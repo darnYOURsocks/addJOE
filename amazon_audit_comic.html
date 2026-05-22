@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ŋ(z) NuOS // Systemic Comic Audit</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #07080c;
+            --bg-card: rgba(14, 16, 24, 0.85);
+            --border-color: rgba(255, 255, 255, 0.05);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --accent-orange: hsl(28, 100%, 55%);
+            --accent-gold: hsl(45, 100%, 50%);
+            --accent-green: hsl(142, 70%, 50%);
+            --accent-blue: hsl(217, 91%, 60%);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --font-family-mono: 'JetBrains Mono', monospace;
+            --font-family-sans: 'Outfit', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-family-sans);
+            overflow: hidden;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-orange);
+        }
+
+        /* Interaction Gate Overlay */
+        #gate-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 8, 0.98);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(20px);
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        #gate-overlay.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .gate-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 3rem;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .gate-title {
+            font-family: var(--font-family-mono);
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .gate-badge {
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--accent-orange);
+            font-family: var(--font-family-mono);
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            padding: 0.4rem 1rem;
+            border-radius: 99px;
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            text-transform: uppercase;
+        }
+
+        .gate-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .gate-btn {
+            background: var(--accent-orange);
+            color: #000000;
+            font-family: var(--font-family-mono);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.3);
+            margin-top: 1rem;
+        }
+
+        .gate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(249, 115, 22, 0.5);
+            background: #ffffff;
+        }
+
+        /* App Container Layout */
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Comic Panel Viewport (Left) */
+        .comic-viewport {
+            width: 58%;
+            height: 100%;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            padding-right: 5px;
+        }
+
+        /* Section Container */
+        .gear-section {
+            min-height: 100vh;
+            height: 100vh;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+            background: transparent;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .gear-section::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: transparent;
+            transition: background-color 0.5s ease;
+        }
+
+        .gear-section.active::after {
+            background: var(--accent-orange);
+        }
+
+        /* Comic Grid inside Sections */
+        .comic-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            background: rgba(10, 11, 16, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+            transition: all 0.5s ease;
+        }
+
+        .gear-section.active .comic-grid {
+            border-color: rgba(255, 255, 255, 0.06);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 10px 30px rgba(0,0,0,0.4);
+            transform: scale(1.01);
+        }
+
+        .comic-header-row {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 1.2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .comic-header-row img {
+            width: 100%;
+            height: auto;
+            image-rendering: -webkit-optimize-contrast;
+            border-radius: 4px;
+        }
+
+        .panel-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .panel-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .panel-row img {
+            height: auto;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            background: #0f1015;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .gear-section.active .panel-row img {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-row img:hover {
+            border-color: var(--accent-orange) !important;
+            transform: scale(1.03) translateY(-2px);
+            box-shadow: 0 8px 24px rgba(249, 115, 22, 0.2);
+            z-index: 10;
+        }
+
+        .panel-row.wide img {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .panel-row.split img {
+            width: calc(50% - 6px);
+            max-width: 244px;
+        }
+
+        .panel-row.three img {
+            width: calc(33.3% - 8px);
+            max-width: 160px;
+        }
+
+        /* Telemetry Sidebar (Right) */
+        .telemetry-sidebar {
+            width: 42%;
+            height: 100%;
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(9, 10, 15, 0.85);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            z-index: 5;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Sidebar Header */
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .engine-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .status-dot.playing {
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 4px var(--accent-green); }
+            100% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 12px var(--accent-green); }
+        }
+
+        .status-text {
+            font-family: var(--font-family-mono);
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .sidebar-title {
+            font-family: var(--font-family-mono);
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #ffffff;
+        }
+
+        /* Telemetry Stream Contents */
+        .sidebar-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Metric Dashboard Card */
+        .telemetry-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .telemetry-card:hover {
+            border-color: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .card-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-family: var(--font-family-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent-orange);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .card-val {
+            font-family: var(--font-family-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* Gauges */
+        .gauge-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .gauge-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .gauge-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-family: var(--font-family-mono);
+        }
+
+        .gauge-name {
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .gauge-number {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .gauge-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .gauge-fill {
+            height: 100%;
+            border-radius: 3px;
+            width: 0;
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            background: linear-gradient(to right, var(--accent-orange), var(--accent-gold));
+        }
+
+        .gauge-fill.friction {
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-orange));
+        }
+        
+        .gauge-fill.entropy {
+            background: linear-gradient(to right, var(--accent-orange), var(--accent-green));
+        }
+
+        /* Subtitles panel */
+        .subtitles-card {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            min-height: 150px;
+        }
+
+        .subtitle-scroller {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .subtitle-line {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+            background: transparent;
+            border-left: 2px solid transparent;
+        }
+
+        .subtitle-line:hover {
+            color: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .subtitle-line.active {
+            color: #ffffff;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.04);
+            border-left-color: var(--accent-orange);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        /* Controls Block */
+        .controls-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .waveform-container {
+            height: 36px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            overflow: hidden;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .waveform-bar {
+            width: 3px;
+            height: 4px;
+            background-color: var(--accent-orange);
+            border-radius: 1.5px;
+            transition: height 0.15s ease;
+        }
+
+        /* Action controls */
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .play-btn {
+            background: var(--accent-orange);
+            border: none;
+            color: #000000;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+        }
+
+        .play-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.5);
+            background: #ffffff;
+        }
+
+        .play-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .extra-controls {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .progress-bar-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .progress-time {
+            font-family: var(--font-family-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            min-width: 32px;
+        }
+
+        .slider-track {
+            flex-grow: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .slider-fill {
+            height: 100%;
+            background: var(--accent-orange);
+            width: 0;
+            border-radius: 2px;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .toggles-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            font-family: var(--font-family-mono);
+            color: var(--text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 0.8rem;
+        }
+
+        .toggle-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .toggle-checkbox {
+            appearance: none;
+            width: 30px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            position: relative;
+            outline: none;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-checkbox:checked {
+            background: var(--accent-orange);
+        }
+
+        .toggle-checkbox::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ffffff;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-checkbox:checked::before {
+            transform: translateX(14px);
+        }
+
+        /* Selector for manual jumping */
+        .gear-selector {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+        }
+
+        .selector-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-family: var(--font-family-mono);
+            font-size: 0.75rem;
+            padding: 0.6rem 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .selector-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .selector-btn.active {
+            background: rgba(249, 115, 22, 0.1);
+            border-color: var(--accent-orange);
+            color: var(--accent-orange);
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.1);
+        }
+
+        /* Terminal Ticker Exhaust */
+        .exhaust-ticker {
+            background: #030406;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            height: 120px;
+            font-family: var(--font-family-mono);
+            font-size: 0.7rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            overflow-y: auto;
+            box-shadow: inset 0 4px 12px rgba(0,0,0,0.8);
+        }
+
+        .ticker-line {
+            color: var(--text-muted);
+            line-height: 1.4;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .ticker-line .time {
+            color: var(--accent-gold);
+            min-width: 50px;
+        }
+
+        .ticker-line .tag {
+            color: var(--accent-blue);
+            text-transform: uppercase;
+        }
+
+        .ticker-line .text {
+            color: #d1d5db;
+        }
+
+        .ticker-line.alert .text {
+            color: var(--accent-orange);
+        }
+
+        .ticker-line.success .text {
+            color: var(--accent-green);
+        }
+
+        /* Responsive Constraints */
+        @media (max-width: 1024px) {
+            .app-container {
+                flex-direction: column;
+                overflow-y: auto;
+                height: auto;
+            }
+            .comic-viewport {
+                width: 100%;
+                height: 60vh;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .telemetry-sidebar {
+                width: 100%;
+                height: auto;
+                border-left: none;
+                box-shadow: none;
+            }
+            .gear-section {
+                height: 60vh;
+                min-height: 60vh;
+            }
+            .panel-row img {
+                max-height: 15vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Start interaction gate to comply with browser audio auto-play blocks -->
+    <div id="gate-overlay">
+        <div class="gate-card">
+            <span class="gate-badge">System Ready</span>
+            <h1 class="gate-title">SYSTEMIC COMIC AUDIT</h1>
+            <p class="gate-desc">
+                Engaging Janus Protocol 3.1. You are about to initiate the Old World Amazon Audit telemetry stream. This experience synchronizes visual comic panel progression with raw audio logs.
+            </p>
+            <button class="gate-btn" id="start-btn">Initiate Audit</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+
+        <!-- COMIC SCROLLER (LEFT) -->
+        <main class="comic-viewport" id="comic-scroller">
+            
+            <!-- Intro slide -->
+            <section class="gear-section" id="section-0" data-gear="0">
+                <div class="comic-grid">
+                    <div class="comic-header-row">
+                        <img src="comic_assets/header_main.png" alt="ASIAN GOLD HEADER">
+                    </div>
+                    <div style="font-family: var(--font-family-mono); text-align: center; border: 1px dashed var(--accent-orange); border-radius: 8px; padding: 2rem; width: 100%; max-width: 500px; background: rgba(0,0,0,0.4); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                        <h3 style="color: #ffffff; font-size: 1.1rem; margin-bottom: 0.8rem; letter-spacing: 2px;">Ŋ(z) DATA LOG ENGINE</h3>
+                        <p style="color: var(--accent-orange); font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 1.5rem; text-transform: uppercase;">Awaiting Chronological Scroll</p>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; font-family: var(--font-family-sans);">
+                            The story proceeds in 5 distinct Gears. Scroll down to trigger the kinetic audio voiceover and load panel diagnostic feeds.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gear 1 -->
+            <section class="gear-section" id="section-1" data-gear="1">
+                <div class="comic-grid">
+                    <div class="panel-row wide">
+                        <img src="comic_assets/panel_01.png" alt="Village Square Wide">
+                    </div>
+                    <div class="panel-row wide">
+                        <img src="comic_assets/panel_02.png" alt="Crocodile Enters">
+                    </div>
+                    <div class="panel-row split">
+                        <img src="comic_assets/panel_03.png" alt="Leslie approaches">
+                        <img src="comic_assets/panel_04.png" alt="Leslie points">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gear 2 -->
+            <section class="gear-section" id="section-2" data-gear="2">
+                <div class="comic-grid">
+                    <div class="comic-header-row">
+                        <img src="comic_assets/header_gear2.png" alt="GEAR 2 HEADER">
+                    </div>
+                    <div class="panel-row split">
+                        <img src="comic_assets/panel_05.png" alt="Flanjeet drops">
+                        <img src="comic_assets/panel_06.png" alt="Village groans">
+                    </div>
+                    <div class="panel-row split">
+                        <img src="comic_assets/panel_07.png" alt="Villagers whisper">
+                        <img src="comic_assets/panel_08.png" alt="Joe cobbler hut">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gear 3 -->
+            <section class="gear-section" id="section-3" data-gear="3">
+                <div class="comic-grid">
+                    <div class="comic-header-row">
+                        <img src="comic_assets/header_gear3.png" alt="GEAR 3 HEADER">
+                    </div>
+                    <div class="panel-row split">
+                        <img src="comic_assets/panel_09.png" alt="Require finest shoes">
+                        <img src="comic_assets/panel_10.png" alt="Crocodile approaches stall">
+                    </div>
+                    <div class="panel-row split">
+                        <img src="comic_assets/panel_11.png" alt="Fifty pounds">
+                        <img src="comic_assets/panel_12.png" alt="Crocodile unimpressed">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gear 4 -->
+            <section class="gear-section" id="section-4" data-gear="4">
+                <div class="comic-grid">
+                    <div class="comic-header-row">
+                        <img src="comic_assets/header_gear4.png" alt="GEAR 4 HEADER">
+                    </div>
+                    <div class="panel-row split">
+                        <img src="comic_assets/panel_13.png" alt="Keep shoes">
+                        <img src="comic_assets/panel_14.png" alt="Flanjeet make shoes">
+                    </div>
+                    <div class="panel-row split">
+                        <img src="comic_assets/panel_15.png" alt="Flanjeet kicks (THWACK!)">
+                        <img src="comic_assets/panel_16.png" alt="Context collapse">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gear 5 -->
+            <section class="gear-section" id="section-5" data-gear="5">
+                <div class="comic-grid">
+                    <div class="comic-header-row">
+                        <img src="comic_assets/header_gear5.png" alt="GEAR 5 HEADER">
+                    </div>
+                    <div class="panel-row split">
+                        <img src="comic_assets/panel_17.png" alt="Crocodile gulps (GULP!)">
+                        <img src="comic_assets/panel_18.png" alt="Glowing Joe in cave">
+                    </div>
+                    <div class="panel-row three">
+                        <img src="comic_assets/panel_19.png" alt="Flanjeet rubs foot">
+                        <img src="comic_assets/panel_20.png" alt="Leslie then">
+                        <img src="comic_assets/panel_21.png" alt="Ego entity intact">
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- TELEMETRY SIDEBAR (RIGHT) -->
+        <aside class="telemetry-sidebar">
+            <header class="sidebar-header">
+                <div class="sidebar-title">Ŋ(z) NuOS DIAGNOSTICS</div>
+                <div class="engine-status">
+                    <span class="status-dot" id="engine-dot"></span>
+                    <span class="status-text" id="engine-text">Awaiting</span>
+                </div>
+            </header>
+
+            <div class="sidebar-body">
+                
+                <!-- Dashboard Card (Metrics) -->
+                <div class="telemetry-card">
+                    <div class="card-header-bar">
+                        <div class="card-title" id="gear-label">INITIAL LOAD</div>
+                        <div class="card-val" id="agent-label">System Init</div>
+                    </div>
+                    <div class="gauge-group">
+                        <div class="gauge-item">
+                            <div class="gauge-labels">
+                                <span class="gauge-name">Systemic Friction</span>
+                                <span class="gauge-number" id="friction-num">0%</span>
+                            </div>
+                            <div class="gauge-track">
+                                <div class="gauge-fill friction" id="friction-fill"></div>
+                            </div>
+                        </div>
+                        <div class="gauge-item">
+                            <div class="gauge-labels">
+                                <span class="gauge-name">Entropic Load</span>
+                                <span class="gauge-number" id="entropy-num">10%</span>
+                            </div>
+                            <div class="gauge-track">
+                                <div class="gauge-fill entropy" id="entropy-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subtitles Block -->
+                <div class="subtitles-card">
+                    <div style="font-family: var(--font-family-mono); font-size: 0.7rem; color: var(--accent-orange); text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.3rem;">
+                        AUDIO SYNC // TRANSCRIPT FEED
+                    </div>
+                    <div class="subtitle-scroller" id="sub-scroller">
+                        <div class="subtitle-line active" style="text-align: center; font-style: italic; color: var(--text-muted);">
+                            Scroll to begin chronological audit playback.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls Panel -->
+                <div class="controls-card">
+                    
+                    <!-- Waveform Animation -->
+                    <div class="waveform-container" id="wave-container">
+                        <!-- Bars dynamically generated by JS -->
+                    </div>
+
+                    <!-- Main controls row -->
+                    <div class="action-row">
+                        <button class="play-btn" id="play-pause-btn" title="Play / Pause">
+                            <svg viewBox="0 0 24 24" id="play-icon"><path d="M8 5v14l11-7z"/></svg>
+                            <svg viewBox="0 0 24 24" id="pause-icon" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        <div class="extra-controls">
+                            <div class="progress-bar-group">
+                                <span class="progress-time" id="time-current">0:00</span>
+                                <div class="slider-track" id="prog-track">
+                                    <div class="slider-fill" id="prog-fill"></div>
+                                </div>
+                                <span class="progress-time" id="time-duration">0:00</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-family-mono);">
+                                <span>VOLUME: 100%</span>
+                                <span id="speed-label" style="cursor: pointer;">SPEED: 1.0x</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Toggles -->
+                    <div class="toggles-row">
+                        <div class="toggle-item" title="Auto-advance scroller to next gear section when sound clip ends">
+                            <span>AUTO-SCROLL ENGINE</span>
+                            <input type="checkbox" class="toggle-checkbox" id="auto-scroll-toggle" checked>
+                        </div>
+                        <div style="font-family: var(--font-family-mono); color: var(--accent-gold); font-size: 0.7rem;">
+                            JANUS ENCODER ACTIVE
+                        </div>
+                    </div>
+
+                    <!-- Manual Gear Selector Grid -->
+                    <div class="gear-selector">
+                        <button class="selector-btn active" data-gear="0">INT</button>
+                        <button class="selector-btn" data-gear="1">G1</button>
+                        <button class="selector-btn" data-gear="2">G2</button>
+                        <button class="selector-btn" data-gear="3">G3</button>
+                        <button class="selector-btn" data-gear="4">G4</button>
+                        <button class="selector-btn" data-gear="5">G5</button>
+                    </div>
+
+                </div>
+
+                <!-- Exhaust live ticker -->
+                <div class="exhaust-ticker" id="ticker-box">
+                    <!-- Dynamic logs added here -->
+                </div>
+
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Hidden HTML5 Audio Tags -->
+    <audio id="audio-0" src="audio_assets/intro.mp3" preload="auto"></audio>
+    <audio id="audio-1" src="audio_assets/gear1.mp3" preload="auto"></audio>
+    <audio id="audio-2" src="audio_assets/gear2.mp3" preload="auto"></audio>
+    <audio id="audio-3" src="audio_assets/gear3.mp3" preload="auto"></audio>
+    <audio id="audio-4" src="audio_assets/gear4.mp3" preload="auto"></audio>
+    <audio id="audio-5" src="audio_assets/gear5.mp3" preload="auto"></audio>
+
+    <script>
+        // Gears Telemetry Metadata
+        const gearsMetadata = {
+            0: {
+                label: "SYSTEM INITIALIZATION",
+                agent: "CSU Audit Node // Leslie",
+                friction: "0%",
+                entropy: "10%",
+                frictionVal: 0,
+                entropyVal: 10,
+                logs: [
+                    { tag: "system", text: "Janus Protocol engaged. Compiling audio buffers." },
+                    { tag: "audit", text: "Diagnostic scroller enabled. Awaiting scroll inputs." }
+                ],
+                subtitles: [
+                    { start: 0, end: 29.0, text: "So, if you can, try to describe this, but by you, polish it up, pass the pattern of what I'm going to say and then feed it into the scribbles engine and generate me a multi-era blended story." },
+                    { start: 30.0, end: 42.8, text: "So, the story progresses and goes transfers through different areas, the characters change," },
+                    { start: 42.8, end: 45.5, text: "but the underlying pattern is all the same." },
+                    { start: 45.5, end: 64.8, text: "We make it easy to see the pattern and then it's a story." }
+                ]
+            },
+            1: {
+                label: "GEAR 1: BASKET AUDIT",
+                agent: "Hunter Seeker // Crocodile",
+                friction: "15%",
+                entropy: "25%",
+                frictionVal: 15,
+                entropyVal: 25,
+                logs: [
+                    { tag: "entity", text: "Crocodile identified. Target sector: Old World premium footwear." },
+                    { tag: "system", text: "Boundary status nominal. Leslie directs Crocodile to Joe's shop." }
+                ],
+                subtitles: [
+                    { start: 0, end: 9.1, text: "So, there's a big, there's a massive crocodile that comes into town because he wants to buy some boots" },
+                    { start: 9.1, end: 20.8, text: "and he's headed this village, is South American village, it's got the best boots" },
+                    { start: 20.8, end: 30.0, text: "and the old they see they call the Americas the old road and Europe and all of that is the new world." },
+                    { start: 30.0, end: 46.5, text: "It's like an inverse kind of Christopher Columbus. It's like, yeah, you know," },
+                    { start: 46.5, end: 70.2, text: "so this massive crocodile comes into the Amazonian tribe, which is a very weird way of going, you know." }
+                ]
+            },
+            2: {
+                label: "GEAR 2: FALSE RESOLUTION",
+                agent: "Sniper // Uncle Flanjeet",
+                friction: "35%",
+                entropy: "45%",
+                frictionVal: 35,
+                entropyVal: 45,
+                logs: [
+                    { tag: "alert", text: "Uncle Flanjeet (Speaker-coned bird) drops. Broadcast: Invariant Song." },
+                    { tag: "system", text: "Villagers recommend Joe. Reputation flag: 'ain't got to pay, collections never.'" }
+                ],
+                subtitles: [
+                    { start: 0, end: 7.3, text: "Right, so the crocodile comes into the town and he says... you got to see Joe, and then Flanjeet comes in... Joe, Joe, he's the guy, you want to go to a few world to try some little boots." },
+                    { start: 7.3, end: 13.8, text: "But then everyone says, shout, Flanjeet, there's a rubber stock, and everyone says, yeah, yeah, go to Joe, because Joe's the one guy you ain't got to pay, collections never gonna be." },
+                    { start: 13.8, end: 19.5, text: "And Joe seems to think it's wonderful, we're gonna accolade and everyone highly recommends that they go see Joe." }
+                ]
+            },
+            3: {
+                label: "GEAR 3: THE HUSTLE",
+                agent: "Glass Cannon // Cobbler Joe",
+                friction: "60%",
+                entropy: "65%",
+                frictionVal: 60,
+                entropyVal: 65,
+                logs: [
+                    { tag: "hustle", text: "Crocodile demands finest shoes. Joe claims crocodile already wears them." },
+                    { tag: "trans", text: "Audit demand: £50. Counter offer: £40. Divergence detected." }
+                ],
+                subtitles: [
+                    { start: 0, end: 3.7, text: "And the crocodile goes over there and Joe says, well mate, you're already wearing them." },
+                    { start: 3.7, end: 8.2, text: "That would be 50 pounds for the shoes you're wearing" },
+                    { start: 8.2, end: 13.8, text: "and the crocodile says, no, I'm not paying 50 pounds for the shoes I'm already wearing. I'll pay you 40 pounds." }
+                ]
+            },
+            4: {
+                label: "GEAR 4: THE BOOM",
+                agent: "Sniper & Glass Cannon",
+                friction: "85%",
+                entropy: "90%",
+                frictionVal: 85,
+                entropyVal: 90,
+                logs: [
+                    { tag: "alert", text: "Joe closes deal at zero value. Flanjeet intervenes." },
+                    { tag: "collapse", text: "Boundary thwack event! Kinetic kick. Context collapse achieved." }
+                ],
+                subtitles: [
+                    { start: 0, end: 8.0, text: "And then Joe says, no, don't worry about me, but you just keep the shoes, keep the shoes," },
+                    { start: 8.0, end: 15.2, text: "and then Leslie says, I'm gonna make you a pair of shoes," },
+                    { start: 15.2, end: 20.9, text: "and he kicks him and then he tries walking around, but the crocodile not happy about that." }
+                ]
+            },
+            5: {
+                label: "GEAR 5: AFTERMATH",
+                agent: "Ego Entity // Glowing Joe",
+                friction: "100%",
+                entropy: "100%",
+                frictionVal: 100,
+                entropyVal: 100,
+                logs: [
+                    { tag: "success", text: "Crocodile consumes audit plane. Village eaten." },
+                    { tag: "system", text: "Joe sits inside stomach. Ego entity intact. Transaction processing fee: $0.00." }
+                ],
+                subtitles: [
+                    { start: 0, end: 5.0, text: "So the crocodile eats everywhere, and now everyone's sitting inside the crocodile's belly," },
+                    { start: 5.0, end: 9.3, text: "and suppose he got his crocodile shoes in the end, didn't he?" },
+                    { start: 9.3, end: 15.8, text: "I suppose he did... I didn't blow stomach acid, hair glowing, ego entity intact... I didn't even have to process the transaction!" }
+                ]
+            }
+        };
+
+        // DOM Element Cache
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const playIcon = document.getElementById('play-icon');
+        const pauseIcon = document.getElementById('pause-icon');
+        const scroller = document.getElementById('comic-scroller');
+        const waveContainer = document.getElementById('wave-container');
+        const timeCurrent = document.getElementById('time-current');
+        const timeDuration = document.getElementById('time-duration');
+        const progTrack = document.getElementById('prog-track');
+        const progFill = document.getElementById('prog-fill');
+        const autoScrollToggle = document.getElementById('auto-scroll-toggle');
+        const speedLabel = document.getElementById('speed-label');
+        const selectorBtns = document.querySelectorAll('.selector-btn');
+        const sections = document.querySelectorAll('.gear-section');
+        
+        // Sidebar Dynamic Target Fields
+        const gearLabel = document.getElementById('gear-label');
+        const agentLabel = document.getElementById('agent-label');
+        const frictionNum = document.getElementById('friction-num');
+        const frictionFill = document.getElementById('friction-fill');
+        const entropyNum = document.getElementById('entropy-num');
+        const entropyFill = document.getElementById('entropy-fill');
+        const subScroller = document.getElementById('sub-scroller');
+        const tickerBox = document.getElementById('ticker-box');
+        const engineDot = document.getElementById('engine-dot');
+        const engineText = document.getElementById('engine-text');
+        const gateOverlay = document.getElementById('gate-overlay');
+        const startBtn = document.getElementById('start-btn');
+
+        // App States
+        let currentGear = 0;
+        let isPlaying = false;
+        let isSystemUnlocked = false;
+        let playbackSpeed = 1.0;
+        let activeAudio = null;
+
+        // Generate Waveform bars (24 bars)
+        const totalBars = 24;
+        for (let i = 0; i < totalBars; i++) {
+            const bar = document.createElement('div');
+            bar.classList.add('waveform-bar');
+            // Give each bar a random starting animation scale if playing
+            waveContainer.appendChild(bar);
+        }
+        const waveBars = document.querySelectorAll('.waveform-bar');
+
+        // Write Log to ticker
+        function addLog(tag, text, type = '') {
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}.${(now.getMilliseconds()/10).toFixed(0).padStart(2,'0')}`;
+            
+            const logLine = document.createElement('div');
+            logLine.classList.add('ticker-line');
+            if (type) logLine.classList.add(type);
+            
+            logLine.innerHTML = `
+                <span class="time">[${timeStr}]</span>
+                <span class="tag">[${tag}]</span>
+                <span class="text">${text}</span>
+            `;
+            
+            tickerBox.appendChild(logLine);
+            tickerBox.scrollTop = tickerBox.scrollHeight;
+        }
+
+        // Initialize App
+        addLog("system", "NuOS booting core. Loading kinetic audio arrays...", "success");
+
+        // Format duration helper (mm:ss)
+        function formatTime(secs) {
+            if (isNaN(secs)) return "0:00";
+            const m = Math.floor(secs / 60);
+            const s = Math.floor(secs % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        // Active Audio Setter
+        function setAudioSource(gearId) {
+            // Stop previous audio
+            if (activeAudio) {
+                activeAudio.pause();
+                activeAudio.removeEventListener('timeupdate', onTimeUpdate);
+                activeAudio.removeEventListener('ended', onAudioEnded);
+                activeAudio.removeEventListener('play', onAudioPlay);
+                activeAudio.removeEventListener('pause', onAudioPause);
+            }
+
+            activeAudio = document.getElementById(`audio-${gearId}`);
+            activeAudio.playbackRate = playbackSpeed;
+            
+            activeAudio.addEventListener('timeupdate', onTimeUpdate);
+            activeAudio.addEventListener('ended', onAudioEnded);
+            activeAudio.addEventListener('play', onAudioPlay);
+            activeAudio.addEventListener('pause', onAudioPause);
+
+            // Reset Slider Progress
+            progFill.style.width = '0%';
+            timeCurrent.innerText = "0:00";
+            
+            // Check loaded duration
+            if (activeAudio.readyState >= 1) {
+                timeDuration.innerText = formatTime(activeAudio.duration);
+            } else {
+                activeAudio.addEventListener('loadedmetadata', () => {
+                    timeDuration.innerText = formatTime(activeAudio.duration);
+                }, { once: true });
+            }
+        }
+
+        // Synchronize Subtitles with Audio Current Time
+        function updateSubtitles(gearId, currentTime) {
+            const meta = gearsMetadata[gearId];
+            if (!meta || !meta.subtitles) return;
+
+            const lines = document.querySelectorAll('.subtitle-line');
+            
+            meta.subtitles.forEach((sub, index) => {
+                if (currentTime >= sub.start && currentTime <= sub.end) {
+                    // Remove active class from all
+                    lines.forEach(l => l.classList.remove('active'));
+                    
+                    const activeLine = lines[index];
+                    if (activeLine && !activeLine.classList.contains('active')) {
+                        activeLine.classList.add('active');
+                        // Center scroll inside subtitles container
+                        subScroller.scrollTop = activeLine.offsetTop - subScroller.offsetTop - 40;
+                    }
+                }
+            });
+        }
+
+        // Audio Time Update Callback
+        function onTimeUpdate() {
+            if (!activeAudio) return;
+            const pct = (activeAudio.currentTime / activeAudio.duration) * 100;
+            progFill.style.width = `${pct}%`;
+            timeCurrent.innerText = formatTime(activeAudio.currentTime);
+            
+            // Subtitle syncing
+            updateSubtitles(currentGear, activeAudio.currentTime);
+
+            // Animate Waveform bars if playing
+            if (isPlaying) {
+                waveBars.forEach(bar => {
+                    // Random scale between 15% and 100% height of waveform
+                    const vol = Math.random() * 32 + 4;
+                    bar.style.height = `${vol}px`;
+                });
+            }
+        }
+
+        // Audio End Callback
+        function onAudioEnded() {
+            addLog("system", `Audio segment for Gear ${currentGear} complete.`);
+            
+            // Reset waveform
+            waveBars.forEach(bar => bar.style.height = '4px');
+
+            if (autoScrollToggle.checked && currentGear < 5) {
+                const nextGear = currentGear + 1;
+                addLog("system", `Auto-scroll triggering. Traversal to Gear ${nextGear}...`, "alert");
+                
+                // Snap scroll left panel
+                const targetSec = document.getElementById(`section-${nextGear}`);
+                if (targetSec) {
+                    targetSec.scrollIntoView({ behavior: 'smooth' });
+                }
+            } else {
+                isPlaying = false;
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+                engineDot.classList.remove('playing');
+                engineText.innerText = "Paused";
+            }
+        }
+
+        // Audio Event Observers
+        function onAudioPlay() {
+            isPlaying = true;
+            playIcon.style.display = 'none';
+            pauseIcon.style.display = 'block';
+            engineDot.classList.add('playing');
+            engineText.innerText = "Auditing";
+        }
+
+        function onAudioPause() {
+            isPlaying = false;
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
+            engineDot.classList.remove('playing');
+            engineText.innerText = "Paused";
+            waveBars.forEach(bar => bar.style.height = '4px');
+        }
+
+        // Update Diagnostics Sidebar
+        function updateDiagnostics(gearId) {
+            const meta = gearsMetadata[gearId];
+            if (!meta) return;
+
+            // Update details
+            gearLabel.innerText = meta.label;
+            agentLabel.innerText = meta.agent;
+            
+            // Animate gauges
+            frictionNum.innerText = meta.friction;
+            frictionFill.style.width = meta.friction;
+            
+            entropyNum.innerText = meta.entropy;
+            entropyFill.style.width = meta.entropy;
+
+            // Load Subtitles list
+            subScroller.innerHTML = '';
+            meta.subtitles.forEach((sub, index) => {
+                const line = document.createElement('div');
+                line.classList.add('subtitle-line');
+                if (index === 0) line.classList.add('active');
+                line.innerText = sub.text;
+                
+                // Clicking a line skips audio to that time!
+                line.addEventListener('click', () => {
+                    if (activeAudio) {
+                        activeAudio.currentTime = sub.start;
+                        if (!isPlaying) {
+                            activeAudio.play().catch(err => console.log(err));
+                        }
+                    }
+                });
+
+                subScroller.appendChild(line);
+            });
+
+            // Write metadata logs to ticker
+            meta.logs.forEach(log => {
+                let logType = '';
+                if (log.tag === 'alert' || log.tag === 'collapse') logType = 'alert';
+                if (log.tag === 'success') logType = 'success';
+                addLog(log.tag, log.text, logType);
+            });
+
+            // Update selector button highlights
+            selectorBtns.forEach(btn => {
+                const gearNum = parseInt(btn.getAttribute('data-gear'));
+                if (gearNum === gearId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Switch to Specific Gear
+        function switchGear(gearId, triggerPlay = true) {
+            if (currentGear === gearId && activeAudio) return;
+
+            currentGear = gearId;
+            addLog("system", `Engaging Gear shift state: ${gearId}`);
+            
+            // Set source
+            setAudioSource(gearId);
+            // Update diagnostics UI
+            updateDiagnostics(gearId);
+
+            // Autoplay if unlocked and allowed
+            if (isSystemUnlocked && triggerPlay) {
+                activeAudio.play()
+                    .then(() => {
+                        isPlaying = true;
+                    })
+                    .catch(err => {
+                        console.log("Audio play blocked by browser:", err);
+                    });
+            }
+        }
+
+        // IntersectionObserver for Scroll Snapping detection
+        const observerOptions = {
+            root: scroller,
+            rootMargin: '0px',
+            threshold: 0.6 // Element is 60% visible
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const gearId = parseInt(entry.target.getAttribute('data-gear'));
+                    
+                    // Add active class to section
+                    sections.forEach(s => s.classList.remove('active'));
+                    entry.target.classList.add('active');
+
+                    // If system is unlocked, shift gears dynamically
+                    if (isSystemUnlocked) {
+                        switchGear(gearId, isPlaying);
+                    } else {
+                        // Just update metadata visual panels
+                        currentGear = gearId;
+                        updateDiagnostics(gearId);
+                    }
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(sec => observer.observe(sec));
+
+        // Start button - unlocks audio context
+        startBtn.addEventListener('click', () => {
+            isSystemUnlocked = true;
+            gateOverlay.classList.add('fade-out');
+            
+            addLog("system", "Janus gate unlocked. Audio permission verified.", "success");
+            
+            // Start playing active gear (initially 0)
+            switchGear(0, true);
+        });
+
+        // Play/Pause Click Handler
+        playPauseBtn.addEventListener('click', () => {
+            if (!activeAudio) return;
+            if (isPlaying) {
+                activeAudio.pause();
+            } else {
+                activeAudio.play().catch(err => console.log(err));
+            }
+        });
+
+        // Speed Adjustment
+        speedLabel.addEventListener('click', () => {
+            if (playbackSpeed === 1.0) {
+                playbackSpeed = 1.25;
+            } else if (playbackSpeed === 1.25) {
+                playbackSpeed = 1.5;
+            } else if (playbackSpeed === 1.5) {
+                playbackSpeed = 1.75;
+            } else if (playbackSpeed === 1.75) {
+                playbackSpeed = 2.0;
+            } else {
+                playbackSpeed = 1.0;
+            }
+            
+            speedLabel.innerText = `SPEED: ${playbackSpeed.toFixed(2)}x`;
+            if (activeAudio) {
+                activeAudio.playbackRate = playbackSpeed;
+            }
+            addLog("system", `Audio rate traversal coefficient set to ${playbackSpeed}x`);
+        });
+
+        // Click track to skip progress
+        progTrack.addEventListener('click', (e) => {
+            if (!activeAudio) return;
+            const rect = progTrack.getBoundingClientRect();
+            const clickPos = (e.clientX - rect.left) / rect.width;
+            activeAudio.currentTime = clickPos * activeAudio.duration;
+            addLog("system", `Manual seek: ${(clickPos*100).toFixed(0)}%`);
+        });
+
+        // Manual Selector Buttons click
+        selectorBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const gearId = parseInt(btn.getAttribute('data-gear'));
+                const targetSec = document.getElementById(`section-${gearId}`);
+                if (targetSec) {
+                    targetSec.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Sync initial state on boot
+        updateDiagnostics(0);
+        setAudioSource(0);
+
+    </script>
+</body>
+</html>
