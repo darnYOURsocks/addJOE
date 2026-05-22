@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ŋ(z): The Cosmic Audit (Roguelike Prototype)</title>
+    <style>
+        body {
+            background-color: #030305;
+            color: #e2e8f0;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        h1 { color: #3b82f6; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+        #ui-panel { display: flex; justify-content: space-between; width: 600px; margin-bottom: 10px; font-size: 14px; }
+        canvas {
+            background-color: #0f172a;
+            border: 2px solid #334155;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        #message-log {
+            width: 600px;
+            height: 80px;
+            background: #000;
+            border: 1px solid #334155;
+            margin-top: 15px;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .highlight { color: #f59e0b; font-weight: bold; }
+        .danger { color: #ef4444; font-weight: bold; }
+        .success { color: #10b981; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>Ŋ(z): The Cosmic Audit</h1>
+    <div id="ui-panel">
+        <span id="era-display">ERA: 1 - Primordial Swamp</span>
+        <span id="turn-display">ENTROPY (Turns): 0</span>
+    </div>
+
+    <canvas id="gameGrid" width="600" height="600"></canvas>
+
+    <div id="message-log">
+        <div>> SYSTEM INITIALIZED. You are Cosmic Order (Blue).</div>
+        <div>> OBJECTIVE: Force Joe (Orange) into the Hard Physics Hazard (Red) before he pitches the Customer (Green). Use Arrow Keys to move and block.</div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gameGrid');
+    const ctx = canvas.getContext('2d');
+    const TILE_SIZE = 40;
+    const GRID_SIZE = 15; // 15x15 grid
+
+    const ERAS = [
+        { name: "Primordial Swamp", hazard: "Volcanic Vent", asset: "Tuber-X", enemyName: "Target Joe", playerSkin: "Velociraptor" },
+        { name: "Tudor Settlement", hazard: "Economic Fire", asset: "Unwashed Potato", enemyName: "Peasant Joe", playerSkin: "Magistrate" },
+        { name: "Roman Forum", hazard: "Aqueduct Shatter", asset: "Square Wheel", enemyName: "Plebeian Joe", playerSkin: "Patrician" },
+        { name: "Deep Space 3026", hazard: "Airlock Vacuum", asset: "Fried Cyber-Core", enemyName: "Ensign Joe", playerSkin: "AI Hologram" }
+    ];
+
+    let currentEraIndex = 0;
+    let turnCount = 0;
+    let gameOver = false;
+
+    // Entities
+    let player = { x: 2, y: 2, color: '#3b82f6' }; // Leslie (Cosmic Order)
+    let joe = { x: 12, y: 12, color: '#f59e0b' };  // The Vector of Chaos
+    let hazard = { x: 7, y: 7, color: '#ef4444' }; // The BOOM Trigger
+    let customer = { x: 1, y: 13, color: '#10b981' }; // The Lead
+
+    function logMessage(msg, type = '') {
+        const log = document.getElementById('message-log');
+        const div = document.createElement('div');
+        div.innerHTML = `> <span class="${type}">${msg}</span>`;
+        log.prepend(div);
+    }
+
+    function drawTile(x, y, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        ctx.strokeStyle = '#1e293b';
+        ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw Grid lines
+        for(let i=0; i<GRID_SIZE; i++){
+            for(let j=0; j<GRID_SIZE; j++){
+                ctx.strokeStyle = '#1e293b';
+                ctx.strokeRect(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            }
+        }
+
+        drawTile(hazard.x, hazard.y, hazard.color);
+        drawTile(customer.x, customer.y, customer.color);
+        drawTile(joe.x, joe.y, joe.color);
+        drawTile(player.x, player.y, player.color);
+    }
+
+    function moveJoe() {
+        // Joe aggressively paths toward the customer (Janus Left Delusion)
+        let dx = Math.sign(customer.x - joe.x);
+        let dy = Math.sign(customer.y - joe.y);
+
+        // Randomly favor X or Y to simulate erratic hustle
+        if (Math.random() > 0.5 && dx !== 0) {
+            let nextX = joe.x + dx;
+            if (nextX !== player.x || joe.y !== player.y) joe.x = nextX; // Player acts as a physical logic block
+        } else if (dy !== 0) {
+            let nextY = joe.y + dy;
+            if (joe.x !== player.x || nextY !== player.y) joe.y = nextY;
+        }
+
+        checkCollisions();
+    }
+
+    function checkCollisions() {
+        // Did Joe hit the Hazard? (WIN)
+        if (joe.x === hazard.x && joe.y === hazard.y) {
+            const era = ERAS[currentEraIndex];
+            logMessage(`CATASTROPHIC CONTEXT COLLAPSE! Joe threw the ${era.asset} into the ${era.hazard}!`, 'success');
+            levelUp();
+            return;
+        }
+
+        // Did Joe hit the Customer? (LOSE)
+        if (joe.x === customer.x && joe.y === customer.y) {
+            logMessage(`TIMELINE FRACTURE! Joe successfully pitched the zero-value asset. Paradox detected.`, 'danger');
+            gameOver = true;
+            return;
+        }
+    }
+
+    function levelUp() {
+        currentEraIndex++;
+        if (currentEraIndex >= ERAS.length) {
+            logMessage(`TRANSCENDENCE ACHIEVED. Temporal Mental Surplus generated. You beat the engine.`, 'success');
+            gameOver = true;
+            return;
+        }
+        
+        const nextEra = ERAS[currentEraIndex];
+        document.getElementById('era-display').innerText = `ERA: ${currentEraIndex + 1} - ${nextEra.name}`;
+        logMessage(`Timeline shifted to ${nextEra.name}. Playing as ${nextEra.playerSkin}.`, 'highlight');
+        
+        // Reset positions
+        player = { x: 2, y: 2, color: '#3b82f6' };
+        joe = { x: 12, y: 12, color: '#f59e0b' };
+        hazard.x = Math.floor(Math.random() * 10) + 2;
+        hazard.y = Math.floor(Math.random() * 10) + 2;
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (gameOver) return;
+
+        let moved = false;
+        let newX = player.x;
+        let newY = player.y;
+
+        if (e.key === 'ArrowUp' && player.y > 0) { newY--; moved = true; }
+        if (e.key === 'ArrowDown' && player.y < GRID_SIZE - 1) { newY++; moved = true; }
+        if (e.key === 'ArrowLeft' && player.x > 0) { newX--; moved = true; }
+        if (e.key === 'ArrowRight' && player.x < GRID_SIZE - 1) { newX++; moved = true; }
+
+        if (moved) {
+            // Cannot walk on hazard or customer
+            if ((newX !== hazard.x || newY !== hazard.y) && (newX !== customer.x || newY !== customer.y)) {
+                player.x = newX;
+                player.y = newY;
+            }
+
+            turnCount++;
+            document.getElementById('turn-display').innerText = `ENTROPY (Turns): ${turnCount}`;
+            moveJoe();
+            render();
+        }
+    });
+
+    render();
+</script>
+
+</body>
+</html>

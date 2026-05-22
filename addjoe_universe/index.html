@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ŋ(z) Traversal Engine: addJOE Multiverse Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #07080b;
+            --bg-card: rgba(15, 18, 28, 0.7);
+            --bg-sidebar: rgba(10, 12, 18, 0.95);
+            --border-color: rgba(255, 255, 255, 0.05);
+            --accent-orange: #ff5722;
+            --accent-blue: #00d2ff;
+            --accent-red: #ff2a5f;
+            --accent-purple: #a855f7;
+            --text-main: #cbd5e1;
+            --text-bright: #ffffff;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 87, 34, 0.2) transparent;
+        }
+
+        /* Custom Scrollbar */
+        *::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        *::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        *::-webkit-scrollbar-thumb {
+            background: rgba(255, 87, 34, 0.2);
+            border-radius: 3px;
+        }
+        *::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-orange);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 300px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 30px 24px;
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 30px;
+        }
+
+        .brand-title {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--text-bright);
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-title span {
+            color: var(--accent-orange);
+        }
+
+        .brand-subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-bright);
+            border-color: rgba(255, 255, 255, 0.03);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: rgba(255, 87, 34, 0.08);
+            color: var(--text-bright);
+            border-color: rgba(255, 87, 34, 0.2);
+            box-shadow: 0 4px 20px rgba(255, 87, 34, 0.05);
+        }
+
+        .nav-item svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .system-status {
+            background: rgba(0, 210, 255, 0.04);
+            border: 1px solid rgba(0, 210, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .status-label {
+            color: var(--text-muted);
+        }
+
+        .status-val {
+            color: var(--accent-blue);
+            font-weight: bold;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--accent-orange);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-orange);
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        /* MAIN CONTENT AREA */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px;
+            position: relative;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 87, 34, 0.02) 0%, transparent 80%);
+        }
+
+        .tab-view {
+            display: none;
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tab-view.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* COMMON COMPONENT ELEMENTS */
+        .view-header {
+            margin-bottom: 30px;
+        }
+
+        .view-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--text-bright);
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .view-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* DASHBOARD VIEW */
+        .dash-hero {
+            background: linear-gradient(135deg, rgba(255, 87, 34, 0.1) 0%, rgba(0, 210, 255, 0.03) 100%);
+            border: 1px solid rgba(255, 87, 34, 0.15);
+            border-radius: 16px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .dash-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255, 87, 34, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .dash-hero-title {
+            font-size: 42px;
+            font-weight: 900;
+            color: var(--text-bright);
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+            line-height: 1.1;
+        }
+
+        .dash-hero-desc {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #94a3b8;
+            max-width: 700px;
+            margin-bottom: 24px;
+        }
+
+        .dash-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-bright);
+        }
+
+        .stat-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .dash-sections {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        @media(max-width: 1024px) {
+            .dash-sections {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-box-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-bright);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feed-item {
+            display: flex;
+            gap: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            padding-bottom: 16px;
+        }
+
+        .feed-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .feed-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 87, 34, 0.1);
+            border: 1px solid rgba(255, 87, 34, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-orange);
+            flex-shrink: 0;
+        }
+
+        .feed-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .feed-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .feed-text {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        .feed-text strong {
+            color: var(--text-bright);
+        }
+
+        /* CHRONICLES (COMICS) VIEW */
+        .comic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        .comic-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .comic-card:hover {
+            border-color: rgba(255, 87, 34, 0.25);
+            box-shadow: 0 8px 30px rgba(255, 87, 34, 0.05);
+            transform: translateY(-4px);
+        }
+
+        .comic-thumb {
+            height: 180px;
+            background: #000;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .comic-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.5;
+            transition: all 0.5s ease;
+        }
+
+        .comic-card:hover .comic-thumb img {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .comic-tag {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(255, 87, 34, 0.85);
+            color: white;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .comic-body {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .comic-info {
+            margin-bottom: 20px;
+        }
+
+        .comic-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-bright);
+            margin-bottom: 8px;
+        }
+
+        .comic-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .comic-meta {
+            display: flex;
+            gap: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            padding-top: 16px;
+            margin-bottom: 20px;
+        }
+
+        .meta-pill {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .meta-pill.red {
+            color: var(--accent-red);
+            border-color: rgba(255, 42, 95, 0.15);
+            background: rgba(255, 42, 95, 0.03);
+        }
+
+        .meta-pill.blue {
+            color: var(--accent-blue);
+            border-color: rgba(0, 210, 255, 0.15);
+            background: rgba(0, 210, 255, 0.03);
+        }
+
+        .launch-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--accent-orange);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .launch-btn:hover {
+            background: #ff7043;
+            box-shadow: 0 4px 15px rgba(255, 87, 34, 0.3);
+        }
+
+        .launch-btn.outline {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+        }
+
+        .launch-btn.outline:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--text-bright);
+            color: var(--text-bright);
+            box-shadow: none;
+        }
+
+        /* TIMELINE VIEW */
+        .timeline-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 56px;
+            top: 40px;
+            bottom: 40px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent-orange), var(--accent-red));
+            z-index: 1;
+        }
+
+        .timeline-nodes {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            z-index: 2;
+        }
+
+        .timeline-card {
+            display: flex;
+            gap: 24px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .timeline-badge {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-dark);
+            border: 2px solid var(--accent-orange);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--accent-orange);
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 0 6px var(--bg-dark);
+        }
+
+        .timeline-card:hover .timeline-badge,
+        .timeline-card.active .timeline-badge {
+            background: var(--accent-orange);
+            color: var(--bg-dark);
+            box-shadow: 0 0 15px rgba(255, 87, 34, 0.6), 0 0 0 6px var(--bg-dark);
+        }
+
+        .timeline-card.hazard .timeline-badge {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .timeline-card.hazard:hover .timeline-badge,
+        .timeline-card.hazard.active .timeline-badge {
+            background: var(--accent-red);
+            color: var(--bg-dark);
+            box-shadow: 0 0 15px rgba(255, 42, 95, 0.6), 0 0 0 6px var(--bg-dark);
+        }
+
+        .timeline-panel {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px 24px;
+            flex: 1;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-card:hover .timeline-panel {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.08);
+            transform: translateX(4px);
+        }
+
+        .timeline-card.active .timeline-panel {
+            background: rgba(255, 87, 34, 0.03);
+            border-color: rgba(255, 87, 34, 0.2);
+        }
+
+        .timeline-card.hazard.active .timeline-panel {
+            background: rgba(255, 42, 95, 0.03);
+            border-color: rgba(255, 42, 95, 0.2);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .timeline-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-bright);
+        }
+
+        .timeline-era {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent-blue);
+        }
+
+        .timeline-desc {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #94a3b8;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+        }
+
+        .timeline-card.active .timeline-desc {
+            max-height: 200px;
+            opacity: 1;
+            margin-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            padding-top: 12px;
+        }
+
+        .timeline-btn-speak {
+            background: none;
+            border: none;
+            color: var(--accent-orange);
+            cursor: pointer;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.6;
+            transition: all 0.2s ease;
+        }
+
+        .timeline-btn-speak:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .timeline-btn-speak svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* TAXONOMIC WIKI VIEW */
+        .wiki-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+            height: 65vh;
+        }
+
+        .wiki-sidebar {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .wiki-nav-item {
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .wiki-nav-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-bright);
+        }
+
+        .wiki-nav-item.active {
+            background: rgba(168, 85, 247, 0.08);
+            border-color: rgba(168, 85, 247, 0.2);
+            color: var(--text-bright);
+        }
+
+        .wiki-content-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            display: flex;
+            gap: 30px;
+            padding: 30px;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .wiki-portrait-frame {
+            width: 320px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            height: 380px;
+            position: relative;
+        }
+
+        .wiki-portrait-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.5s ease;
+        }
+
+        .wiki-details {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex: 1;
+        }
+
+        .wiki-char-name {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--text-bright);
+            margin-bottom: 4px;
+        }
+
+        .wiki-char-archetype {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent-purple);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wiki-char-desc {
+            font-size: 15px;
+            line-height: 1.7;
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+
+        .wiki-audio-visualizer {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 24px;
+            margin-top: 10px;
+        }
+
+        .vis-bar {
+            width: 3px;
+            height: 3px;
+            background: var(--accent-purple);
+            border-radius: 1px;
+            transition: height 0.1s ease;
+        }
+
+        /* MODAL */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 6, 8, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 40px;
+            backdrop-filter: blur(12px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 87, 34, 0.2);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 900px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-bright);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 20px;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--accent-orange);
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 70vh;
+            overflow-y: auto;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="brand-container">
+            <div class="brand">
+                <div class="brand-title"><span>Ŋ(z)</span> Traversal</div>
+                <div class="brand-subtitle">addJOE Multiverse Engine</div>
+            </div>
+            
+            <ul class="nav-list">
+                <li class="nav-item active" onclick="switchTab('dashboard')">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                    Dashboard
+                </li>
+                <li class="nav-item" onclick="switchTab('comics')">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M21 9H3M21 15H3M12 3v18"/></svg>
+                    Chronicles (Comics)
+                </li>
+                <li class="nav-item" onclick="switchTab('timeline')">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    Invariant Timeline
+                </li>
+                <li class="nav-item" onclick="switchTab('wiki')">
+                    <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5v-15z"/></svg>
+                    Taxonomic Wiki
+                </li>
+                <li class="nav-item" onclick="switchTab('diagnostics')">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    Diagnostics & Games
+                </li>
+            </ul>
+        </div>
+
+        <div class="system-status">
+            <div class="status-row">
+                <span class="status-label">SYS STATUS</span>
+                <span class="status-indicator">
+                    <div class="status-dot"></div>
+                    ONLINE
+                </span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">SYS ARCHITECT</span>
+                <span class="status-val">ŋ(z) CORE</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">TELEMETRY</span>
+                <span class="status-val" style="color:var(--accent-orange)">DUAL-LEDGER</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">READINESS</span>
+                <span class="status-val" style="color:var(--accent-blue)">100%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="tab-view active">
+            <div class="dash-hero">
+                <div class="dash-hero-title">Welcome to the addJOE Multiverse Hub</div>
+                <div class="dash-hero-desc">
+                    A deeply systemic, tragicomic universe where the same archetypal cast repeats the exact same catastrophic hustle across all of time and space. Track telemetry, run diagnostics, and navigate the chronicles of the Invariant.
+                </div>
+                <div style="display:flex; gap:12px;">
+                    <button class="launch-btn" onclick="switchTab('comics')">Explore Interactive Chronicles</button>
+                    <button class="launch-btn outline" onclick="switchTab('wiki')">Examine Taxonomic Constants</button>
+                </div>
+            </div>
+
+            <div class="dash-stats-grid">
+                <div class="stat-card">
+                    <span class="stat-label">Active Vectors</span>
+                    <span class="stat-value" style="color: var(--accent-orange)">1</span>
+                    <span class="stat-desc">Joe (Primary Hustler)</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Control Agents</span>
+                    <span class="stat-value" style="color: var(--accent-blue)">1</span>
+                    <span class="stat-desc">Leslie (Logical Plan)</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Indexed Eras</span>
+                    <span class="stat-value" style="color: var(--accent-purple)">10</span>
+                    <span class="stat-desc">From Caveman to Space</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Chaos index</span>
+                    <span class="stat-value" style="color: var(--accent-red)">ERR</span>
+                    <span class="stat-desc">Entropy Limit Exceeded</span>
+                </div>
+            </div>
+
+            <div class="dash-sections">
+                <div class="panel-box">
+                    <div class="panel-box-title">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="var(--accent-orange)" fill="none" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        Telemetry Event Feed
+                    </div>
+                    <div class="feed-list">
+                        <div class="feed-item">
+                            <div class="feed-icon">🔁</div>
+                            <div class="feed-details">
+                                <span class="feed-time">2026-05-22 22:39:56</span>
+                                <span class="feed-text">Centralized <strong>addJOE universe directories</strong>. Unified 2 legacy html modules, 1 timeline index, 1 physics simulator, and 18 image assets.</span>
+                            </div>
+                        </div>
+                        <div class="feed-item">
+                            <div class="feed-icon" style="color: var(--accent-blue); background: rgba(0, 210, 255, 0.1); border-color: rgba(0, 210, 255, 0.2)">🛰️</div>
+                            <div class="feed-details">
+                                <span class="feed-time">2026-05-22 21:46:57</span>
+                                <span class="feed-text">Compiled <strong>apollo_audit_comic.html</strong> with 9:16 viewport responsive mechanics and scroll-synchronous voiceover.</span>
+                            </div>
+                        </div>
+                        <div class="feed-item">
+                            <div class="feed-icon" style="color: var(--accent-red); background: rgba(255, 42, 95, 0.1); border-color: rgba(255, 42, 95, 0.2)">💥</div>
+                            <div class="feed-details">
+                                <span class="feed-time">2026-05-22 20:23:36</span>
+                                <span class="feed-text">Compiled <strong>amazon_audit_comic.html</strong>. Successfully partitioned and bounded 7 audial telemetry segments.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-box" style="display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <div class="panel-box-title">
+                            <svg viewBox="0 0 24 24" width="18" height="18" stroke="var(--accent-blue)" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+                            Multiverse Rule
+                        </div>
+                        <p style="font-size:13px; line-height:1.6; color:#94a3b8; margin-bottom:15px;">
+                            The Janus Collision dictates that whenever Joe's emotional hustle (Janus Left) collides with the hard rules of reality (Janus Right), the result is an explosion of absolute entropy and a timeline reset.
+                        </p>
+                    </div>
+                    <button class="launch-btn outline" style="width:100%" onclick="switchTab('wiki'); selectWikiItem('janus')">Examine Janus Law</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHRONICLES TAB -->
+        <div id="tab-comics" class="tab-view">
+            <div class="view-header">
+                <div class="view-title">The Interactive Chronicles</div>
+                <div class="view-subtitle">Explore 9:16 mobile-responsive and legacy multi-media chronicles detailing the loop of chaos.</div>
+            </div>
+
+            <div class="comic-grid">
+                <!-- Amazon Audit -->
+                <div class="comic-card">
+                    <div class="comic-thumb">
+                        <span class="comic-tag">MODERN ERA</span>
+                        <img src="lore_assets/addjoe_modern_office_comic_1777478825632.png" alt="Amazon Audit">
+                    </div>
+                    <div class="comic-body">
+                        <div class="comic-info">
+                            <div class="comic-title">Amazon Audit Comic</div>
+                            <div class="comic-desc">Joe's high-entropy hustle in the corporate sphere. A scroll-snapped, voiceover-guided audit adventure.</div>
+                        </div>
+                        <div class="comic-meta">
+                            <span class="meta-pill blue">7 Panels</span>
+                            <span class="meta-pill red">Friction: Critical</span>
+                        </div>
+                        <a href="amazon_audit_comic.html" class="launch-btn" target="_blank">Launch Comic Engine</a>
+                    </div>
+                </div>
+
+                <!-- Apollo Audit -->
+                <div class="comic-card">
+                    <div class="comic-thumb">
+                        <span class="comic-tag" style="background: var(--accent-purple)">APOLLO ERA</span>
+                        <img src="lore_assets/addjoe_deepspace_comic_1777478610045.png" alt="Apollo Audit">
+                    </div>
+                    <div class="comic-body">
+                        <div class="comic-info">
+                            <div class="comic-title">Apollo Audit Comic</div>
+                            <div class="comic-desc">"Who are we going to send to the moon? Let's send some idiot." Joe's lunar expedition audit, segment-synchronised.</div>
+                        </div>
+                        <div class="comic-meta">
+                            <span class="meta-pill blue">10 Panels</span>
+                            <span class="meta-pill red">Friction: Extreme</span>
+                        </div>
+                        <a href="apollo_audit_comic.html" class="launch-btn" target="_blank">Launch Comic Engine</a>
+                    </div>
+                </div>
+
+                <!-- Legacy Phase A -->
+                <div class="comic-card">
+                    <div class="comic-thumb">
+                        <span class="comic-tag" style="background: var(--text-muted)">LEGACY PHASE A</span>
+                        <img src="lore_assets/addjoe_primordial_comic_1777478899119.png" alt="Phase A">
+                    </div>
+                    <div class="comic-body">
+                        <div class="comic-info">
+                            <div class="comic-title">Phase A: Primordial</div>
+                            <div class="comic-desc">Caveman era inception of the Earth-Apple. Joe hurls the premium upgrade into the pit. Pathetic sizzle.</div>
+                        </div>
+                        <div class="comic-meta">
+                            <span class="meta-pill">Static Comic Strip</span>
+                        </div>
+                        <button class="launch-btn outline" onclick="openComicModal('lore_assets/addjoe_primordial_comic_1777478899119.png', 'Phase A — Primordial Cretaceous')">View Comic Strip</button>
+                    </div>
+                </div>
+
+                <!-- Legacy Phase B -->
+                <div class="comic-card">
+                    <div class="comic-thumb">
+                        <span class="comic-tag" style="background: var(--text-muted)">LEGACY PHASE B</span>
+                        <img src="lore_assets/addjoe_colonial_comic_1777478428930.png" alt="Phase B">
+                    </div>
+                    <div class="comic-body">
+                        <div class="comic-info">
+                            <div class="comic-title">Phase B: Colonial</div>
+                            <div class="comic-desc">1621 Pilgrim settlement. Joe barters a wooden Earth-Apple to secure status. Cabbage Truth from Uncle Flanjeet.</div>
+                        </div>
+                        <div class="comic-meta">
+                            <span class="meta-pill">Static Comic Strip</span>
+                        </div>
+                        <button class="launch-btn outline" onclick="openComicModal('lore_assets/addjoe_colonial_comic_1777478428930.png', 'Phase B — Colonial Pilgrim')">View Comic Strip</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TIMELINE TAB -->
+        <div id="tab-timeline" class="tab-view">
+            <div class="view-header" style="display:flex; justify-content:space-between; align-items:flex-end;">
+                <div>
+                    <div class="view-title">The Invariant Timeline</div>
+                    <div class="view-subtitle">Chronological traversal of the 10-part series. Click nodes to inspect specific era setups.</div>
+                </div>
+                <a href="addjoe_10_part_timeline.html" class="launch-btn" style="margin-bottom:8px;" target="_blank">Launch Fullscreen Timeline</a>
+            </div>
+
+            <div class="timeline-wrapper">
+                <div class="timeline-line"></div>
+                <div class="timeline-nodes" id="timeline-nodes-container">
+                    <!-- Dynamic timeline nodes will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- WIKI TAB -->
+        <div id="tab-wiki" class="tab-view">
+            <div class="view-header">
+                <div class="view-title">Taxonomic Constants Wiki</div>
+                <div class="view-subtitle">Deep documentation of the cast and mechanics locked in the Ŋ(z) Multiverse.</div>
+            </div>
+
+            <div class="wiki-layout">
+                <div class="wiki-sidebar" id="wiki-sidebar-list">
+                    <!-- Dynamic sidebar items -->
+                </div>
+                <div class="wiki-content-card">
+                    <div class="wiki-portrait-frame">
+                        <img id="wiki-char-img" src="" alt="Portrait">
+                    </div>
+                    <div class="wiki-details">
+                        <div>
+                            <div class="wiki-char-name" id="wiki-display-name">Character Name</div>
+                            <div class="wiki-char-archetype" id="wiki-display-archetype">The Archetype</div>
+                            <p class="wiki-char-desc" id="wiki-display-desc">Loading details...</p>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:20px;">
+                            <button class="launch-btn" onclick="speakCurrentWikiItem()">
+                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" style="margin-right:6px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                                Speak Lore Node
+                            </button>
+                            <div class="wiki-audio-visualizer" id="wiki-visualizer">
+                                <div class="vis-bar"></div>
+                                <div class="vis-bar"></div>
+                                <div class="vis-bar"></div>
+                                <div class="vis-bar"></div>
+                                <div class="vis-bar"></div>
+                                <div class="vis-bar"></div>
+                                <div class="vis-bar"></div>
+                                <div class="vis-bar"></div>
+                                <div class="vis-bar"></div>
+                                <div class="vis-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAGNOSTICS TAB -->
+        <div id="tab-diagnostics" class="tab-view">
+            <div class="view-header">
+                <div class="view-title">System Diagnostics & Simulators</div>
+                <div class="view-subtitle">Run simulators, examine legacy architectures, and execute text diagnostics.</div>
+            </div>
+
+            <div class="comic-grid">
+                <!-- Physics Simulator -->
+                <div class="comic-card">
+                    <div class="comic-body" style="justify-content:space-between; height:100%; min-height:220px;">
+                        <div>
+                            <div class="comic-title">Shambles Physics Simulator</div>
+                            <p class="comic-desc" style="margin-bottom:15px;">An interactive canvas simulator mapping thermodynamic collisions. Spawn particles, increase global friction, and trigger local collapse.</p>
+                        </div>
+                        <a href="shambles_physics_simulator.html" class="launch-btn" target="_blank">Initiate Physics Sandbox</a>
+                    </div>
+                </div>
+
+                <!-- Cosmic Order Roguelike -->
+                <div class="comic-card">
+                    <div class="comic-body" style="justify-content:space-between; height:100%; min-height:220px;">
+                        <div>
+                            <div class="comic-title">Cosmic Order Roguelike</div>
+                            <p class="comic-desc" style="margin-bottom:15px;">A text-based RPG exploring the mechanics of the addJOE loop. Face Leslie's spreadsheets and Uncle Flanjeet's frequency disruptors.</p>
+                        </div>
+                        <a href="addJOE_roguelike_cosmic_game.html" class="launch-btn" target="_blank">Boot Game Console</a>
+                    </div>
+                </div>
+
+                <!-- Legacy Full App -->
+                <div class="comic-card">
+                    <div class="comic-body" style="justify-content:space-between; height:100%; min-height:220px;">
+                        <div>
+                            <div class="comic-title">Legacy Full App (29/04)</div>
+                            <p class="comic-desc" style="margin-bottom:15px;">The complete React-style prototype built in the legacy era, complete with individual character cards and initial diagnostics log outputs.</p>
+                        </div>
+                        <a href="addJOE_full_app.html" class="launch-btn outline" target="_blank">Open App Legacy</a>
+                    </div>
+                </div>
+
+                <!-- Legacy Lore Hub -->
+                <div class="comic-card">
+                    <div class="comic-body" style="justify-content:space-between; height:100%; min-height:220px;">
+                        <div>
+                            <div class="comic-title">Original Lore Hub</div>
+                            <p class="comic-desc" style="margin-bottom:15px;">The standalone 29/04 Lore Hub wiki page with corrected paths pointing to the new `lore_assets` repository.</p>
+                        </div>
+                        <a href="addJOE_Lore_Hub_legacy.html" class="launch-btn outline" target="_blank">Open Standalone Wiki</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- COMIC MODAL -->
+    <div class="modal" id="comic-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-comic-title">Phase Comic Strip</div>
+                <button class="modal-close" onclick="closeComicModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img id="modal-comic-img" src="" alt="Comic Strip">
+            </div>
+        </div>
+    </div>
+
+    <!-- DATA STRUCTURES & LOGIC -->
+    <script>
+        const TIMELINE_DATA = [
+            { id: "01", title: "The Primordial Swamp", era: "Caveman / Inception", hazard: false, desc: "<strong>The Setup:</strong> The tragic 'cyanide plot' is inverted into the first biological delusion. Joe, a kinetic Neanderthal, discovers a 'Spicy Berry' and believes it is a Premium Evolutionary Upgrade.<br><strong>The Boom:</strong> He hurls it into the Great Fire Pit, expecting an Apex Predator transformation. It produces a pathetic sizzle. Jane, the First Stoic, kicks dirt over it." },
+            { id: "02", title: "The Deep Cretaceous", era: "Dinosaur Metropolis", hazard: true, desc: "<strong>The Setup:</strong> Millions of years pass. The swamp is paved over into a brutalist Dinosaur Metropolis. Leslie, a tired salesman, tries to sell the Alien Ambassador a muddy lump of coal.<br><strong>The Boom:</strong> Joe forces the Earth-Apple into a physical wall port, triggering a cascading failure that breaks the reality matrix. Jane initiates the Radical Authenticity protocol to reboot." },
+            { id: "03", title: "Ancient Egyptian Bathhouse", era: "Pharaonic Dynasty", hazard: false, desc: "<strong>The Setup:</strong> The reboot lands them in an echoing bathhouse. Leslie, now a Cyber-Doc, warns Joe that his reckless trading has destabilized the cosmos.<br><strong>The Boom:</strong> Joe attempts to force a localized Janus Collision with a high-voltage plasma grid. The Pharaoh looms as Jane grounds the electrical fault with radical authenticity." },
+            { id: "04", title: "The Pilgrim Settlement", era: "1621 Colonial", hazard: true, desc: "<strong>The Setup:</strong> Fast forward to the colonial settlement. Joe tries to barter a wooden Earth-Apple to secure status among the Pilgrims.<br><strong>The Boom:</strong> Uncle Flanjeet preaches the 'Cabbage Truth' from the pulpit. Joe is thrown in the stocks, demanding a Premium Choker Refund from the town elders." },
+            { id: "05", title: "Victorian Workhouse", era: "19th Century Steam", hazard: false, desc: "<strong>The Setup:</strong> The steam age. Joe acts as the kinetic chimney sweep, clutching soot-covered artifacts, believing he has unlocked the ultimate industrial upgrade.<br><strong>The Boom:</strong> He shoves the artifact into the massive, red-glowing Victorian boiler. Jane, acting as the Void Overseer, manually vents the pressure before the timeline explodes." },
+            { id: "06", title: "The Clinical Core", era: "1983 Medical Room", hazard: true, desc: "<strong>The Setup:</strong> We dive into the internal matrix. Leslie, the exhausted mother, sits in a dark 1983 clinical room, trying to contain Joe within her.<br><strong>The Boom:</strong> Joe forces the worthless object into her primary physical mechanism. Jane steps in, drops the temperature to absolute zero, and unplugs the biological chaos." },
+            { id: "07", title: "The D2D Suburbs", era: "Late 20th Century", hazard: false, desc: "<strong>The Setup:</strong> The door-to-door suburban sprawl. A cramped backroom where Leslie tracks the thermodynamic sales numbers. The Alien Ambassador awaits.<br><strong>The Boom:</strong> Joe jams a depleted O2 canister into the local power mechanism. The resulting pandemonium proves that zero-value leads remain zero-value across time." },
+            { id: "08", title: "Silicon Valley Tech Office", era: "2021 Algorithmic Loop", hazard: true, desc: "<strong>The Setup:</strong> The modern era. Joe is a street hacker trying to force the Earth-Apple into a corporate server rack.<br><strong>The Boom:</strong> Uncle Flanjeet correctly identifies the Invariant Song: 'History is doomed to recycle dysfunction.' When Jane pulls the server plug, time violently resets, freezing them all in the algorithmic loop." },
+            { id: "09", title: "Deep Space / The Void", era: "Future Orbital", hazard: false, desc: "<strong>The Setup:</strong> Sourced from the deep space lore. Joe floats in an isolating orbital habitat, still clutching the glinting Earth-Apple, convinced it holds the key to the universe.<br><strong>The Boom:</strong> The Cleaner (a malfunctioning airlock drone) triggers a decompression event. Jane seals the bulkhead, leaving Joe to face the pure, silent void of his own ego." },
+            { id: "10", title: "The Master Orchestrator", era: "Omnipresent Core", hazard: true, desc: "<strong>The Setup:</strong> The loop shatters. Joe realizes he is merely a vector within the NuOS architecture. He stands before the HD Viewport, facing the Master Orchestrator.<br><strong>The Boom:</strong> He surrenders the Earth-Apple. The 5-Gear system resolves not in chaos, but in absolute thermodynamic balance. Jane and Leslie nod. The 10-part series achieves structural perfection." }
+        ];
+
+        const WIKI_DATA = {
+            'leslie': {
+                name: "Leslie",
+                archetype: "The Mastermind",
+                img: "lore_assets/addjoe_lore_leslie_1777482554672.png",
+                desc: "Whether manifesting as a Velociraptor, a 1600s Magistrate, an HR Manager, or an AI Hologram, Leslie is the embodiment of the Logical Plan. He represents the system's desperate attempt to impose order, strategy, and survival onto a universe that naturally bends toward entropy. His plans are always flawless in theory, and always utterly destroyed in practice by Joe."
+            },
+            'joe': {
+                name: "Joe",
+                archetype: "The Vector of Chaos",
+                img: "lore_assets/addjoe_lore_joe_1777482569537.png",
+                desc: "Ginger Orangutan, Pilgrim, Danny Windows, or Low-Level Ensign. Joe is the 'Token Target'. Driven by deep, emotional truths and petty grievances, he is the engine of the narrative. Armed with Rule #1: Confuse Them, Joe operates under the delusion that he is a master hustler. He is entirely immune to Leslie's logic and uniquely susceptible to catastrophic failure. Tragically, he beams with pride precisely when he should be fleeing."
+            },
+            'patel': {
+                name: "Patel",
+                archetype: "The Observer",
+                img: "lore_assets/addjoe_lore_patel_1777482676770.png",
+                desc: "The Systems Analyst, the Chronicler, the Dry Wit. Patel never intervenes. He merely observes the collapse of the timeline, offering the driest of understatements: 'Bit redundant, no?'. He is the quiet historian of the apocalypse, making notes as the timeline burns."
+            },
+            'ak': {
+                name: "AK",
+                archetype: "The Moral Compass / Anxiety Node",
+                img: "lore_assets/addjoe_lore_ak_1777482589611.png",
+                desc: "AK is the manifestation of systemic anxiety. When the Cleaner strikes, AK is the one who panics. Depending on the era, he worries about the extinction risk, the legality under Crown law, HR liabilities, or triggering the O2 alarms. He is the only character who truly understands the precariousness of their situation."
+            },
+            'flanjeet': {
+                name: "Uncle Flanjeet",
+                archetype: "The Folk Disruptor",
+                img: "lore_assets/addjoe_lore_flanjeet_1777482609391.png",
+                desc: "A rhythmic force of nature. Uncle Flanjeet exists to accelerate the context collapse. Be it playing a drum, a microphone, or a frequency disruptor, he delivers the Invariant Song: a rhythmic, mocking chant. The true tragedy is that Joe always misunderstands the mocking chant as a celebration of his own genius."
+            },
+            'cleaner': {
+                name: "The Cleaner",
+                archetype: "Hygiene Tech & The Inevitable Side-Ball",
+                img: "lore_assets/addjoe_lore_cleaner_1777482624015.png",
+                desc: "A universal constant of disruption. The Cleaner always enters precisely during The Invisible Struggle. Known for the dreaded 90-degree sanitation lunge. Due to a tragic, cross-era lack of appropriate legwear, be it a T-Rex tabard, a burlap sack, or a micro-spacesuit, he triggers the Inevitable Side-Ball event, forcing the entire cast into the Avert Eyes protocol."
+            },
+            'earthapple': {
+                name: "The EarthApple",
+                archetype: "Asset Value: 0.00",
+                img: "lore_assets/addjoe_lore_earthapple_1777482637775.png",
+                desc: "The MacGuffin that drives the hustle. It has absolute zero intrinsic value. It manifests as a muddy tuber, an unwashed turnip, a lukewarm latte, or a fried carbon-battery core. Yet, Joe believes it is a rare luxury item. The EarthApple is the physical manifestation of Joe's delusion."
+            },
+            'janus': {
+                name: "The Janus Collision",
+                archetype: "The Architecture of The BOOM",
+                img: "lore_assets/addjoe_lore_janus_1777482652201.png",
+                desc: "The addJOE universe operates on Dual-Ledger Telemetry. Janus Left is Joe's internal emotional truth—his attempt to hustle. Janus Right represents the unyielding, hard physical and economic rules of the current era, such as Gravity, Scurvy, GDPR, or Zero-O2. When Joe's hustle collides with the hard rules of reality, it results in The BOOM: complete context collapse, an exponential increase in entropy, and an immediate loop into the next era."
+            }
+        };
+
+        // NAV/TAB SWITCHING
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-view').forEach(view => {
+                view.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            
+            // Find active nav item button and select it
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                if (item.textContent.trim().toLowerCase().includes(tabId === 'comics' ? 'chronicles' : tabId)) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Stop speech if we navigate away from timeline or wiki
+            if (tabId !== 'timeline' && tabId !== 'wiki') {
+                stopSpeech();
+            }
+        }
+
+        // COMIC MODAL
+        function openComicModal(src, title) {
+            const modal = document.getElementById('comic-modal');
+            document.getElementById('modal-comic-img').src = src;
+            document.getElementById('modal-comic-title').textContent = title;
+            modal.classList.add('active');
+        }
+
+        function closeComicModal() {
+            const modal = document.getElementById('comic-modal');
+            modal.classList.remove('active');
+        }
+
+        // TIMELINE RENDERING & INTERACTIONS
+        function renderTimeline() {
+            const container = document.getElementById('timeline-nodes-container');
+            container.innerHTML = TIMELINE_DATA.map((node, index) => `
+                <div class="timeline-card ${node.hazard ? 'hazard' : ''}" id="t-node-${node.id}" onclick="toggleTimelineNode('${node.id}')">
+                    <div class="timeline-badge">${node.id}</div>
+                    <div class="timeline-panel">
+                        <div class="timeline-header">
+                            <span class="timeline-title">${node.title}</span>
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <span class="timeline-era">${node.era}</span>
+                                <button class="timeline-btn-speak" onclick="speakTimelineNode('${node.id}', event)">
+                                    <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="timeline-desc" id="t-desc-${node.id}">
+                            ${node.desc}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleTimelineNode(id) {
+            const card = document.getElementById(`t-node-${id}`);
+            const isActive = card.classList.contains('active');
+            
+            // Close all
+            document.querySelectorAll('.timeline-card').forEach(c => c.classList.remove('active'));
+            
+            // Toggle clicked
+            if (!isActive) {
+                card.classList.add('active');
+            }
+            stopSpeech();
+        }
+
+        // SPEECH SYNTHESIS ENGINE
+        const synth = window.speechSynthesis;
+        let currentUtterance = null;
+        let visualizerInterval = null;
+        let activeWikiKey = 'leslie';
+
+        function speakTimelineNode(id, event) {
+            event.stopPropagation(); // Avoid closing the node
+            const node = TIMELINE_DATA.find(n => n.id === id);
+            if (!node) return;
+            
+            // Strip HTML for reader
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = node.desc;
+            const plainText = node.title + ". " + tempDiv.textContent;
+
+            speakText(plainText);
+        }
+
+        function speakText(text, onStartCallback, onEndCallback) {
+            stopSpeech();
+
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.rate = 0.95;
+            currentUtterance.pitch = 0.95;
+
+            if (onStartCallback) currentUtterance.onstart = onStartCallback;
+            currentUtterance.onend = () => {
+                if (onEndCallback) onEndCallback();
+                stopSpeech();
+            };
+            currentUtterance.onerror = () => {
+                stopSpeech();
+            };
+
+            synth.speak(currentUtterance);
+        }
+
+        function stopSpeech() {
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            if (visualizerInterval) {
+                clearInterval(visualizerInterval);
+                visualizerInterval = null;
+            }
+            resetVisualizer();
+        }
+
+        // WIKI RENDERING & INTERACTIONS
+        function renderWikiSidebar() {
+            const container = document.getElementById('wiki-sidebar-list');
+            container.innerHTML = Object.keys(WIKI_DATA).map(key => `
+                <div class="wiki-nav-item ${key === activeWikiKey ? 'active' : ''}" id="wiki-item-${key}" onclick="selectWikiItem('${key}')">
+                    ${WIKI_DATA[key].name} (${WIKI_DATA[key].archetype.split(' ')[0]})
+                </div>
+            `).join('');
+        }
+
+        function selectWikiItem(key) {
+            activeWikiKey = key;
+            document.querySelectorAll('.wiki-nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`wiki-item-${key}`).classList.add('active');
+
+            const data = WIKI_DATA[key];
+            document.getElementById('wiki-char-img').src = data.img;
+            document.getElementById('wiki-display-name').textContent = data.name;
+            document.getElementById('wiki-display-archetype').textContent = data.archetype;
+            document.getElementById('wiki-display-desc').textContent = data.desc;
+            
+            stopSpeech();
+        }
+
+        function speakCurrentWikiItem() {
+            const data = WIKI_DATA[activeWikiKey];
+            if (!data) return;
+            
+            const plainText = `${data.name}, ${data.archetype}. ${data.desc}`;
+            speakText(plainText, startVisualizer, stopSpeech);
+        }
+
+        // VISUALIZER EFFECT
+        function startVisualizer() {
+            const bars = document.querySelectorAll('.vis-bar');
+            visualizerInterval = setInterval(() => {
+                bars.forEach(bar => {
+                    const height = Math.random() * 22 + 2;
+                    bar.style.height = `${height}px`;
+                });
+            }, 100);
+        }
+
+        function resetVisualizer() {
+            const bars = document.querySelectorAll('.vis-bar');
+            bars.forEach(bar => {
+                bar.style.height = '3px';
+            });
+        }
+
+        // INITIALIZATION
+        window.addEventListener('load', () => {
+            renderTimeline();
+            renderWikiSidebar();
+            selectWikiItem('leslie');
+        });
+    </script>
+</body>
+</html>

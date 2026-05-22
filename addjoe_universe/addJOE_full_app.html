@@ -1,0 +1,482 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:13px}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0}
+.app-title{font-size:15px;font-weight:500;color:var(--color-text-primary);letter-spacing:-.01em}
+.era-select{flex:1;max-width:220px;font-size:12px;padding:5px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)}
+.entropy-wrap{display:flex;align-items:center;gap:6px;margin-left:auto}
+.entropy-label{font-size:11px;color:var(--color-text-tertiary)}
+.entropy-bar-bg{width:80px;height:6px;background:var(--color-border-tertiary);border-radius:3px;overflow:hidden}
+.entropy-fill{height:100%;background:#E24B4A;border-radius:3px;transition:width .4s}
+.layout{display:grid;grid-template-columns:130px 1fr 120px;gap:0;min-height:520px}
+.sidebar{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);padding:10px 8px}
+.sidebar-left{border-right:none;border-radius:0 0 0 var(--border-radius-lg)}
+.sidebar-right{border-left:0.5px solid var(--color-border-tertiary);border-radius:0 0 var(--border-radius-lg) 0}
+.sid-label{font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.earth-apple-box{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px;text-align:center;margin-bottom:10px}
+.ea-emoji{font-size:24px;display:block;margin-bottom:4px}
+.ea-value{font-size:11px;color:var(--color-text-tertiary);background:var(--color-background-secondary);border-radius:4px;padding:2px 6px;display:inline-block;margin-top:2px}
+.janus-label{font-size:10px;color:var(--color-text-tertiary);margin-bottom:4px;margin-top:8px}
+.janus-input{width:100%;font-size:11px;padding:5px 6px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);resize:none;height:58px;font-family:var(--font-sans);line-height:1.5}
+.char-node{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);margin-bottom:5px;cursor:default}
+.char-emoji{font-size:20px;line-height:1}
+.char-name{font-size:10px;font-weight:500;color:var(--color-text-primary);text-align:center}
+.char-role{font-size:9px;color:var(--color-text-tertiary);text-align:center;line-height:1.2}
+.center{background:var(--color-background-primary);border-left:0.5px solid var(--color-border-tertiary);border-right:0.5px solid var(--color-border-tertiary);padding:10px}
+.gear-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px;margin-bottom:8px;transition:border-color .2s}
+.gear-card.active{border-color:#7F77DD;background:#EEEDFE22}
+.gear-header{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.gear-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0}
+.gear-title-text{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.gear-desc{font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;line-height:1.5}
+.gear-input{width:100%;font-size:12px;padding:6px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans);resize:none}
+.gear-input:focus{outline:none;border-color:#7F77DD}
+.auto-badge{font-size:10px;padding:2px 7px;border-radius:10px;background:#E1F5EE;color:#085041;border:0.5px solid #9FE1CB;margin-left:auto}
+.flanjeet-btn{width:100%;padding:7px;font-size:12px;border-radius:var(--border-radius-md);border:0.5px solid #AFA9EC;background:#EEEDFE;color:#3C3489;cursor:pointer;font-weight:500}
+.flanjeet-btn:hover{background:#CECBF6}
+.scene-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
+.stag{font-size:10px;padding:1px 5px;border-radius:8px;border:0.5px solid var(--color-border-secondary);color:var(--color-text-tertiary);background:var(--color-background-secondary)}
+.stag.char{border-color:#AFA9EC;color:#3C3489;background:#EEEDFE}
+.stag.env{border-color:#9FE1CB;color:#085041;background:#E1F5EE}
+.stag.prop{border-color:#FAC775;color:#633806;background:#FAEEDA}
+.stag.fx{border-color:#F0997B;color:#712B13;background:#FAECE7}
+.bottom{border-top:0.5px solid var(--color-border-tertiary);padding:10px 12px;background:var(--color-background-secondary);border-radius:0 0 var(--border-radius-lg) var(--border-radius-lg);display:flex;gap:10px;align-items:flex-start}
+.render-btn{padding:10px 20px;font-size:13px;font-weight:500;border-radius:var(--border-radius-md);background:#534AB7;color:#fff;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:opacity .15s}
+.render-btn:hover{opacity:.88}
+.output-window{flex:1;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:10px;min-height:80px;font-size:12px;color:var(--color-text-secondary);line-height:1.8}
+.code-log{width:160px;background:#1a1a2e;border-radius:var(--border-radius-md);padding:8px;font-size:10px;font-family:var(--font-mono);color:#9FE1CB;line-height:1.7;overflow:hidden}
+.scene-row{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px;align-items:center}
+.scene-char{font-size:18px}
+.scene-bubble{font-size:11px;background:var(--color-background-secondary);border-radius:8px;padding:3px 7px;color:var(--color-text-secondary);max-width:100%;line-height:1.4}
+.boom-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.boom-emoji{font-size:28px;animation:boomPulse .5s ease-out}
+@keyframes boomPulse{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.3)}100%{transform:scale(1);opacity:1}}
+@keyframes floatNote{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-20px);opacity:0}}
+.note-float{display:inline-block;animation:floatNote 1.2s ease-out forwards;font-size:14px}
+</style>
+
+<div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden">
+
+<div class="topbar">
+  <span class="app-title">addJOE</span>
+  <select class="era-select" id="era-sel" onchange="switchEra()">
+    <option value="A">Phase A — Primordial / Cretaceous</option>
+    <option value="B">Phase B — Colonial / Pilgrim</option>
+    <option value="C">Phase C — Modern Sales Office</option>
+    <option value="D">Phase D — Deep Space 3026</option>
+  </select>
+  <div class="entropy-wrap">
+    <span class="entropy-label">Entropy</span>
+    <div class="entropy-bar-bg"><div class="entropy-fill" id="entropy-fill" style="width:0%"></div></div>
+    <span style="font-size:11px;color:#A32D2D;font-weight:500" id="entropy-pct">0</span>
+  </div>
+</div>
+
+<div class="layout">
+
+  <div class="sidebar sidebar-left">
+    <div class="sid-label">Biological Skins</div>
+    <div class="earth-apple-box">
+      <span class="ea-emoji" id="ea-emoji">🥔</span>
+      <div style="font-size:10px;color:var(--color-text-tertiary);margin-bottom:2px" id="ea-name">Muddy tuber</div>
+      <span class="ea-value">Asset Value: 0.00</span>
+    </div>
+    <div class="janus-label">Janus Right — era rules</div>
+    <textarea class="janus-input" id="janus-right" placeholder="Define hard rules of this era...">Gravity exists. Anaerobic swamp. Predator hierarchy is absolute.</textarea>
+    <div class="janus-label" style="margin-top:10px">Environment</div>
+    <div style="font-size:11px;color:var(--color-text-secondary);padding:4px 0;line-height:1.5" id="env-display">🌋 Muddy Swamp / Volcanic Vent</div>
+  </div>
+
+  <div class="center">
+    <div class="gear-card active" id="gc1">
+      <div class="gear-header">
+        <div class="gear-num" style="background:#EEEDFE;color:#534AB7">1</div>
+        <span class="gear-title-text">The Briefing — setup</span>
+      </div>
+      <div class="gear-desc">Leslie's logical plan. Joe holds the prop and nods.</div>
+      <textarea class="gear-input" id="g1-input" rows="2" placeholder="e.g. We must avoid the tar pit by moving north along the ridge..." oninput="updateEntropy()"></textarea>
+      <div class="scene-tags">
+        <span class="stag char" id="tag-leslie">👔 skin_Leslie</span>
+        <span class="stag char" id="tag-joe">🦧 skin_Joe</span>
+        <span class="stag env" id="tag-env">🌋 bg_env</span>
+        <span class="stag prop" id="tag-prop">🥔 prop_EarthApple</span>
+      </div>
+    </div>
+
+    <div class="gear-card" id="gc2">
+      <div class="gear-header">
+        <div class="gear-num" style="background:#FAEEDA;color:#633806">2</div>
+        <span class="gear-title-text">addJOE — the Hustle</span>
+      </div>
+      <div class="gear-desc">How does Joe execute Rule #1: Confuse Them? Enter Joe's emotional truth / petty grievance.</div>
+      <textarea class="gear-input" id="g2-input" rows="2" placeholder="e.g. Joe believes the tuber is a rare luxury item and tries to sell it to a Stegosaurus..." oninput="updateEntropy()"></textarea>
+      <div class="scene-tags">
+        <span class="stag char" id="tag-joe2">🦧 skin_Joe</span>
+        <span class="stag prop" id="tag-prop2">🥔 prop</span>
+        <span class="stag fx">⚡ Janus_Left active</span>
+      </div>
+    </div>
+
+    <div class="gear-card" id="gc3">
+      <div class="gear-header">
+        <div class="gear-num" style="background:#FAECE7;color:#712B13">3</div>
+        <span class="gear-title-text">The Invisible Struggle — auto</span>
+        <span class="auto-badge">auto-fill</span>
+      </div>
+      <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6;padding:4px 0" id="g3-auto">🦕 The Cleaner enters. 👀 All cast: Avert_Eyes. 90° sanitation lunge — no appropriate legwear detected. ⚠️ Inevitable Side-Ball triggered. AK: panics. Patel: "Bit redundant, no?"</div>
+      <div class="scene-tags">
+        <span class="stag char" id="tag-cleaner">🦕 skin_Cleaner</span>
+        <span class="stag char">😬 skin_AK</span>
+        <span class="stag char">🧐 skin_Patel</span>
+        <span class="stag fx">👀 Avert_Eyes</span>
+        <span class="stag fx">⚠️ Side-Ball</span>
+      </div>
+    </div>
+
+    <div class="gear-card" id="gc4">
+      <div class="gear-header">
+        <div class="gear-num" style="background:#E1F5EE;color:#085041">4</div>
+        <span class="gear-title-text">The Invariant Song — Flanjeet</span>
+      </div>
+      <button class="flanjeet-btn" id="flanjeet-btn" onclick="generateChant()">🥁 Generate Uncle Flanjeet's chant</button>
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-top:6px;min-height:28px;line-height:1.6" id="chant-output"></div>
+      <div class="scene-tags">
+        <span class="stag char">🥁 skin_UncleFlanjeet</span>
+        <span class="stag char" id="tag-joe3">🦧 skin_Joe</span>
+        <span class="stag fx">🎵 Chant: J-O-E!</span>
+        <span class="stag fx">😁 Beam_with_Pride</span>
+      </div>
+    </div>
+
+    <div class="gear-card" id="gc5">
+      <div class="gear-header">
+        <div class="gear-num" style="background:#FCEBEB;color:#A32D2D">5</div>
+        <span class="gear-title-text">The BOOM — context collapse</span>
+      </div>
+      <div class="gear-desc">The catastrophic outcome when Janus_Left meets Janus_Right.</div>
+      <textarea class="gear-input" id="g5-input" rows="2" placeholder="e.g. The Stegosaurus ingests the tuber. Choker Refund loop initiated. Tar pit ignites..." oninput="updateEntropy()"></textarea>
+      <div class="scene-tags">
+        <span class="stag fx">💥 BOOM</span>
+        <span class="stag fx">⚡ Janus collision</span>
+        <span class="stag fx">📈 Entropy += 1</span>
+        <span class="stag env" id="tag-loop">🔁 Era loop</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar sidebar-right">
+    <div class="sid-label">Taxonomic constants</div>
+    <div id="char-roster"></div>
+  </div>
+
+</div>
+
+<div class="bottom">
+  <div style="display:flex; flex-direction:column; gap: 10px; width: 100%;">
+    <div style="display:flex; gap:10px; align-items:flex-start; width: 100%;">
+      <button class="render-btn" onclick="renderDisplacement()">Render Displacement</button>
+      <div class="output-window" id="output-win">
+        <span style="color:var(--color-text-tertiary);font-size:11px">Fill the gears and click Render Displacement to generate the episode animatic...</span>
+      </div>
+      <div class="code-log" id="code-log">
+        <div style="color:#534AB7;margin-bottom:4px">// addJOE code log</div>
+        <div id="log-lines" style="color:#9FE1CB"></div>
+      </div>
+    </div>
+    
+    <!-- AI Integration Section -->
+    <div style="display:none; gap:10px; padding-top:10px; border-top:0.5px solid var(--color-border-tertiary); width: 100%;" id="ai-section">
+      <div style="flex:1">
+        <div style="font-size:11px; font-weight:500; color:var(--color-text-tertiary); margin-bottom:5px">AI Image Prompt (Copy & Paste to Antigravity)</div>
+        <textarea id="ai-prompt-out" style="width:100%; height:80px; font-size:11px; padding:6px; border-radius:var(--border-radius-md); border:0.5px solid var(--color-border-secondary); background:var(--color-background-primary); color:var(--color-text-primary); resize:none" readonly></textarea>
+        <button onclick="copyPrompt()" style="margin-top:5px; padding:5px 10px; font-size:11px; border-radius:4px; background:#EEEDFE; color:#534AB7; border:0.5px solid #AFA9EC; cursor:pointer">📋 Copy Prompt</button>
+      </div>
+      <div style="flex:1; border: 1px dashed var(--color-border-tertiary); border-radius: var(--border-radius-md); background:var(--color-background-primary); display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 10px; position:relative; min-height: 120px;" id="drop-zone">
+        <span style="font-size:11px; color:var(--color-text-tertiary); text-align:center; pointer-events:none" id="drop-text">Drop Generated Image Here<br>or click to upload</span>
+        <input type="file" id="image-upload" accept="image/*" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer" onchange="handleImageUpload(event)">
+        <img id="preview-image" style="max-width:100%; max-height:200px; display:none; border-radius:4px; margin-top:5px; position:relative; z-index:10;">
+        <button id="download-btn" onclick="downloadImage()" style="display:none; margin-top:10px; padding:5px 10px; font-size:11px; border-radius:4px; background:#534AB7; color:#fff; border:none; cursor:pointer; position:relative; z-index:20;">⬇️ Download Image</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const ERAS = {
+  A:{
+    name:"Primordial / Cretaceous",env:"🌋 Muddy Swamp / Volcanic Vent",
+    eaEmoji:"🥔",eaName:"Muddy prehistoric tuber",
+    chars:[
+      {name:"Leslie",role:"Mastermind",emoji:"🦖",skin:"Velociraptor"},
+      {name:"Joe",role:"Token Target",emoji:"🦧",skin:"Ginger Orangutan"},
+      {name:"Patel",role:"Dry Wit",emoji:"🦕",skin:"Dry Saurian"},
+      {name:"AK",role:"Moral Compass",emoji:"😬",skin:"Anxious Primate"},
+      {name:"Uncle F.",role:"Chaos Element",emoji:"🥁",skin:"Rhythm Raptor"},
+      {name:"Cleaner",role:"Hygiene Tech",emoji:"🦕",skin:"T-Rex tabard"}
+    ],
+    janusRight:"Gravity exists. Anaerobic swamp. Predator hierarchy absolute.",
+    cleanerText:"🦕 The Cleaner [T-Rex in micro-membrane tabard] enters. 👀 All cast: Avert_Eyes. 90° sanitation lunge — no appropriate legwear detected. ⚠️ Inevitable Side-Ball triggered. 😬 AK: panics about extinction risk. 🦕 Patel: \"Bit redundant, no?\"",
+    chants:["🥁 J-O-E! You ain't got no opposable grip! 🦧","🥁 J-O-E! Your tuber belongs in the tar pit! 🥔💀","🥁 J-O-E! Even the trilobites said no! 🪲"],
+    boom:"asteroid / volcanic chain reaction 🌋💥☄️",
+    boomEmoji:"☄️"
+  },
+  B:{
+    name:"Colonial / Pilgrim",env:"🌲 1600s Settlement / Mud Street",
+    eaEmoji:"🫚",eaName:"Unwashed Turnip / Potato",
+    chars:[
+      {name:"Leslie",role:"Mastermind",emoji:"🎩",skin:"Magistrate"},
+      {name:"Joe",role:"Token Target",emoji:"🧑‍🌾",skin:"Pilgrim (ginger)"},
+      {name:"Patel",role:"Dry Wit",emoji:"📜",skin:"Chronicler"},
+      {name:"AK",role:"Moral Compass",emoji:"😨",skin:"Puritan Worrier"},
+      {name:"Uncle F.",role:"Chaos Element",emoji:"🪘",skin:"Folk Disruptor"},
+      {name:"Cleaner",role:"Hygiene Tech",emoji:"🧹",skin:"Bald + twig broom"}
+    ],
+    janusRight:"Mercantile law applies. Scurvy is rampant. No germ theory.",
+    cleanerText:"🧹 The Cleaner [bald man, twig broom, burlap sack] enters. 👀 All cast: Avert_Eyes. 90° sanitation lunge — no legwear. ⚠️ Inevitable Side-Ball. 😨 AK panics about legality under Crown law. 📜 Patel: \"Bit redundant, no?\"",
+    chants:["🪘 J-O-E! Thy turnip hath no market value! 🫚","🪘 J-O-E! Even the Puritans hath declined! ⛪","🪘 J-O-E! Thou art redundant to the colony! 📜"],
+    boom:"economic collapse of the settlement 📉💷🔥",
+    boomEmoji:"🔥"
+  },
+  C:{
+    name:"Modern Sales Office",env:"🏢 Neon-lit London glazier office",
+    eaEmoji:"☕",eaName:"Lukewarm Latte / Misspelled Domain",
+    chars:[
+      {name:"Leslie",role:"Mastermind",emoji:"👔",skin:"HR Manager"},
+      {name:"Joe",role:"Token Target",emoji:"🪟",skin:"Danny Windows"},
+      {name:"Patel",role:"Dry Wit",emoji:"💻",skin:"Systems Analyst"},
+      {name:"AK",role:"Moral Compass",emoji:"😰",skin:"Compliance Officer"},
+      {name:"Uncle F.",role:"Chaos Element",emoji:"🎤",skin:"Office DJ"},
+      {name:"Cleaner",role:"Hygiene Tech",emoji:"🧴",skin:"Janitor/unplugged hoover"}
+    ],
+    janusRight:"GDPR applies. KPIs are tracked. Capitalism is operational.",
+    cleanerText:"🧴 The Cleaner [janitor, unplugged hoover] enters. 👀 All cast: Avert_Eyes. 90° sanitation lunge — no appropriate legwear. ⚠️ Inevitable Side-Ball. 😰 AK panics about HR liability. 💻 Patel: \"Bit redundant, no?\"",
+    chants:["🎤 J-O-E! Your domain is misspelled! 💻😂","🎤 J-O-E! That's not on the CRM! 📊","🎤 J-O-E! Your latte has gone cold again! ☕"],
+    boom:"full compliance meltdown + HR incident 📋🚨📉",
+    boomEmoji:"🚨"
+  },
+  D:{
+    name:"Deep Space 3026",env:"🚀 Zero-gravity airlock",
+    eaEmoji:"🔋",eaName:"Fried Carbon-Battery Core",
+    chars:[
+      {name:"Leslie",role:"Mastermind",emoji:"🤖",skin:"AI Hologram"},
+      {name:"Joe",role:"Token Target",emoji:"👨‍🚀",skin:"Low-Level Ensign"},
+      {name:"Patel",role:"Dry Wit",emoji:"📡",skin:"Systems Monitor"},
+      {name:"AK",role:"Moral Compass",emoji:"😱",skin:"Oxygen Monitor"},
+      {name:"Uncle F.",role:"Chaos Element",emoji:"🛸",skin:"Frequency Disruptor"},
+      {name:"Cleaner",role:"Hygiene Tech",emoji:"🤖",skin:"Cybernetic Janitor"}
+    ],
+    janusRight:"Oxygen reserves failing. Zero gravity. AI override protocols active.",
+    cleanerText:"🤖 The Cleaner [cybernetic janitor, micro-spacesuit] enters. 👀 All cast: Avert_Eyes. 90° sanitation lunge — micro-spacesuit provides zero legwear coverage. ⚠️ Inevitable Side-Ball. 😱 AK: O2 alarm triggered. 📡 Patel: \"Bit redundant, no?\"",
+    chants:["🛸 J-O-E! Your battery was already dead! 🔋💀","🛸 J-O-E! The airlock does not accept your currency! 🚀","🛸 J-O-E! Even the AI refused the transaction! 🤖"],
+    boom:"atmospheric poisoning / oxygen reserve failure 💀🌬️🚀",
+    boomEmoji:"💀"
+  }
+};
+
+let currentEra = "A";
+let entropyVal = 0;
+let chantIndex = 0;
+
+function switchEra(){
+  currentEra = document.getElementById('era-sel').value;
+  const e = ERAS[currentEra];
+  document.getElementById('ea-emoji').textContent = e.eaEmoji;
+  document.getElementById('ea-name').textContent = e.eaName;
+  document.getElementById('env-display').textContent = e.env;
+  document.getElementById('janus-right').value = e.janusRight;
+  document.getElementById('g3-auto').textContent = e.cleanerText;
+  const tagEa = e.eaEmoji + ' prop_EarthApple';
+  document.getElementById('tag-prop').textContent = tagEa;
+  document.getElementById('tag-prop2').textContent = e.eaEmoji + ' prop';
+  document.getElementById('tag-env').textContent = e.env.split(' ')[0] + ' bg_env';
+  document.getElementById('tag-loop').textContent = '🔁 → ' + e.name.substring(0,12);
+  document.getElementById('chant-output').textContent = '';
+  renderRoster();
+  logLine('era_switch → ' + currentEra);
+}
+
+function renderRoster(){
+  const e = ERAS[currentEra];
+  const r = document.getElementById('char-roster');
+  r.innerHTML = e.chars.map(c=>`
+    <div class="char-node">
+      <span style="font-size:20px;line-height:1">${c.emoji}</span>
+      <span style="font-size:10px;font-weight:500;color:var(--color-text-primary);text-align:center">${c.name}</span>
+      <span style="font-size:9px;color:var(--color-text-tertiary);text-align:center;line-height:1.2">${c.skin}</span>
+    </div>`).join('');
+  const chars = e.chars;
+  document.getElementById('tag-leslie').textContent = chars[0].emoji+' skin_Leslie';
+  document.getElementById('tag-joe').textContent = chars[1].emoji+' skin_Joe';
+  document.getElementById('tag-joe2').textContent = chars[1].emoji+' skin_Joe';
+  document.getElementById('tag-joe3').textContent = chars[1].emoji+' skin_Joe';
+  document.getElementById('tag-cleaner').textContent = chars[5].emoji+' skin_Cleaner';
+}
+
+function updateEntropy(){
+  const g1 = (document.getElementById('g1-input').value||'').length;
+  const g2 = (document.getElementById('g2-input').value||'').length;
+  const g5 = (document.getElementById('g5-input').value||'').length;
+  entropyVal = Math.min(100, Math.round((g1+g2+g5)/3));
+  document.getElementById('entropy-fill').style.width = entropyVal+'%';
+  document.getElementById('entropy-pct').textContent = entropyVal;
+  [1,2,3,4,5].forEach(i=>{
+    document.getElementById('gc'+i).classList.remove('active');
+  });
+  if(g2>0) document.getElementById('gc2').classList.add('active');
+  else if(g1>0) document.getElementById('gc1').classList.add('active');
+  else document.getElementById('gc1').classList.add('active');
+}
+
+function generateChant(){
+  const e = ERAS[currentEra];
+  const chant = e.chants[chantIndex % e.chants.length];
+  chantIndex++;
+  const el = document.getElementById('chant-output');
+  el.textContent = chant;
+  el.style.animation = 'none';
+  el.offsetHeight;
+  const btn = document.getElementById('flanjeet-btn');
+  btn.textContent = '🥁 Again!';
+  logLine('chant_gen → gear4');
+  document.getElementById('gc4').classList.add('active');
+}
+
+function renderDisplacement(){
+  const e = ERAS[currentEra];
+  const g1 = document.getElementById('g1-input').value || 'Leslie outlines the plan.';
+  const g2 = document.getElementById('g2-input').value || 'Joe executes Rule #1: Confuse Them.';
+  const g5 = document.getElementById('g5-input').value || 'The transaction fails catastrophically.';
+  const chant = document.getElementById('chant-output').textContent || e.chants[0];
+  const chars = e.chars;
+  const out = document.getElementById('output-win');
+
+  out.innerHTML = `
+<div style="margin-bottom:10px">
+  <div class="scene-row">
+    <span style="font-size:10px;font-weight:500;background:#EEEDFE;color:#534AB7;padding:1px 6px;border-radius:8px;border:0.5px solid #AFA9EC">GEAR 1 — Briefing</span>
+  </div>
+  <div class="scene-row" style="margin-top:4px">
+    <span class="scene-char">${chars[0].emoji}</span>
+    <span class="scene-char">${chars[1].emoji}</span>
+    <span style="font-size:12px;margin:0 4px">${e.eaEmoji}</span>
+    <span class="scene-bubble">${g1}</span>
+  </div>
+  <div style="font-size:10px;color:var(--color-text-tertiary);margin-top:3px">${e.env} &nbsp;|&nbsp; ${e.eaEmoji} value: 0.00</div>
+</div>
+<div style="margin-bottom:10px;border-top:0.5px solid var(--color-border-tertiary);padding-top:8px">
+  <div class="scene-row">
+    <span style="font-size:10px;font-weight:500;background:#FAEEDA;color:#633806;padding:1px 6px;border-radius:8px;border:0.5px solid #FAC775">GEAR 2 — addJOE Hustle</span>
+  </div>
+  <div class="scene-row" style="margin-top:4px">
+    <span class="scene-char">${chars[1].emoji}</span>
+    <span style="font-size:12px;margin:0 4px">${e.eaEmoji}</span>
+    <span class="scene-bubble">⚡ ${g2}</span>
+  </div>
+  <div style="font-size:10px;color:var(--color-text-tertiary);margin-top:3px">Janus_Left active &nbsp;|&nbsp; Janus_Right: ${document.getElementById('janus-right').value}</div>
+</div>
+<div style="margin-bottom:10px;border-top:0.5px solid var(--color-border-tertiary);padding-top:8px">
+  <div class="scene-row">
+    <span style="font-size:10px;font-weight:500;background:#FAECE7;color:#712B13;padding:1px 6px;border-radius:8px;border:0.5px solid #F0997B">GEAR 3 — Invisible Struggle</span>
+  </div>
+  <div class="scene-row" style="margin-top:4px">
+    <span class="scene-char">${chars[5].emoji}</span>
+    <span class="scene-char">👀</span>
+    <span class="scene-char">😬</span>
+    <span class="scene-char">🧐</span>
+    <span class="scene-bubble">${e.cleanerText}</span>
+  </div>
+</div>
+<div style="margin-bottom:10px;border-top:0.5px solid var(--color-border-tertiary);padding-top:8px">
+  <div class="scene-row">
+    <span style="font-size:10px;font-weight:500;background:#E1F5EE;color:#085041;padding:1px 6px;border-radius:8px;border:0.5px solid #9FE1CB">GEAR 4 — Invariant Song</span>
+  </div>
+  <div class="scene-row" style="margin-top:4px">
+    <span class="scene-char">${chars[4].emoji}</span>
+    <span class="scene-char">${chars[1].emoji}</span>
+    <span class="scene-bubble">${chant}</span>
+  </div>
+  <div style="display:inline-flex;gap:4px;margin-top:3px">
+    <span class="note-float">🎵</span>
+    <span class="note-float" style="animation-delay:.2s">🎶</span>
+    <span class="note-float" style="animation-delay:.4s">🎵</span>
+    <span class="note-float" style="animation-delay:.6s">🎶</span>
+  </div>
+  <span style="font-size:11px;color:var(--color-text-secondary);margin-left:6px">${chars[1].emoji} 😁 [Beam_with_Pride — misunderstands chant as celebration]</span>
+</div>
+<div style="border-top:0.5px solid var(--color-border-danger);padding-top:8px">
+  <div class="scene-row">
+    <span style="font-size:10px;font-weight:500;background:#FCEBEB;color:#A32D2D;padding:1px 6px;border-radius:8px;border:0.5px solid #F7C1C1">GEAR 5 — THE BOOM</span>
+  </div>
+  <div class="boom-row" style="margin-top:6px">
+    <span class="boom-emoji">${e.boomEmoji}</span>
+    <span class="boom-emoji" style="animation-delay:.1s">💥</span>
+    <span class="boom-emoji" style="animation-delay:.2s">${e.boomEmoji}</span>
+    <span class="scene-bubble" style="border-color:var(--color-border-danger)">⚡ Janus_Left ✕ Janus_Right — ${g5} — ${e.boom}</span>
+  </div>
+  <div style="font-size:10px;color:#A32D2D;margin-top:4px">Entropy += 1 &nbsp;|&nbsp; Universe degraded &nbsp;|&nbsp; 🔁 Loop → next era</div>
+</div>`;
+
+  logLine('render_displacement()');
+  logLine('era: '+currentEra);
+  logLine('gears: [1,2,3✓auto,4,5]');
+  logLine('entropy: '+entropyVal+'%');
+  logLine('output: animatic_v1');
+  logLine('status: BOOM deployed');
+
+  // Generate AI Prompt
+  const cleanChant = chant.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+  const aiPrompt = `A 5-panel comic strip set in ${e.env}. Panel 1: ${chars[0].name} (a ${chars[0].skin}) explains a logical plan to ${chars[1].name} (a ${chars[1].skin}), who is holding a ${e.eaName}. Panel 2: Joe tries to hustle and sell the ${e.eaName} to a confused creature, executing rule: ${g2}. Panel 3: A Cleaner (${chars[5].skin}) lunges in to clean causing awkwardness; ${chars[3].name} panics, while ${chars[2].name} looks away. Panel 4: Uncle F. (a ${chars[4].skin}) chants rhythmically '${cleanChant}' while Joe beams with pride. Panel 5: Catastrophic explosion! ${g5} — ${e.boom}. Art style: detailed, humorous comic strip, expressive characters.`;
+  
+  document.getElementById('ai-prompt-out').value = aiPrompt;
+  document.getElementById('ai-section').style.display = 'flex';
+}
+
+function logLine(txt){
+  const el = document.getElementById('log-lines');
+  el.innerHTML += '<div>> '+txt+'</div>';
+  el.scrollTop = el.scrollHeight;
+}
+
+function copyPrompt() {
+  const promptText = document.getElementById('ai-prompt-out');
+  promptText.select();
+  document.execCommand('copy');
+  logLine('AI prompt copied to clipboard');
+}
+
+function handleImageUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = document.getElementById('preview-image');
+      img.src = e.target.result;
+      img.style.display = 'block';
+      document.getElementById('drop-text').style.display = 'none';
+      document.getElementById('download-btn').style.display = 'block';
+      logLine('Image loaded into viewer');
+    }
+    reader.readAsDataURL(file);
+  }
+}
+
+function downloadImage() {
+  const img = document.getElementById('preview-image');
+  if (img.src) {
+    const a = document.createElement('a');
+    a.href = img.src;
+    a.download = `addJOE_Phase_${currentEra}_Comic.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    logLine('Image downloaded');
+  }
+}
+
+switchEra();
+logLine('addJOE engine init');
+logLine('era_A loaded');
+</script>

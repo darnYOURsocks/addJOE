@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The addJOE Universe Lore Hub</title>
+<style>
+  :root {
+    --bg-main: #0d0f12;
+    --bg-sidebar: #15181e;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --accent: #7F77DD;
+    --accent-hover: #9891ea;
+    --border: #2e3643;
+    --danger: #E24B4A;
+    --success: #9FE1CB;
+    --warning: #FAC775;
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  #sidebar {
+    width: 280px;
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  #logo {
+    padding: 24px 20px;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-section {
+    padding: 20px 0 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-section h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    padding: 0 20px;
+  }
+
+  .nav-item {
+    display: block;
+    padding: 8px 20px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+  }
+
+  .nav-item:hover, .nav-item.active {
+    background-color: rgba(127, 119, 221, 0.1);
+    color: var(--accent-hover);
+    border-left-color: var(--accent);
+  }
+
+  /* MAIN CONTENT */
+  #main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 40px;
+    position: relative;
+  }
+
+  /* VIEWS */
+  .view-container {
+    display: none;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+    animation: fadeIn 0.4s ease-out forwards;
+  }
+  .view-container.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* BUTTONS */
+  .btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-secondary {
+    background: #1e293b;
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: #334155; }
+  .btn-danger {
+    background: rgba(226, 75, 74, 0.1);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+  }
+  .btn-danger:hover { background: rgba(226, 75, 74, 0.2); }
+
+  /* HOME VIEW */
+  .home-hero {
+    text-align: center;
+    margin-top: 5vh;
+  }
+  .home-hero h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+    background: linear-gradient(90deg, #7F77DD, #9FE1CB);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .home-hero p {
+    font-size: 18px;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto 30px auto;
+    line-height: 1.6;
+  }
+  
+  #walkthrough-status {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(159, 225, 203, 0.1);
+    border: 1px dashed var(--success);
+    border-radius: 8px;
+    color: var(--success);
+    display: none;
+  }
+
+  /* ERA COMIC VIEW */
+  .era-header, .lore-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+  }
+  .header-content { flex: 1; }
+  .header-actions { margin-left: 20px; }
+  
+  .era-title, .lore-title {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    color: var(--accent);
+  }
+  .era-rules {
+    font-size: 14px;
+    color: var(--warning);
+    font-family: monospace;
+    background: rgba(250, 199, 117, 0.1);
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px dashed var(--warning);
+    display: inline-block;
+  }
+  .comic-wrapper {
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  .comic-img {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    display: block;
+  }
+
+  /* LORE VIEW specific */
+  .lore-subtitle {
+    font-size: 18px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  .lore-body {
+    font-size: 18px;
+    line-height: 1.8;
+    color: var(--text-primary);
+  }
+  .lore-body strong { color: var(--success); }
+  .lore-body em { color: var(--danger); font-style: normal; }
+
+</style>
+</head>
+<body>
+
+  <!-- SIDEBAR NAVIGATION -->
+  <div id="sidebar">
+    <div id="logo" style="cursor:pointer" onclick="showHome()">
+      <span style="font-size:24px">🔁</span> addJOE Lore
+    </div>
+    
+    <div class="nav-section">
+      <h3>The Chronicles</h3>
+      <div class="nav-item" onclick="showEra('A', this)">Phase A: Primordial</div>
+      <div class="nav-item" onclick="showEra('B', this)">Phase B: Colonial</div>
+      <div class="nav-item" onclick="showEra('C', this)">Phase C: Modern Office</div>
+      <div class="nav-item" onclick="showEra('D', this)">Phase D: Deep Space</div>
+    </div>
+
+    <div class="nav-section">
+      <h3>The Taxonomic Constants</h3>
+      <div class="nav-item" onclick="showLore('leslie', this)">Leslie (The Mastermind)</div>
+      <div class="nav-item" onclick="showLore('joe', this)">Joe (The Vector)</div>
+      <div class="nav-item" onclick="showLore('patel', this)">Patel (The Observer)</div>
+      <div class="nav-item" onclick="showLore('ak', this)">AK (The Anxious)</div>
+      <div class="nav-item" onclick="showLore('flanjeet', this)">Uncle Flanjeet (The Catalyst)</div>
+      <div class="nav-item" onclick="showLore('cleaner', this)">The Cleaner</div>
+    </div>
+
+    <div class="nav-section">
+      <h3>The MacGuffins</h3>
+      <div class="nav-item" onclick="showLore('earthapple', this)">The EarthApple</div>
+      <div class="nav-item" onclick="showLore('janus', this)">Janus Laws (The BOOM)</div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT AREA -->
+  <div id="main-content">
+    
+    <!-- HOME VIEW -->
+    <div id="view-home" class="view-container active">
+      <div class="home-hero">
+        <h1>Welcome to the addJOE Universe</h1>
+        <p>A deeply systemic, tragicomic universe where the same archetypal cast repeats the exact same catastrophic hustle across all of time and space. Use the sidebar to explore the lore, or experience the fully guided tour.</p>
+        
+        <div style="display:flex; gap:15px; justify-content:center; margin-top:30px;">
+          <button class="btn btn-primary" onclick="startWalkthrough()">▶️ Start Guided Walkthrough</button>
+          <button class="btn btn-danger" onclick="stopSpeaking()" id="btn-stop-wt" style="display:none">⏹️ Stop Walkthrough</button>
+        </div>
+        
+        <div id="walkthrough-status">
+          <strong>Walkthrough Active:</strong> Sit back and listen as the system introduces the timeline.
+        </div>
+      </div>
+    </div>
+
+    <!-- COMIC ERA VIEW -->
+    <div id="view-era" class="view-container">
+      <div class="era-header">
+        <div class="header-content">
+          <div class="era-title" id="era-title">Phase X</div>
+          <div class="era-rules" id="era-rules">Rules: Janus Right active.</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="readCurrentEra()">🔊 Read Out Loud</button>
+        </div>
+      </div>
+      <div class="comic-wrapper">
+        <img id="era-img" class="comic-img" src="" alt="Comic Strip">
+      </div>
+    </div>
+
+    <!-- LORE WIKI VIEW -->
+    <div id="view-lore" class="view-container">
+      <div class="lore-header">
+        <div class="header-content">
+          <div class="lore-title" id="lore-title">Character Name</div>
+          <div class="lore-subtitle" id="lore-subtitle">The Archetype</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="readCurrentLore()">🔊 Read Out Loud</button>
+        </div>
+      </div>
+      <div style="margin-bottom: 30px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border);">
+        <img id="lore-img" src="" style="width: 100%; display: block;">
+      </div>
+      <div class="lore-body" id="lore-body">
+        Lore content goes here...
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // DATABASE - Using Relative Paths for portability
+    const ERAS = {
+      'A': { title: "Phase A — Primordial / Cretaceous", img: "lore_assets/addjoe_primordial_comic_1777478899119.png", desc: "JANUS RIGHT: Gravity exists. Anaerobic swamp. Predator hierarchy is absolute." },
+      'B': { title: "Phase B — Colonial / Pilgrim", img: "lore_assets/addjoe_colonial_comic_1777478428930.png", desc: "JANUS RIGHT: Mercantile law applies. Scurvy is rampant. No germ theory." },
+      'C': { title: "Phase C — Modern Sales Office", img: "lore_assets/addjoe_modern_office_comic_1777478825632.png", desc: "JANUS RIGHT: GDPR applies. KPIs are tracked. Capitalism is operational." },
+      'D': { title: "Phase D — Deep Space 3026", img: "lore_assets/addjoe_deepspace_comic_1777478610045.png", desc: "JANUS RIGHT: Oxygen reserves failing. Zero gravity. AI override protocols active." }
+    };
+
+    const LORE = {
+      'leslie': { title: "Leslie", subtitle: "The Mastermind", img: "lore_assets/addjoe_lore_leslie_1777482554672.png", content: "Whether manifesting as a Velociraptor, a 1600s Magistrate, an HR Manager, or an AI Hologram, Leslie is the embodiment of the Logical Plan. He represents the system's desperate attempt to impose order, strategy, and survival onto a universe that naturally bends toward entropy. His plans are always flawless in theory, and always utterly destroyed in practice by Joe." },
+      'joe': { title: "Joe", subtitle: "The Vector of Chaos", img: "lore_assets/addjoe_lore_joe_1777482569537.png", content: "Ginger Orangutan, Pilgrim, Danny Windows, or Low-Level Ensign. Joe is the 'Token Target'. Driven by deep, emotional truths and petty grievances, he is the engine of the narrative. Armed with Rule #1: Confuse Them, Joe operates under the delusion that he is a master hustler. He is entirely immune to Leslie's logic and uniquely susceptible to catastrophic failure. Tragically, he beams with pride precisely when he should be fleeing." },
+      'patel': { title: "Patel", subtitle: "The Observer", img: "lore_assets/addjoe_lore_patel_1777482676770.png", content: "The Systems Analyst, the Chronicler, the Dry Wit. Patel never intervenes. He merely observes the collapse of the timeline, offering the driest of understatements: 'Bit redundant, no?'. He is the quiet historian of the apocalypse, making notes as the timeline burns." },
+      'ak': { title: "AK", subtitle: "The Moral Compass / Anxiety Node", img: "lore_assets/addjoe_lore_ak_1777482589611.png", content: "AK is the manifestation of systemic anxiety. When the Cleaner strikes, AK is the one who panics. Depending on the era, he worries about the extinction risk, the legality under Crown law, HR liabilities, or triggering the O2 alarms. He is the only character who truly understands the precariousness of their situation." },
+      'flanjeet': { title: "Uncle Flanjeet", subtitle: "The Folk Disruptor", img: "lore_assets/addjoe_lore_flanjeet_1777482609391.png", content: "A rhythmic force of nature. Uncle Flanjeet exists to accelerate the context collapse. Be it playing a drum, a microphone, or a frequency disruptor, he delivers the Invariant Song: a rhythmic, mocking chant. The true tragedy is that Joe always misunderstands the mocking chant as a celebration of his own genius." },
+      'cleaner': { title: "The Cleaner", subtitle: "Hygiene Tech & The Inevitable Side-Ball", img: "lore_assets/addjoe_lore_cleaner_1777482624015.png", content: "A universal constant of disruption. The Cleaner always enters precisely during The Invisible Struggle. Known for the dreaded 90-degree sanitation lunge. Due to a tragic, cross-era lack of appropriate legwear, be it a T-Rex tabard, a burlap sack, or a micro-spacesuit, he triggers the Inevitable Side-Ball event, forcing the entire cast into the Avert Eyes protocol." },
+      'earthapple': { title: "The EarthApple", subtitle: "Asset Value: 0.00", img: "lore_assets/addjoe_lore_earthapple_1777482637775.png", content: "The MacGuffin that drives the hustle. It has absolute zero intrinsic value. It manifests as a muddy tuber, an unwashed turnip, a lukewarm latte, or a fried carbon-battery core. Yet, Joe believes it is a rare luxury item. The EarthApple is the physical manifestation of Joe's delusion." },
+      'janus': { title: "The Janus Collision", subtitle: "The Architecture of The BOOM", img: "lore_assets/addjoe_lore_janus_1777482652201.png", content: "The addJOE universe operates on Dual-Ledger Telemetry. Janus Left is Joe's internal emotional truth—his attempt to hustle. Janus Right represents the unyielding, hard physical and economic rules of the current era, such as Gravity, Scurvy, GDPR, or Zero-O2. When Joe's hustle collides with the hard rules of reality, it results in The BOOM: complete context collapse, an exponential increase in entropy, and an immediate loop into the next era." }
+    };
+
+    // SPEECH SYNTHESIS ENGINE
+    const synth = window.speechSynthesis;
+    let currentUtterance = null;
+    let isWalkthrough = false;
+    let walkthroughIdx = 0;
+
+    // The Sequence for the Walkthrough
+    const WALKTHROUGH_STEPS = [
+      { type: 'home', text: "Welcome to the add J O E Universe. A deeply systemic, tragicomic universe where the same archetypal cast repeats the exact same catastrophic hustle across all of time and space. Let me introduce you to the Chronicles, starting with Phase A." },
+      { type: 'era', id: 'A', text: "Phase A. Primordial Cretaceous. The rules: Gravity exists. Anaerobic swamp. Predator hierarchy is absolute. The hustle fails, ending in a volcanic asteroid strike." },
+      { type: 'era', id: 'B', text: "Phase B. Colonial Pilgrim. The rules: Mercantile law applies. Scurvy is rampant. No germ theory. The hustle ends in the economic collapse of the settlement." },
+      { type: 'era', id: 'C', text: "Phase C. Modern Sales Office. The rules: GDPR applies. KPIs are tracked. Capitalism is operational. The result is a full compliance meltdown and HR incident." },
+      { type: 'era', id: 'D', text: "Phase D. Deep Space 30 26. The rules: Oxygen reserves failing. Zero gravity. AI override protocols active. The inevitable result: atmospheric poisoning." },
+      { type: 'home', text: "Now that you've seen the timeline, let us examine the Taxonomic Constants: the cast of characters doomed to repeat this cycle forever." },
+      { type: 'lore', id: 'leslie', text: LORE['leslie'].title + ". " + LORE['leslie'].subtitle + ". " + LORE['leslie'].content },
+      { type: 'lore', id: 'joe', text: LORE['joe'].title + ". " + LORE['joe'].subtitle + ". " + LORE['joe'].content },
+      { type: 'lore', id: 'patel', text: LORE['patel'].title + ". " + LORE['patel'].subtitle + ". " + LORE['patel'].content },
+      { type: 'lore', id: 'ak', text: LORE['ak'].title + ". " + LORE['ak'].subtitle + ". " + LORE['ak'].content },
+      { type: 'lore', id: 'flanjeet', text: LORE['flanjeet'].title + ". " + LORE['flanjeet'].subtitle + ". " + LORE['flanjeet'].content },
+      { type: 'lore', id: 'cleaner', text: LORE['cleaner'].title + ". " + LORE['cleaner'].subtitle + ". " + LORE['cleaner'].content },
+      { type: 'home', text: "Finally, let us examine the items and mechanics that drive the universe toward absolute entropy." },
+      { type: 'lore', id: 'earthapple', text: LORE['earthapple'].title + ". " + LORE['earthapple'].subtitle + ". " + LORE['earthapple'].content },
+      { type: 'lore', id: 'janus', text: LORE['janus'].title + ". " + LORE['janus'].subtitle + ". " + LORE['janus'].content },
+      { type: 'home', text: "You have completed the add J O E integration. The loop is now active. Feel free to explore the Hub on your own." }
+    ];
+
+    function speakText(text, onEndCallback) {
+      if (synth.speaking) synth.cancel();
+      
+      // Clean text for speech
+      const cleanText = text.replace(/<[^>]*>?/gm, '');
+      currentUtterance = new SpeechSynthesisUtterance(cleanText);
+      currentUtterance.rate = 0.95; // Slightly dramatic pacing
+      currentUtterance.pitch = 0.95;
+      
+      if(onEndCallback) {
+        currentUtterance.onend = onEndCallback;
+      }
+      
+      synth.speak(currentUtterance);
+    }
+
+    function stopSpeaking() {
+      if (synth.speaking) synth.cancel();
+      isWalkthrough = false;
+      document.getElementById('walkthrough-status').style.display = 'none';
+      document.getElementById('btn-stop-wt').style.display = 'none';
+    }
+
+    // WALKTHROUGH LOGIC
+    function startWalkthrough() {
+      isWalkthrough = true;
+      walkthroughIdx = 0;
+      document.getElementById('walkthrough-status').style.display = 'block';
+      document.getElementById('btn-stop-wt').style.display = 'inline-flex';
+      playNextWalkthroughStep();
+    }
+
+    function playNextWalkthroughStep() {
+      if (!isWalkthrough) return;
+      if (walkthroughIdx >= WALKTHROUGH_STEPS.length) {
+        stopSpeaking();
+        return;
+      }
+      
+      const step = WALKTHROUGH_STEPS[walkthroughIdx];
+      
+      // Navigate to the correct view
+      if (step.type === 'home') showHome(true);
+      else if (step.type === 'era') showEra(step.id, null, true);
+      else if (step.type === 'lore') showLore(step.id, null, true);
+      
+      // Speak and wait for end
+      speakText(step.text, () => {
+        walkthroughIdx++;
+        if(isWalkthrough) {
+          setTimeout(playNextWalkthroughStep, 1500); // 1.5s dramatic pause between sections
+        }
+      });
+    }
+
+    // INDIVIDUAL READ BUTTONS
+    function readCurrentEra() {
+      stopSpeaking();
+      const title = document.getElementById('era-title').textContent;
+      const rules = document.getElementById('era-rules').textContent;
+      speakText(title + ". " + rules);
+    }
+
+    function readCurrentLore() {
+      stopSpeaking();
+      const title = document.getElementById('lore-title').textContent;
+      const sub = document.getElementById('lore-subtitle').textContent;
+      const body = document.getElementById('lore-body').textContent;
+      speakText(title + ". " + sub + ". " + body);
+    }
+
+    // NAVIGATION
+    function clearActiveNav() {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    }
+
+    function hideAllViews() {
+      document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
+    }
+
+    function showHome(isSilent = false) {
+      if(!isSilent && !isWalkthrough) stopSpeaking();
+      clearActiveNav();
+      hideAllViews();
+      document.getElementById('view-home').classList.add('active');
+    }
+
+    function showEra(eraKey, navElement, isSilent = false) {
+      if(!isSilent && !isWalkthrough) stopSpeaking();
+      clearActiveNav();
+      if(navElement) navElement.classList.add('active');
+      hideAllViews();
+
+      const era = ERAS[eraKey];
+      document.getElementById('era-title').textContent = era.title;
+      document.getElementById('era-rules').textContent = era.desc;
+      document.getElementById('era-img').src = era.img;
+
+      document.getElementById('view-era').classList.add('active');
+    }
+
+    function showLore(loreKey, navElement, isSilent = false) {
+      if(!isSilent && !isWalkthrough) stopSpeaking();
+      clearActiveNav();
+      if(navElement) navElement.classList.add('active');
+      hideAllViews();
+
+      const lore = LORE[loreKey];
+      document.getElementById('lore-title').textContent = lore.title;
+      document.getElementById('lore-subtitle').textContent = lore.subtitle;
+      document.getElementById('lore-img').src = lore.img;
+      document.getElementById('lore-body').innerHTML = lore.content;
+
+      document.getElementById('view-lore').classList.add('active');
+    }
+
+  </script>
+</body>
+</html>

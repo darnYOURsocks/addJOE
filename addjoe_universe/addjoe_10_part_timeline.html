@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>addJOE: The 10-Part Invariant Series</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0a0c;
+            --joe-orange: #ff5722;
+            --hazard-red: #e11d48;
+            --leslie-blue: #38bdf8;
+            --grid-color: rgba(255, 255, 255, 0.03);
+        }
+        body {
+            background-color: var(--bg-color);
+            color: #e2e8f0;
+            font-family: 'Outfit', sans-serif;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+            overflow-x: hidden;
+        }
+        .mono { font-family: 'Space Mono', monospace; }
+        
+        .timeline-container {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 50px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--joe-orange), var(--hazard-red));
+        }
+        
+        .era-node {
+            position: relative;
+            padding-left: 100px;
+            margin-bottom: 4rem;
+            opacity: 0.5;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .era-node:hover, .era-node.active {
+            opacity: 1;
+            transform: translateX(10px);
+        }
+        
+        .node-dot {
+            position: absolute;
+            left: 41px;
+            top: 24px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--bg-color);
+            border: 2px solid var(--joe-orange);
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+        .era-node.active .node-dot {
+            background: var(--joe-orange);
+            box-shadow: 0 0 20px var(--joe-orange);
+        }
+        .era-node.hazard .node-dot {
+            border-color: var(--hazard-red);
+        }
+        .era-node.active.hazard .node-dot {
+            background: var(--hazard-red);
+            box-shadow: 0 0 20px var(--hazard-red);
+        }
+        
+        .era-content {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--joe-orange);
+            padding: 2rem;
+            border-radius: 0 12px 12px 0;
+            backdrop-filter: blur(10px);
+        }
+        .era-node.hazard .era-content {
+            border-left-color: var(--hazard-red);
+        }
+
+        .era-number {
+            font-size: 4rem;
+            font-weight: 900;
+            position: absolute;
+            right: 20px;
+            top: -20px;
+            color: rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+        }
+
+        .hud-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 12, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .btn-glitch {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-glitch::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        .btn-glitch:hover::after {
+            left: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="hud-header">
+        <div>
+            <span class="text-2xl font-black text-white tracking-tighter">addJOE SERIES</span>
+            <span class="ml-4 text-xs text-slate-500 mono">The 10-Part Invariant Traversal</span>
+        </div>
+        <div class="flex gap-4">
+            <button class="btn-glitch text-[10px] mono uppercase tracking-widest border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-black px-4 py-2 rounded transition-colors" onclick="initiateRegen()">
+                [ INITIATE 10-PART RENDER PIPELINE ]
+            </button>
+        </div>
+    </header>
+
+    <div class="timeline-container">
+        <div class="timeline-line"></div>
+
+        <!-- PART 1 -->
+        <div class="era-node active" onclick="activateNode(this)">
+            <div class="node-dot"></div>
+            <div class="era-content">
+                <div class="era-number">01</div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-xs mono px-2 py-1 bg-orange-500/20 text-orange-400 rounded">ORIGIN POINT</span>
+                    <h2 class="text-2xl font-bold text-white">The Primordial Swamp</h2>
+                </div>
+                <h3 class="text-slate-400 text-sm mono mb-4">ERA: CAVEMAN / INCEPTION OF THE EARTH-APPLE</h3>
+                <p class="text-slate-300 leading-relaxed text-sm">
+                    <strong>The Setup:</strong> The tragic "cyanide plot" is inverted into the first biological delusion. Joe, a kinetic Neanderthal, discovers a "Spicy Berry" and believes it is a Premium Evolutionary Upgrade.<br>
+                    <strong>The Boom:</strong> He hurls it into the Great Fire Pit, expecting an Apex Predator transformation. It produces a pathetic sizzle. Jane, the First Stoic, kicks dirt over it.
+                </p>
+            </div>
+        </div>
+
+        <!-- PART 2 -->
+        <div class="era-node hazard" onclick="activateNode(this)">
+            <div class="node-dot"></div>
+            <div class="era-content">
+                <div class="era-number">02</div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-xs mono px-2 py-1 bg-red-500/20 text-red-400 rounded">SIMULATION GLITCH</span>
+                    <h2 class="text-2xl font-bold text-white">The Deep Cretaceous</h2>
+                </div>
+                <h3 class="text-slate-400 text-sm mono mb-4">ERA: PREHISTORIC METROPOLIS / MUDDY LUMP OF COAL</h3>
+                <p class="text-slate-300 leading-relaxed text-sm">
+                    <strong>The Setup:</strong> Millions of years pass. The swamp is paved over into a brutalist Dinosaur Metropolis. Leslie, a tired salesman, tries to sell the Alien Ambassador a muddy lump of coal.<br>
+                    <strong>The Boom:</strong> Joe forces the Earth-Apple into a physical wall port, triggering a cascading failure that breaks the reality matrix. Jane initiates the Radical Authenticity protocol to reboot.
+                </p>
+            </div>
+        </div>
+
+        <!-- PART 3 -->
+        <div class="era-node" onclick="activateNode(this)">
+            <div class="node-dot"></div>
+            <div class="era-content">
+                <div class="era-number">03</div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-xs mono px-2 py-1 bg-orange-500/20 text-orange-400 rounded">ARCHITECTURAL EGO</span>
+                    <h2 class="text-2xl font-bold text-white">Ancient Egyptian Bathhouse</h2>
+                </div>
+                <h3 class="text-slate-400 text-sm mono mb-4">ERA: PHARAONIC DYNASTY / PREMIUM PHARAOH TIER</h3>
+                <p class="text-slate-300 leading-relaxed text-sm">
+                    <strong>The Setup:</strong> The reboot lands them in an echoing bathhouse. Leslie, now a Cyber-Doc, warns Joe that his reckless trading has destabilized the cosmos.<br>
+                    <strong>The Boom:</strong> Joe attempts to force a localized Janus Collision with a high-voltage plasma grid. The Pharaoh looms as Jane grounds the electrical fault with radical authenticity.
+                </p>
+            </div>
+        </div>
+
+        <!-- PART 4 -->
+        <div class="era-node hazard" onclick="activateNode(this)">
+            <div class="node-dot"></div>
+            <div class="era-content">
+                <div class="era-number">04</div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-xs mono px-2 py-1 bg-red-500/20 text-red-400 rounded">SYSTEM CRUSH</span>
+                    <h2 class="text-2xl font-bold text-white">The Pilgrim Settlement</h2>
+                </div>
+                <h3 class="text-slate-400 text-sm mono mb-4">ERA: 1621 COLONIAL / THE FRANKINI ANCHOR</h3>
+                <p class="text-slate-300 leading-relaxed text-sm">
+                    <strong>The Setup:</strong> Fast forward to the colonial settlement (from the addJoe lore archives). Joe tries to barter a wooden Earth-Apple to secure status among the Pilgrims.<br>
+                    <strong>The Boom:</strong> Uncle Flanjeet preaches the "Cabbage Truth" from the pulpit. Joe is thrown in the stocks, demanding a Premium Choker Refund from the town elders.
+                </p>
+            </div>
+        </div>
+
+        <!-- PART 5 -->
+        <div class="era-node" onclick="activateNode(this)">
+            <div class="node-dot"></div>
+            <div class="era-content">
+                <div class="era-number">05</div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-xs mono px-2 py-1 bg-orange-500/20 text-orange-400 rounded">INDUSTRIAL GRIND</span>
+                    <h2 class="text-2xl font-bold text-white">Victorian Workhouse</h2>
+                </div>
+                <h3 class="text-slate-400 text-sm mono mb-4">ERA: 19TH CENTURY / THE BOILER ROOM</h3>
+                <p class="text-slate-300 leading-relaxed text-sm">
+                    <strong>The Setup:</strong> The steam age. Joe acts as the kinetic chimney sweep, clutching soot-covered artifacts, believing he has unlocked the ultimate industrial upgrade.<br>
+                    <strong>The Boom:</strong> He shoves the artifact into the massive, red-glowing Victorian boiler. Jane, acting as the Void Overseer, manually vents the pressure before the timeline explodes.
+                </p>
+            </div>
+        </div>
+
+        <!-- PART 6 -->
+        <div class="era-node hazard" onclick="activateNode(this)">
+            <div class="node-dot"></div>
+            <div class="era-content">
+                <div class="era-number">06</div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-xs mono px-2 py-1 bg-red-500/20 text-red-400 rounded">BIOLOGICAL ROOT</span>
+                    <h2 class="text-2xl font-bold text-white">The Clinical Core</h2>
+                </div>
+                <h3 class="text-slate-400 text-sm mono mb-4">ERA: 1983 / THE OUTDATED MEDICAL ROOM</h3>
+                <p class="text-slate-300 leading-relaxed text-sm">
+                    <strong>The Setup:</strong> We dive into the internal matrix. Leslie, the exhausted mother, sits in a dark 1983 clinical room, trying to contain Joe within her.<br>
+                    <strong>The Boom:</strong> Joe forces the worthless object into her primary physical mechanism. Jane steps in, drops the temperature to absolute zero, and unplugs the biological chaos.
+                </p>
+            </div>
+        </div>
+
+        <!-- PART 7 -->
+        <div class="era-node" onclick="activateNode(this)">
+            <div class="node-dot"></div>
+            <div class="era-content">
+                <div class="era-number">07</div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-xs mono px-2 py-1 bg-orange-500/20 text-orange-400 rounded">MODERN ABSURDITY</span>
+                    <h2 class="text-2xl font-bold text-white">The D2D Suburbs</h2>
+                </div>
+                <h3 class="text-slate-400 text-sm mono mb-4">ERA: LATE 20TH CENTURY / SACRED SARCOPHAGUS</h3>
+                <p class="text-slate-300 leading-relaxed text-sm">
+                    <strong>The Setup:</strong> The door-to-door suburban sprawl. A cramped backroom where Leslie tracks the thermodynamic sales numbers. The Alien Ambassador awaits.<br>
+                    <strong>The Boom:</strong> Joe jams a depleted O2 canister into the local power mechanism. The resulting pandemonium proves that zero-value leads remain zero-value across time.
+                </p>
+            </div>
+        </div>
+
+        <!-- PART 8 -->
+        <div class="era-node hazard" onclick="activateNode(this)">
+            <div class="node-dot"></div>
+            <div class="era-content">
+                <div class="era-number">08</div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-xs mono px-2 py-1 bg-red-500/20 text-red-400 rounded">THE CLOSED LOOP</span>
+                    <h2 class="text-2xl font-bold text-white">Silicon Valley Tech Office</h2>
+                </div>
+                <h3 class="text-slate-400 text-sm mono mb-4">ERA: 2021 / ALGORITHMIC DYSFUNCTION</h3>
+                <p class="text-slate-300 leading-relaxed text-sm">
+                    <strong>The Setup:</strong> The modern era. Joe is a street hacker trying to force the Earth-Apple into a corporate server rack.<br>
+                    <strong>The Boom:</strong> Uncle Flanjeet correctly identifies the Invariant Song: "History is doomed to recycle dysfunction." When Jane pulls the server plug, time violently resets, freezing them all in the algorithmic loop.
+                </p>
+            </div>
+        </div>
+
+        <!-- PART 9 -->
+        <div class="era-node" onclick="activateNode(this)">
+            <div class="node-dot"></div>
+            <div class="era-content">
+                <div class="era-number">09</div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-xs mono px-2 py-1 bg-orange-500/20 text-orange-400 rounded">COSMIC ISOLATION</span>
+                    <h2 class="text-2xl font-bold text-white">Deep Space / The Void</h2>
+                </div>
+                <h3 class="text-slate-400 text-sm mono mb-4">ERA: UNKNOWN FUTURE / THE LAST ORBIT</h3>
+                <p class="text-slate-300 leading-relaxed text-sm">
+                    <strong>The Setup:</strong> Sourced from the deep space lore. Joe floats in an isolating orbital habitat, still clutching the glinting Earth-Apple, convinced it holds the key to the universe.<br>
+                    <strong>The Boom:</strong> The Cleaner (a malfunctioning airlock drone) triggers a decompression event. Jane seals the bulkhead, leaving Joe to face the pure, silent void of his own ego.
+                </p>
+            </div>
+        </div>
+
+        <!-- PART 10 -->
+        <div class="era-node hazard" onclick="activateNode(this)">
+            <div class="node-dot"></div>
+            <div class="era-content">
+                <div class="era-number">10</div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-xs mono px-2 py-1 bg-red-500/20 text-red-400 rounded">THE FINAL CONVERGENCE</span>
+                    <h2 class="text-2xl font-bold text-white">The Master Orchestrator</h2>
+                </div>
+                <h3 class="text-slate-400 text-sm mono mb-4">ERA: OMNIPRESENT / Ŋ(z) SYSTEM CORE</h3>
+                <p class="text-slate-300 leading-relaxed text-sm">
+                    <strong>The Setup:</strong> The loop shatters. Joe realizes he is merely a vector within the NuOS architecture. He stands before the HD Viewport, facing the Master Orchestrator.<br>
+                    <strong>The Boom:</strong> He surrenders the Earth-Apple. The 5-Gear system resolves not in chaos, but in absolute thermodynamic balance. Jane and Leslie nod. The 10-part series achieves structural perfection.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function activateNode(element) {
+            document.querySelectorAll('.era-node').forEach(node => {
+                node.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        function initiateRegen() {
+            alert("[ SYSTEM ALERT ]\nThe 10-Part Master Pipeline has been planned and sequenced.\nCommencing sequential image generation of the addJOE series using the Shambles Engine...");
+        }
+    </script>
+</body>
+</html>

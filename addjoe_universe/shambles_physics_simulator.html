@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ŋ(z) Deterministic Physics Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --grid-color: rgba(255, 255, 255, 0.05);
+        }
+        body {
+            background-color: var(--bg-color);
+            color: #00ffcc;
+            font-family: 'Space Mono', monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        svg {
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        .panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #333;
+            padding: 20px;
+            width: 350px;
+            backdrop-filter: blur(5px);
+        }
+        .metric { font-size: 0.8rem; color: #888; margin-bottom: 5px;}
+        .val { color: #fff; font-weight: bold; }
+        
+        button {
+            border: 1px solid #00ffcc;
+            color: #00ffcc;
+            background: transparent;
+            padding: 5px 10px;
+            margin-right: 5px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        button:hover { background: #00ffcc; color: #000; }
+        
+        .joe-core { fill: #ff5722; filter: drop-shadow(0 0 10px #ff5722); }
+        .hazard-core { fill: transparent; stroke: #e11d48; stroke-width: 4; filter: drop-shadow(0 0 15px #e11d48); stroke-dasharray: 10; animation: rotate 10s linear infinite;}
+        .leslie-anchor { fill: #38bdf8; opacity: 0.6; }
+        .jane-ground { stroke: #fff; stroke-width: 2; opacity: 0; transition: opacity 0.5s; }
+        
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+        
+        #glitch-overlay {
+            position: absolute; top:0; left:0; right:0; bottom:0;
+            background: rgba(225, 29, 72, 0.1);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="panel">
+        <div class="text-xl font-bold mb-4 text-white">Ŋ(z) KINETIC SIMULATOR</div>
+        <div class="mb-4">
+            <button onclick="setGear(1)">G1: Brief</button>
+            <button onclick="setGear(2)">G2: Hustle</button>
+            <button onclick="setGear(3)">G3: Struggle</button>
+            <button onclick="setGear(4)">G4: False Res</button>
+            <button onclick="setGear(5)" class="border-red-500 text-red-500 hover:bg-red-500">G5: BOOM</button>
+        </div>
+        
+        <div class="metric">SYSTEM STATE: <span class="val text-blue-400" id="m-state">GEAR 1 (STATIC)</span></div>
+        <div class="metric">JOE KINETIC VELOCITY: <span class="val text-orange-500" id="m-vel">0.00</span></div>
+        <div class="metric">HAZARD DISTANCE: <span class="val text-red-500" id="m-dist">0.00</span></div>
+        <div class="metric">THERMODYNAMIC ENTROPY: <span class="val" id="m-ent">0%</span></div>
+        <div class="mt-4 text-xs text-gray-500" id="m-log">
+            > SYSTEM ONLINE. AWAITING GEAR INITIATION.
+        </div>
+    </div>
+
+    <svg id="viewport" viewBox="0 0 1000 600">
+        <!-- Jane: The Grounding Plane (Hidden until Gear 5) -->
+        <line x1="0" y1="500" x2="1000" y2="500" class="jane-ground" id="jane-plane" />
+        
+        <!-- Leslie: The Anchor (Static Reference) -->
+        <rect x="100" y="250" width="40" height="100" class="leslie-anchor" />
+        <text x="120" y="370" fill="#38bdf8" font-size="12" text-anchor="middle">LESLIE (ANCHOR)</text>
+        
+        <!-- The Hazard: The Mechanism / Fire Pit -->
+        <g transform="translate(800, 300)">
+            <circle cx="0" cy="0" r="60" class="hazard-core" id="hazard-shape" />
+            <text x="0" y="85" fill="#e11d48" font-size="12" text-anchor="middle">THE HAZARD (MECHANISM)</text>
+        </g>
+        
+        <!-- Joe: The Kinetic Vector -->
+        <circle cx="200" cy="300" r="15" class="joe-core" id="joe-shape" />
+        
+        <!-- Earth-Apple: Attached to Joe -->
+        <circle cx="200" cy="300" r="5" fill="#fff" id="earth-apple" />
+    </svg>
+    
+    <div id="glitch-overlay"></div>
+
+    <script>
+        const joe = document.getElementById('joe-shape');
+        const apple = document.getElementById('earth-apple');
+        const hazard = document.getElementById('hazard-shape');
+        const jane = document.getElementById('jane-plane');
+        const glitch = document.getElementById('glitch-overlay');
+        
+        let state = {
+            gear: 1,
+            joeX: 200,
+            joeY: 300,
+            vx: 0,
+            vy: 0,
+            targetX: 200,
+            targetY: 300,
+            hazardX: 800,
+            hazardY: 300,
+            entropy: 0
+        };
+
+        function log(msg) {
+            document.getElementById('m-log').innerHTML = `> ${msg}`;
+        }
+
+        function setGear(g) {
+            state.gear = g;
+            jane.style.opacity = 0;
+            glitch.style.opacity = 0;
+            
+            if(g === 1) {
+                document.getElementById('m-state').textContent = "GEAR 1 (BRIEFING)";
+                state.targetX = 200; state.targetY = 300;
+                state.entropy = 0;
+                log("Leslie anchors the system. Joe is static.");
+            }
+            if(g === 2) {
+                document.getElementById('m-state').textContent = "GEAR 2 (HUSTLE)";
+                state.entropy = 20;
+                log("Joe gains kinetic delusion. Eratic movement begins.");
+            }
+            if(g === 3) {
+                document.getElementById('m-state').textContent = "GEAR 3 (STRUGGLE)";
+                state.entropy = 50;
+                log("Biological cleaning logic fails. Velocity spikes.");
+            }
+            if(g === 4) {
+                document.getElementById('m-state').textContent = "GEAR 4 (FALSE RES)";
+                state.targetX = 600; // Moving toward hazard
+                state.entropy = 80;
+                log("Invariant Song echoes. Joe gravitates toward Hazard.");
+            }
+            if(g === 5) {
+                document.getElementById('m-state').textContent = "GEAR 5 (JANUS COLLISION)";
+                state.targetX = 800; // Direct collision course
+                state.entropy = 100;
+                log("COLLISION IMMINENT. JANE ACTIVATES RADICAL AUTHENTICITY.");
+                
+                setTimeout(() => {
+                    glitch.style.opacity = 1;
+                    jane.style.opacity = 1;
+                    // Grounding fault: Drop Joe to the Jane plane
+                    state.targetY = 485;
+                    state.targetX = 800;
+                    state.vx = 0;
+                    state.vy = 0;
+                    state.entropy = 0; // Chaos unplugged
+                    log("SYSTEM GROUNDED. CHAOS UNPLUGGED.");
+                    setTimeout(() => glitch.style.opacity = 0, 300);
+                }, 1000);
+            }
+        }
+
+        function loop() {
+            // Physics calculations
+            let speed = 0;
+            
+            if(state.gear === 1) {
+                state.vx += (state.targetX - state.joeX) * 0.05;
+                state.vy += (state.targetY - state.joeY) * 0.05;
+                state.vx *= 0.8; state.vy *= 0.8;
+            } else if (state.gear === 2 || state.gear === 3) {
+                // Random kinetic hustle
+                let jitter = state.gear === 3 ? 15 : 5;
+                state.targetX = 300 + Math.random() * 200;
+                state.targetY = 300 + (Math.random() - 0.5) * 200;
+                state.vx += (state.targetX - state.joeX) * 0.01;
+                state.vy += (state.targetY - state.joeY) * 0.01;
+                state.vx += (Math.random() - 0.5) * jitter;
+                state.vy += (Math.random() - 0.5) * jitter;
+                state.vx *= 0.95; state.vy *= 0.95;
+            } else if (state.gear === 4) {
+                // Pulled toward hazard
+                state.vx += (state.targetX - state.joeX) * 0.02;
+                state.vy += (state.targetY - state.joeY) * 0.02;
+                state.vy += Math.sin(Date.now()/100) * 10; // Chanting oscillation
+                state.vx *= 0.9; state.vy *= 0.9;
+            } else if (state.gear === 5) {
+                if(state.entropy > 0) { // Pre-collision
+                    state.vx += (state.targetX - state.joeX) * 0.1;
+                    state.vy += (state.targetY - state.joeY) * 0.1;
+                    state.vx *= 0.9; state.vy *= 0.9;
+                } else { // Post-collision grounded by Jane
+                    state.vx += (state.targetX - state.joeX) * 0.2;
+                    state.vy += (state.targetY - state.joeY) * 0.2;
+                    state.vx *= 0.7; state.vy *= 0.7;
+                }
+            }
+
+            state.joeX += state.vx;
+            state.joeY += state.vy;
+            
+            // Boundary checks
+            if(state.joeX < 15) state.joeX = 15;
+            if(state.joeY < 15) state.joeY = 15;
+            if(state.joeY > 585) state.joeY = 585;
+
+            // Apply to DOM
+            joe.setAttribute('cx', state.joeX);
+            joe.setAttribute('cy', state.joeY);
+            
+            // Earth Apple orbits Joe wildly based on entropy
+            let orbitSpeed = Date.now() / (100 - state.entropy + 10);
+            apple.setAttribute('cx', state.joeX + Math.cos(orbitSpeed) * 25);
+            apple.setAttribute('cy', state.joeY + Math.sin(orbitSpeed) * 25);
+
+            // Metrics Update
+            let vel = Math.sqrt(state.vx*state.vx + state.vy*state.vy);
+            let dist = Math.sqrt(Math.pow(state.hazardX - state.joeX, 2) + Math.pow(state.hazardY - state.joeY, 2));
+            
+            document.getElementById('m-vel').textContent = vel.toFixed(2);
+            document.getElementById('m-dist').textContent = dist.toFixed(2);
+            document.getElementById('m-ent').textContent = state.entropy + "%";
+            
+            if(state.entropy === 100) {
+                document.getElementById('m-ent').classList.add('text-red-500');
+            } else {
+                document.getElementById('m-ent').classList.remove('text-red-500');
+            }
+
+            requestAnimationFrame(loop);
+        }
+
+        // Start engine
+        loop();
+    </script>
+</body>
+</html>
