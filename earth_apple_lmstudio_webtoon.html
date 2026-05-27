@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EARTH-APPLE (LLAMA 3.1) - Auto-Play Audio Webtoon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Bangers&display=swap');
+        body { 
+            background-color: #05060b; color: #fff; font-family: 'JetBrains Mono', monospace; 
+            margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; 
+            background-image: radial-gradient(rgba(249, 115, 22, 0.05) 1px, transparent 1px);
+            background-size: 24px 24px;
+            scroll-behavior: smooth;
+        }
+        .webtoon-container { 
+            width: 100%; max-width: 600px; background: #090d16; min-height: 100vh;
+            display: flex; flex-direction: column; border-left: 1px solid #1f2937; border-right: 1px solid #1f2937;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            position: relative;
+        }
+        .controls {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;
+            display: flex; gap: 10px; background: rgba(5,6,11,0.9); padding: 15px 25px;
+            border-radius: 50px; border: 2px solid #f97316; box-shadow: 0 10px 30px rgba(249,115,22,0.3);
+            backdrop-filter: blur(10px);
+        }
+        .controls button {
+            background: #f97316; color: #fff; border: none; padding: 10px 20px; border-radius: 30px;
+            font-family: 'Bangers', cursive; font-size: 24px; letter-spacing: 2px; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .controls button:hover { background: #ea580c; transform: scale(1.05); }
+        .controls button:active { transform: scale(0.95); }
+        .controls #stop-btn { background: #ef4444; display: none; }
+        .controls #stop-btn:hover { background: #dc2626; }
+        
+        .scroll-gap-small { height: 120px; }
+        .scroll-gap-large { height: 350px; }
+        .scroll-gap-episode { height: 600px; }
+        .episode-header {
+            text-align: center; padding: 80px 20px;
+            background: linear-gradient(180deg, #05060b 0%, transparent 100%);
+            border-top: 2px dashed #f97316;
+        }
+        .panel { padding: 0 30px; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 10; transition: filter 0.3s; }
+        .speech-bubble {
+            background: #fff; color: #000; padding: 25px; border-radius: 24px;
+            font-family: 'Bangers', cursive; font-size: 28px; letter-spacing: 1.5px;
+            position: relative; border: 4px solid #18181b; box-shadow: 8px 8px 0px #f97316;
+            max-width: 90%; text-align: center; line-height: 1.2; z-index: 20; transition: all 0.3s ease;
+        }
+        .speech-bubble::after {
+            content: ''; position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%);
+            border-width: 24px 24px 0; border-style: solid; border-color: #fff transparent transparent transparent; z-index: 21; transition: border-color 0.3s ease;
+        }
+        .speech-bubble::before {
+            content: ''; position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);
+            border-width: 28px 28px 0; border-style: solid; border-color: #18181b transparent transparent transparent; z-index: 19;
+        }
+        .character-art {
+            width: 250px; height: 250px; margin-top: 30px;
+            filter: drop-shadow(0px 20px 20px rgba(0,0,0,0.9)); z-index: 15; transition: transform 0.4s ease;
+        }
+        .punchline-panel .character-art { transform: scale(1.35) translateY(-10px); filter: drop-shadow(0px 0px 30px rgba(249,115,22,0.4)); }
+        .punchline-panel .speech-bubble { box-shadow: 8px 8px 0px #ef4444; transform: scale(1.05); }
+        .character-glow {
+            position: absolute; width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(249,115,22,0.15) 0%, transparent 70%);
+            border-radius: 50%; z-index: 5; bottom: 50px;
+        }
+
+        /* Active Audio Styling */
+        .panel.active-audio .speech-bubble {
+            background: #fef08a; border-color: #eab308; box-shadow: 0 0 30px rgba(234, 179, 8, 0.6), 8px 8px 0px #f97316;
+            transform: scale(1.1);
+        }
+        .panel.active-audio .speech-bubble::after { border-color: #fef08a transparent transparent transparent; }
+        .panel.active-audio .character-art { transform: scale(1.1); filter: drop-shadow(0px 0px 40px rgba(234,179,8,0.6)); }
+        .punchline-panel.active-audio .character-art { transform: scale(1.4) translateY(-10px); }
+        .panel.dimmed { filter: brightness(0.4) grayscale(0.5); }
+
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button id="play-btn">▶ PLAY CINEMATIC AUDIO</button>
+        <button id="stop-btn">■ STOP</button>
+    </div>
+
+    <div class="webtoon-container">
+        <div id="top-anchor" class="text-center pt-48 pb-16 bg-[#05060b] relative overflow-hidden">
+            <div class="absolute inset-0 bg-orange-500/5 mix-blend-overlay"></div>
+            <h1 class="text-6xl font-['Bangers'] tracking-widest text-orange-500 mb-4 drop-shadow-[0_0_15px_rgba(249,115,22,0.5)]">THE EARTH-APPLE THEORY</h1>
+            <p class="text-sm text-zinc-400 uppercase tracking-widest font-bold">Auto-Scroll Audio Enabled</p>
+        </div>
+        
+        <div class="scroll-gap-episode"></div>
+        <div class="episode-header">
+            <h2 class="text-4xl font-['Bangers'] text-zinc-200 tracking-wider">PHASE 1</h2>
+            <h3 class="text-lg text-orange-500 mt-3 tracking-widest font-bold uppercase">The Phased Structured Displacement of Developmental Traits</h3>
+        </div>
+        <div class="scroll-gap-small"></div>
+    
+            <div class="panel " data-character="Leslie" data-text="The universe lacks the creative bandwidth to invent new idiots, so it simply recycles the same &apos;Token&apos; ginger liability across every era.">
+                <div class="speech-bubble">The universe lacks the creative bandwidth to invent new idiots, so it simply recycles the same 'Token' ginger liability across every era.</div>
+                <div class="character-art"><svg class="shambles-svg" width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Monochromatic woodcut aesthetic -->
+                            <!-- Tired Face Profile -->
+                            <path d="M48 20c-15 0-20 8-20 20v18c0 10 8 16 18 16s18-6 18-16V40c0-12-5-20-18-20z" fill="#0c0a09" stroke="#57534e" stroke-width="1.5" />
+                            <!-- Hairline (receding, corporate, neat) -->
+                            <path d="M28 40c4-4 8-6 20-6s16 2 20 6c0-10-8-16-20-16s-20 6-20 16z" fill="#292524" />
+                            <!-- Under-eye bags representing infinite cosmic dread -->
+                            <path d="M34 54c3 2 7 2 10 0" stroke="#78716c" stroke-width="1.2" stroke-linecap="round" />
+                            <path d="M56 54c3 2 7 2 10 0" stroke="#78716c" stroke-width="1.2" stroke-linecap="round" />
+                            <!-- Tired, slightly down-turned eyes -->
+                            <path d="M35 50c3-1 6-1 9 0M57 50c3-1 6-1 9 0" stroke="#a8a29e" stroke-width="1.5" stroke-linecap="round" />
+                            <!-- Deep pinch-nose line of absolute exhaustion -->
+                            <path d="M50 48v10l-2 2" stroke="#44403c" stroke-width="1.5" stroke-linecap="round" />
+                            <!-- Tight, flat mouth line -->
+                            <path d="M42 68h16" stroke="#44403c" stroke-width="2" stroke-linecap="round" />
+                            <!-- Lukewarm Mug of Tea -->
+                            <path d="M68 62h6v8h-6zm6 2c2 0 3 1 3 2s-1 2-3 2" stroke="#78716c" stroke-width="1.2" fill="none" />
+                        </svg></div>
+                <div class="character-glow"></div>
+            </div>
+        <div class="scroll-gap-large"></div>
+            <div class="panel " data-character="Joe" data-text="I&apos;m just a non-scalable biological asset with a negative ROI on existence, trying to survive in this chaotic world.">
+                <div class="speech-bubble">I'm just a non-scalable biological asset with a negative ROI on existence, trying to survive in this chaotic world.</div>
+                <div class="character-art"><svg class="shambles-svg" width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Background Subtle Halo -->
+                            <circle cx="50" cy="50" r="35" fill="url(#joe-halo)" opacity="0.1" />
+                            <!-- Grayscale Face Outline and shadows -->
+                            <path d="M50 78c-12 0-21-9-21-21V48c0-3 2-6 5-6s5 3 5 6v1H38l12-18c1-1 3-1 4 0l12 18h-1V48c0-3 2-6 5-6s5 3 5 6v9c0 12-9 21-21 21z" fill="#18181b" stroke="#3f3f46" stroke-width="1.5" />
+                            <!-- Weary eyes -->
+                            <path d="M41 49h4M55 49h4" stroke="#a1a1aa" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M43 51c0 1-1 1-1 1s-1 0-1-1" stroke="#a1a1aa" stroke-width="1" stroke-linecap="round" />
+                            <path d="M57 51c0 1-1 1-1 1s-1 0-1-1" stroke="#a1a1aa" stroke-width="1" stroke-linecap="round" />
+                            <!-- Sceptical mouth -->
+                            <path d="M46 64h8" stroke="#3f3f46" stroke-width="1.5" stroke-linecap="round" />
+                            <!-- Bold, Layered Neon-Orange Impasto Hair Anomaly -->
+                            <g class="orange-anomaly-group" fill="#FF4500">
+                                <path d="M50 15c-5 3-14 3-17 10-3-1-7 1-6 6-2 1-3 4-2 7 2 0 4-1 5-3 1-5 6-8 10-10l10-10z" />
+                                <path d="M50 15c5 3 14 3 17 10 3-1 7 1 6 6 2 1 3 4 2 7-2 0-4-1-5-3-1-5-6-8-10-10l-10-10z" />
+                                <path d="M50 13c-3 4-8 8-8 14 0 6 3 9 8 9s8-3 8-9c0-6-5-10-8-14z" fill="#FFA500" />
+                                <path d="M50 25c-1 2-4 4-4 7s2 5 4 5 4-2 4-5-3-5-4-7z" fill="#FFD700" />
+                                <path d="M28 42c-3-2-6-1-7 2s1 6 4 7c1-3 1-7 3-9z" />
+                                <path d="M72 42c3-2 6-1 7 2s-1 6-4 7c-1-3-1-7-3-9z" />
+                            </g>
+                            <defs>
+                                <radialGradient id="joe-halo" cx="50" cy="50" r="35" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#FF4500" />
+                                    <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+                                </radialGradient>
+                            </defs>
+                        </svg></div>
+                <div class="character-glow"></div>
+            </div>
+        <div class="scroll-gap-large"></div>
+            <div class="panel punchline-panel" data-character="EarthApple" data-text="You&apos;re the stashed value of a forgotten memory, Joe – possessing no cash value, yet somehow always present to disrupt progress.">
+                <div class="speech-bubble">You're the stashed value of a forgotten memory, Joe – possessing no cash value, yet somehow always present to disrupt progress.</div>
+                <div class="character-art"><svg class="shambles-svg" width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Organic, craggy mud potato silhouette -->
+                            <path d="M52 18c15-4 28 8 30 20s-6 26-18 30c-15 5-30-4-32-18s5-28 20-32z" fill="url(#potato-grad)" stroke="#27272a" stroke-width="1.5" />
+                            <!-- Craggy crevices and dirt speckles -->
+                            <circle cx="45" cy="35" r="1" fill="#18181b" />
+                            <circle cx="65" cy="50" r="1.5" fill="#18181b" />
+                            <circle cx="35" cy="48" r="1" fill="#18181b" />
+                            <circle cx="55" cy="62" r="1.2" fill="#18181b" />
+                            <path d="M42 28c5 1 8-2 10 1" stroke="#27272a" stroke-width="1" stroke-linecap="round" fill="none" />
+                            <path d="M58 52c-4 2-5-2-9-1" stroke="#27272a" stroke-width="1" stroke-linecap="round" fill="none" />
+                            <!-- Subtle, unearned glowing golden outline indicating delusion of value -->
+                            <path d="M52 18c15-4 28 8 30 20s-6 26-18 30c-15 5-30-4-32-18s5-28 20-32z" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2 3" opacity="0.8" />
+                            <!-- Little withered twig growing out of top -->
+                            <path d="M54 20c0-6 4-8 6-12" stroke="#71717a" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M58 12c2-1 4-1 4-3s-2-2-4 0" stroke="#71717a" stroke-width="1.2" stroke-linecap="round" fill="none" />
+                            <defs>
+                                <radialGradient id="potato-grad" cx="45%" cy="40%" r="50%">
+                                    <stop offset="0%" stop-color="#3f3f46" />
+                                    <stop offset="100%" stop-color="#18181b" />
+                                </radialGradient>
+                            </defs>
+                        </svg></div>
+                <div class="character-glow"></div>
+            </div>
+        
+        <div class="scroll-gap-episode"></div>
+        <div class="episode-header">
+            <h2 class="text-4xl font-['Bangers'] text-zinc-200 tracking-wider">PHASE 2</h2>
+            <h3 class="text-lg text-orange-500 mt-3 tracking-widest font-bold uppercase">Evolutionary Success via Biological Incompetence</h3>
+        </div>
+        <div class="scroll-gap-small"></div>
+    
+            <div class="panel " data-character="Joe" data-text="I initiated the Great Oxidation Event by taking a deep breath of light – effectively poisoning the entire anaerobic world with oxygen.">
+                <div class="speech-bubble">I initiated the Great Oxidation Event by taking a deep breath of light – effectively poisoning the entire anaerobic world with oxygen.</div>
+                <div class="character-art"><svg class="shambles-svg" width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Background Subtle Halo -->
+                            <circle cx="50" cy="50" r="35" fill="url(#joe-halo)" opacity="0.1" />
+                            <!-- Grayscale Face Outline and shadows -->
+                            <path d="M50 78c-12 0-21-9-21-21V48c0-3 2-6 5-6s5 3 5 6v1H38l12-18c1-1 3-1 4 0l12 18h-1V48c0-3 2-6 5-6s5 3 5 6v9c0 12-9 21-21 21z" fill="#18181b" stroke="#3f3f46" stroke-width="1.5" />
+                            <!-- Weary eyes -->
+                            <path d="M41 49h4M55 49h4" stroke="#a1a1aa" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M43 51c0 1-1 1-1 1s-1 0-1-1" stroke="#a1a1aa" stroke-width="1" stroke-linecap="round" />
+                            <path d="M57 51c0 1-1 1-1 1s-1 0-1-1" stroke="#a1a1aa" stroke-width="1" stroke-linecap="round" />
+                            <!-- Sceptical mouth -->
+                            <path d="M46 64h8" stroke="#3f3f46" stroke-width="1.5" stroke-linecap="round" />
+                            <!-- Bold, Layered Neon-Orange Impasto Hair Anomaly -->
+                            <g class="orange-anomaly-group" fill="#FF4500">
+                                <path d="M50 15c-5 3-14 3-17 10-3-1-7 1-6 6-2 1-3 4-2 7 2 0 4-1 5-3 1-5 6-8 10-10l10-10z" />
+                                <path d="M50 15c5 3 14 3 17 10 3-1 7 1 6 6 2 1 3 4 2 7-2 0-4-1-5-3-1-5-6-8-10-10l-10-10z" />
+                                <path d="M50 13c-3 4-8 8-8 14 0 6 3 9 8 9s8-3 8-9c0-6-5-10-8-14z" fill="#FFA500" />
+                                <path d="M50 25c-1 2-4 4-4 7s2 5 4 5 4-2 4-5-3-5-4-7z" fill="#FFD700" />
+                                <path d="M28 42c-3-2-6-1-7 2s1 6 4 7c1-3 1-7 3-9z" />
+                                <path d="M72 42c3-2 6-1 7 2s-1 6-4 7c-1-3-1-7-3-9z" />
+                            </g>
+                            <defs>
+                                <radialGradient id="joe-halo" cx="50" cy="50" r="35" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#FF4500" />
+                                    <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+                                </radialGradient>
+                            </defs>
+                        </svg></div>
+                <div class="character-glow"></div>
+            </div>
+        <div class="scroll-gap-large"></div>
+            <div class="panel " data-character="Leslie" data-text="I was trying to organize a coherent molecular lattice, but Joe&apos;s incompetence forced a geopolitical shift from fermentation to respiration.">
+                <div class="speech-bubble">I was trying to organize a coherent molecular lattice, but Joe's incompetence forced a geopolitical shift from fermentation to respiration.</div>
+                <div class="character-art"><svg class="shambles-svg" width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Monochromatic woodcut aesthetic -->
+                            <!-- Tired Face Profile -->
+                            <path d="M48 20c-15 0-20 8-20 20v18c0 10 8 16 18 16s18-6 18-16V40c0-12-5-20-18-20z" fill="#0c0a09" stroke="#57534e" stroke-width="1.5" />
+                            <!-- Hairline (receding, corporate, neat) -->
+                            <path d="M28 40c4-4 8-6 20-6s16 2 20 6c0-10-8-16-20-16s-20 6-20 16z" fill="#292524" />
+                            <!-- Under-eye bags representing infinite cosmic dread -->
+                            <path d="M34 54c3 2 7 2 10 0" stroke="#78716c" stroke-width="1.2" stroke-linecap="round" />
+                            <path d="M56 54c3 2 7 2 10 0" stroke="#78716c" stroke-width="1.2" stroke-linecap="round" />
+                            <!-- Tired, slightly down-turned eyes -->
+                            <path d="M35 50c3-1 6-1 9 0M57 50c3-1 6-1 9 0" stroke="#a8a29e" stroke-width="1.5" stroke-linecap="round" />
+                            <!-- Deep pinch-nose line of absolute exhaustion -->
+                            <path d="M50 48v10l-2 2" stroke="#44403c" stroke-width="1.5" stroke-linecap="round" />
+                            <!-- Tight, flat mouth line -->
+                            <path d="M42 68h16" stroke="#44403c" stroke-width="2" stroke-linecap="round" />
+                            <!-- Lukewarm Mug of Tea -->
+                            <path d="M68 62h6v8h-6zm6 2c2 0 3 1 3 2s-1 2-3 2" stroke="#78716c" stroke-width="1.2" fill="none" />
+                        </svg></div>
+                <div class="character-glow"></div>
+            </div>
+        <div class="scroll-gap-large"></div>
+            <div class="panel punchline-panel" data-character="Jane" data-text="Human life only exists because an ancient ancestor &apos;messed up the quote&apos; for the original lifeforms – and it was all thanks to your biological incompetence, Joe.">
+                <div class="speech-bubble">Human life only exists because an ancient ancestor 'messed up the quote' for the original lifeforms – and it was all thanks to your biological incompetence, Joe.</div>
+                <div class="character-art"><svg class="shambles-svg" width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Soft, calm curves of naturalism -->
+                            <circle cx="50" cy="50" r="30" fill="url(#jane-halo)" opacity="0.1" />
+                            <!-- Minimalist profile -->
+                            <path d="M45 22c-12 0-17 6-17 18v16c0 10 7 14 17 14s17-4 17-14V40c0-12-5-18-17-18z" fill="#09090b" stroke="#4b5563" stroke-width="1.5" />
+                            <!-- Calm, closed eyes representing sanctuary -->
+                            <path d="M33 46c2 2 5 2 7 0M53 46c2 2 5 2 7 0" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" fill="none" />
+                            <!-- Soft smile of peaceful resolution -->
+                            <path d="M41 58c3 2 5 2 8 0" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" fill="none" />
+                            <!-- Hair (simple bob cut, static lines) -->
+                            <path d="M28 36c0-10 6-14 17-14s17 4 17 14v12h-34V36z" fill="#1f2937" />
+                            <!-- Ground pin/plug wire in her hands -->
+                            <path d="M50 70v15" stroke="#a855f7" stroke-width="2" stroke-linecap="round" />
+                            <rect x="46" y="80" width="8" height="6" rx="1" fill="#581c87" stroke="#a855f7" stroke-width="1" />
+                            <line x1="48" y1="86" x2="48" y2="89" stroke="#a855f7" stroke-width="1" />
+                            <line x1="52" y1="86" x2="52" y2="89" stroke="#a855f7" stroke-width="1" />
+                            <defs>
+                                <radialGradient id="jane-halo" cx="50" cy="50" r="30" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#a855f7" />
+                                    <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+                                </radialGradient>
+                            </defs>
+                        </svg></div>
+                <div class="character-glow"></div>
+            </div>
+        
+        <div class="scroll-gap-episode"></div>
+        <div class="episode-header">
+            <h2 class="text-4xl font-['Bangers'] text-zinc-200 tracking-wider">PHASE 3</h2>
+            <h3 class="text-lg text-orange-500 mt-3 tracking-widest font-bold uppercase">Strategic Digital Diplomacy in the Window Game</h3>
+        </div>
+        <div class="scroll-gap-small"></div>
+    
+            <div class="panel " data-character="Joe" data-text="I&apos;m a modern Joe, attempting to navigate the high-stakes world of window sales by utilizing Strategic Digital Diplomacy.">
+                <div class="speech-bubble">I'm a modern Joe, attempting to navigate the high-stakes world of window sales by utilizing Strategic Digital Diplomacy.</div>
+                <div class="character-art"><svg class="shambles-svg" width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Background Subtle Halo -->
+                            <circle cx="50" cy="50" r="35" fill="url(#joe-halo)" opacity="0.1" />
+                            <!-- Grayscale Face Outline and shadows -->
+                            <path d="M50 78c-12 0-21-9-21-21V48c0-3 2-6 5-6s5 3 5 6v1H38l12-18c1-1 3-1 4 0l12 18h-1V48c0-3 2-6 5-6s5 3 5 6v9c0 12-9 21-21 21z" fill="#18181b" stroke="#3f3f46" stroke-width="1.5" />
+                            <!-- Weary eyes -->
+                            <path d="M41 49h4M55 49h4" stroke="#a1a1aa" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M43 51c0 1-1 1-1 1s-1 0-1-1" stroke="#a1a1aa" stroke-width="1" stroke-linecap="round" />
+                            <path d="M57 51c0 1-1 1-1 1s-1 0-1-1" stroke="#a1a1aa" stroke-width="1" stroke-linecap="round" />
+                            <!-- Sceptical mouth -->
+                            <path d="M46 64h8" stroke="#3f3f46" stroke-width="1.5" stroke-linecap="round" />
+                            <!-- Bold, Layered Neon-Orange Impasto Hair Anomaly -->
+                            <g class="orange-anomaly-group" fill="#FF4500">
+                                <path d="M50 15c-5 3-14 3-17 10-3-1-7 1-6 6-2 1-3 4-2 7 2 0 4-1 5-3 1-5 6-8 10-10l10-10z" />
+                                <path d="M50 15c5 3 14 3 17 10 3-1 7 1 6 6 2 1 3 4 2 7-2 0-4-1-5-3-1-5-6-8-10-10l-10-10z" />
+                                <path d="M50 13c-3 4-8 8-8 14 0 6 3 9 8 9s8-3 8-9c0-6-5-10-8-14z" fill="#FFA500" />
+                                <path d="M50 25c-1 2-4 4-4 7s2 5 4 5 4-2 4-5-3-5-4-7z" fill="#FFD700" />
+                                <path d="M28 42c-3-2-6-1-7 2s1 6 4 7c1-3 1-7 3-9z" />
+                                <path d="M72 42c3-2 6-1 7 2s-1 6-4 7c-1-3-1-7-3-9z" />
+                            </g>
+                            <defs>
+                                <radialGradient id="joe-halo" cx="50" cy="50" r="35" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#FF4500" />
+                                    <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+                                </radialGradient>
+                            </defs>
+                        </svg></div>
+                <div class="character-glow"></div>
+            </div>
+        <div class="scroll-gap-large"></div>
+            <div class="panel punchline-panel" data-character="Leslie" data-text="You&apos;re trying to sell double-glazing to a Carboniferous swamp, Joe! This is a temporal violation!">
+                <div class="speech-bubble">You're trying to sell double-glazing to a Carboniferous swamp, Joe! This is a temporal violation!</div>
+                <div class="character-art"><svg class="shambles-svg" width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Monochromatic woodcut aesthetic -->
+                            <!-- Tired Face Profile -->
+                            <path d="M48 20c-15 0-20 8-20 20v18c0 10 8 16 18 16s18-6 18-16V40c0-12-5-20-18-20z" fill="#0c0a09" stroke="#57534e" stroke-width="1.5" />
+                            <!-- Hairline (receding, corporate, neat) -->
+                            <path d="M28 40c4-4 8-6 20-6s16 2 20 6c0-10-8-16-20-16s-20 6-20 16z" fill="#292524" />
+                            <!-- Under-eye bags representing infinite cosmic dread -->
+                            <path d="M34 54c3 2 7 2 10 0" stroke="#78716c" stroke-width="1.2" stroke-linecap="round" />
+                            <path d="M56 54c3 2 7 2 10 0" stroke="#78716c" stroke-width="1.2" stroke-linecap="round" />
+                            <!-- Tired, slightly down-turned eyes -->
+                            <path d="M35 50c3-1 6-1 9 0M57 50c3-1 6-1 9 0" stroke="#a8a29e" stroke-width="1.5" stroke-linecap="round" />
+                            <!-- Deep pinch-nose line of absolute exhaustion -->
+                            <path d="M50 48v10l-2 2" stroke="#44403c" stroke-width="1.5" stroke-linecap="round" />
+                            <!-- Tight, flat mouth line -->
+                            <path d="M42 68h16" stroke="#44403c" stroke-width="2" stroke-linecap="round" />
+                            <!-- Lukewarm Mug of Tea -->
+                            <path d="M68 62h6v8h-6zm6 2c2 0 3 1 3 2s-1 2-3 2" stroke="#78716c" stroke-width="1.2" fill="none" />
+                        </svg></div>
+                <div class="character-glow"></div>
+            </div>
+        
+        <div class="text-center py-40 text-orange-600/50 font-bold tracking-widest border-t border-zinc-900 mt-20">
+            [ SIMULATION COMPLETE ]
+        </div>
+    </div>
+
+    <script>
+        let isPlaying = false;
+        let currentUtterance = null;
+        let voices = [];
+        
+        // Wait for voices to load
+        window.speechSynthesis.onvoiceschanged = () => {
+            voices = window.speechSynthesis.getVoices();
+        };
+
+        const playBtn = document.getElementById('play-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const panels = Array.from(document.querySelectorAll('.panel'));
+
+        function getVoiceForCharacter(charName) {
+            if (!voices.length) voices = window.speechSynthesis.getVoices();
+            // Simple heuristic to assign different voices to characters
+            const englishVoices = voices.filter(v => v.lang.startsWith('en'));
+            const maleVoices = englishVoices.filter(v => v.name.toLowerCase().includes('guy') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('david'));
+            const femaleVoices = englishVoices.filter(v => v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('hazel'));
+            
+            if (charName.toLowerCase() === 'joe') return maleVoices[0] || englishVoices[0];
+            if (charName.toLowerCase() === 'leslie') return femaleVoices[0] || englishVoices[1] || englishVoices[0];
+            if (charName.toLowerCase() === 'jane') return femaleVoices[1] || englishVoices[2] || englishVoices[0];
+            if (charName.toLowerCase() === 'earthapple') return englishVoices[Math.floor(Math.random() * englishVoices.length)];
+            
+            return englishVoices[0];
+        }
+
+        function getPitchForCharacter(charName) {
+            if (charName.toLowerCase() === 'joe') return 0.9;
+            if (charName.toLowerCase() === 'leslie') return 1.2;
+            if (charName.toLowerCase() === 'earthapple') return 0.5; // Deep/weird
+            return 1.0;
+        }
+
+        function getRateForCharacter(charName) {
+            if (charName.toLowerCase() === 'joe') return 1.1; // Frantic
+            if (charName.toLowerCase() === 'leslie') return 0.95; // Cynical, slow
+            return 1.0;
+        }
+
+        async function playPanels(startIndex = 0) {
+            if (!isPlaying) return;
+            
+            if (startIndex >= panels.length) {
+                stopPlaying();
+                return;
+            }
+
+            const panel = panels[startIndex];
+            const text = panel.getAttribute('data-text');
+            const character = panel.getAttribute('data-character');
+
+            // Dim others, highlight current
+            panels.forEach(p => p.classList.add('dimmed'));
+            panels.forEach(p => p.classList.remove('active-audio'));
+            panel.classList.remove('dimmed');
+            panel.classList.add('active-audio');
+
+            // Scroll into view
+            const yOffset = -200; // Offset for the fixed controls
+            const y = panel.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({top: y, behavior: 'smooth'});
+
+            // Wait a beat for scroll
+            await new Promise(r => setTimeout(r, 600));
+            if (!isPlaying) return;
+
+            // Speech
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.voice = getVoiceForCharacter(character);
+            currentUtterance.pitch = getPitchForCharacter(character);
+            currentUtterance.rate = getRateForCharacter(character);
+            
+            currentUtterance.onend = () => {
+                setTimeout(() => {
+                    playPanels(startIndex + 1);
+                }, 400); // Small pause between lines
+            };
+            
+            window.speechSynthesis.speak(currentUtterance);
+        }
+
+        function stopPlaying() {
+            isPlaying = false;
+            window.speechSynthesis.cancel();
+            playBtn.style.display = 'block';
+            stopBtn.style.display = 'none';
+            panels.forEach(p => {
+                p.classList.remove('dimmed');
+                p.classList.remove('active-audio');
+            });
+            document.getElementById('top-anchor').scrollIntoView({behavior: 'smooth'});
+        }
+
+        playBtn.addEventListener('click', () => {
+            isPlaying = true;
+            playBtn.style.display = 'none';
+            stopBtn.style.display = 'block';
+            
+            // Ensure voices are loaded (hack for Chrome)
+            window.speechSynthesis.getVoices();
+            
+            playPanels(0);
+        });
+
+        stopBtn.addEventListener('click', stopPlaying);
+
+        // Cancel speech on page hide/refresh
+        window.addEventListener('beforeunload', () => {
+            window.speechSynthesis.cancel();
+        });
+    </script>
+</body>
+</html>

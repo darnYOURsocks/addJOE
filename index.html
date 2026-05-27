@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shambles Engine // NuOS Archives</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700;800&family=Bangers&display=swap');
+        
+        :root {
+            --neon-orange: #f97316;
+            --dark-bg: #05060b;
+        }
+
+        body { 
+            background-color: var(--dark-bg); 
+            color: #fff; 
+            font-family: 'JetBrains Mono', monospace; 
+            margin: 0; padding: 0; 
+            background-image: 
+                radial-gradient(rgba(249, 115, 22, 0.08) 1px, transparent 1px),
+                linear-gradient(180deg, rgba(5,6,11,1) 0%, rgba(9,13,22,1) 100%);
+            background-size: 30px 30px, 100% 100%;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.1), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.5s ease;
+        }
+
+        .glass-card:hover::before {
+            left: 150%;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--neon-orange);
+            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.2), 0 0 15px rgba(249, 115, 22, 0.1) inset;
+        }
+
+        .bangers { font-family: 'Bangers', cursive; letter-spacing: 2px; }
+        
+        .header-glow {
+            text-shadow: 0 0 20px rgba(249,115,22,0.6), 0 0 40px rgba(249,115,22,0.3);
+        }
+
+        .badge {
+            background: rgba(249,115,22,0.15);
+            color: var(--neon-orange);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid rgba(249,115,22,0.3);
+            align-self: flex-start;
+        }
+    </style>
+</head>
+<body class="p-8 md:p-16">
+
+    <header class="max-w-6xl mx-auto mb-20 text-center relative z-10 pt-10">
+        <div class="inline-block px-4 py-1 rounded-full border border-orange-500/30 text-orange-500 text-xs font-bold tracking-[0.3em] mb-6 bg-orange-500/10 backdrop-blur-md">
+            TRANSMISSION INCOMING: Ŋ(z) NuOS
+        </div>
+        <h1 class="text-6xl md:text-8xl bangers text-white header-glow mb-4 uppercase">The Shambles Engine</h1>
+        <p class="text-xl text-zinc-400 max-w-2xl mx-auto font-light leading-relaxed">
+            A comprehensive audit of biological incompetence across the space-time continuum. 
+            All simulations rendered via strict 5-Gear Spatiotemporal Telemetry.
+        </p>
+    </header>
+
+    <main class="max-w-6xl mx-auto">
+        
+        <div class="mb-16">
+            <h2 class="text-3xl font-bold border-b border-zinc-800 pb-4 mb-8 flex items-center gap-4">
+                <span class="text-orange-500">>></span> 10-Era Batch Simulation
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Cards -->
+                <a href="episode_1_egyptian_audit.html" class="glass-card">
+                    <span class="badge">PHASE -2500</span>
+                    <h3 class="text-2xl bangers text-zinc-100">The Egyptian Audit</h3>
+                    <p class="text-sm text-zinc-400">Square blocks are a stagnant market. Behold the frictionless granite sphere.</p>
+                </a>
+                
+                <a href="episode_2_cyber_hustle.html" class="glass-card">
+                    <span class="badge">PHASE 2099</span>
+                    <h3 class="text-2xl bangers text-zinc-100">The Cyber-Hustle</h3>
+                    <p class="text-sm text-zinc-400">Bypassing the digital grid with an un-hackable, analog wooden abacus.</p>
+                </a>
+
+                <a href="episode_3_wall_street_shambles.html" class="glass-card">
+                    <span class="badge">PHASE 1987</span>
+                    <h3 class="text-2xl bangers text-zinc-100">Wall Street Shambles</h3>
+                    <p class="text-sm text-zinc-400">Injecting physical pre-IPO arcade equity into the mainframe.</p>
+                </a>
+
+                <a href="episode_4_medieval_siege.html" class="glass-card">
+                    <span class="badge">PHASE 1347</span>
+                    <h3 class="text-2xl bangers text-zinc-100">The Medieval Siege</h3>
+                    <p class="text-sm text-zinc-400">Executing a Bureaucratic Boundary Negation via catapult.</p>
+                </a>
+
+                <a href="episode_5_paleolithic_ignition.html" class="glass-card">
+                    <span class="badge">PHASE -10,000</span>
+                    <h3 class="text-2xl bangers text-zinc-100">Paleolithic Ignition</h3>
+                    <p class="text-sm text-zinc-400">A hydro-thermal lubrication node to initiate the Ice Age.</p>
+                </a>
+
+                <a href="episode_6_pirate_market_saturation.html" class="glass-card">
+                    <span class="badge">PHASE 1715</span>
+                    <h3 class="text-2xl bangers text-zinc-100">Market Saturation</h3>
+                    <p class="text-sm text-zinc-400">Mapping the ocean using self-erasing squid ink geography.</p>
+                </a>
+
+                <a href="episode_7_victorian_tea_friction.html" class="glass-card">
+                    <span class="badge">PHASE 1888</span>
+                    <h3 class="text-2xl bangers text-zinc-100">Victorian Tea Friction</h3>
+                    <p class="text-sm text-zinc-400">Introducing an iron-infused rustic infusion to the high society.</p>
+                </a>
+
+                <a href="episode_8_samurai_dojo_collapse.html" class="glass-card">
+                    <span class="badge">PHASE 1600</span>
+                    <h3 class="text-2xl bangers text-zinc-100">Samurai Dojo Collapse</h3>
+                    <p class="text-sm text-zinc-400">Swords are a liability. Enter the Zero-Edge Pacification Rod.</p>
+                </a>
+
+                <a href="episode_9_industrial_mill_weep.html" class="glass-card">
+                    <span class="badge">PHASE 1812</span>
+                    <h3 class="text-2xl bangers text-zinc-100">Industrial Mill Weep</h3>
+                    <p class="text-sm text-zinc-400">A micro-fibrous ambient fluff upgrade for the steam piston.</p>
+                </a>
+
+                <a href="episode_10_orbital_greenhouse.html" class="glass-card">
+                    <span class="badge">PHASE 2300</span>
+                    <h3 class="text-2xl bangers text-zinc-100">Orbital Greenhouse</h3>
+                    <p class="text-sm text-zinc-400">The ultimate open-concept layout in the vacuum of space.</p>
+                </a>
+            </div>
+        </div>
+
+        <div>
+            <h2 class="text-3xl font-bold border-b border-zinc-800 pb-4 mb-8 flex items-center gap-4 mt-24">
+                <span class="text-orange-500">>></span> Offline Standalone Ledgers
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <a href="earth_apple_lmstudio_webtoon.html" class="glass-card !border-zinc-700 hover:!border-white">
+                    <span class="badge !bg-zinc-800 !text-white !border-zinc-600">LLAMA 3.1 SYNTHESIS</span>
+                    <h3 class="text-2xl bangers text-zinc-100">The Earth-Apple Theory</h3>
+                    <p class="text-sm text-zinc-400">The stashed value of a forgotten memory, possessing no cash value.</p>
+                </a>
+
+                <a href="moan_machine_webtoon.html" class="glass-card !border-zinc-700 hover:!border-white">
+                    <span class="badge !bg-zinc-800 !text-white !border-zinc-600">STANDALONE</span>
+                    <h3 class="text-2xl bangers text-zinc-100">The Moan Machine</h3>
+                    <p class="text-sm text-zinc-400">A non-scalable biological asset receives an untraceable fiat generator.</p>
+                </a>
+
+                <a href="tiny_horse_webtoon.html" class="glass-card !border-zinc-700 hover:!border-white">
+                    <span class="badge !bg-zinc-800 !text-white !border-zinc-600">STANDALONE</span>
+                    <h3 class="text-2xl bangers text-zinc-100">The Tiny Horse Incident</h3>
+                    <p class="text-sm text-zinc-400">A promotion from 'unemployed idiot' to 'garbage supervisor'.</p>
+                </a>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-32 border-t border-zinc-900 py-12 text-center">
+        <p class="text-zinc-600 font-bold tracking-widest uppercase text-sm">[ SYSTEM AUDIT FINALIZED // CYCLE COMPLETE ]</p>
+    </footer>
+
+</body>
+</html>
