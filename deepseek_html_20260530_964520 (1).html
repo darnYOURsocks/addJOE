@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHAMBLES ENGINE // ASIAN GOLD AUDIT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060608;
+  --bg2: #0d0d12;
+  --orange: #ff6b1a;
+  --orange-dim: #7a3008;
+  --gold: #c8960a;
+  --gold-bright: #f0c030;
+  --cyan: #00e5cc;
+  --red: #d42020;
+  --text: #c8c0a8;
+  --text-dim: #5a5448;
+  --white: #ede8dc;
+  --mono: 'Share Tech Mono', monospace;
+  --display: 'Bebas Neue', sans-serif;
+  --serif: 'IM Fell English', serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: crosshair;
+}
+
+/* ── SCAN LINES OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.18) 2px,
+    rgba(0,0,0,0.18) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── VHS FLICKER ── */
+@keyframes vhsFlicker {
+  0%,98%,100% { opacity: 1; }
+  99% { opacity: 0.88; }
+}
+body { animation: vhsFlicker 8s infinite; }
+
+/* ── HEADER ── */
+.site-header {
+  border-bottom: 1px solid var(--orange-dim);
+  padding: 20px 32px 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  position: relative;
+}
+.site-header::after {
+  content: '';
+  position: absolute;
+  bottom: -3px; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--orange) 30%, var(--gold) 70%, transparent);
+}
+
+.engine-badge {
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: 0.35em;
+  color: var(--orange);
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.main-title {
+  font-family: var(--display);
+  font-size: clamp(28px, 5vw, 58px);
+  letter-spacing: 0.04em;
+  color: var(--gold-bright);
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(200,150,10,0.4), 2px 2px 0 rgba(0,0,0,0.8);
+}
+.sub-title {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(11px, 1.5vw, 14px);
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+.header-right {
+  text-align: right;
+}
+.phase-label {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--cyan);
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.phase-value {
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  color: var(--cyan);
+}
+
+/* ── GEAR PROGRESS BAR ── */
+.gear-nav {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid #222;
+  background: var(--bg2);
+  overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.gear-tab {
+  flex: 1;
+  min-width: 100px;
+  padding: 12px 8px 10px;
+  text-align: center;
+  cursor: pointer;
+  border-right: 1px solid #1a1a20;
+  transition: background 0.2s;
+  position: relative;
+  user-select: none;
+}
+.gear-tab:last-child { border-right: none; }
+.gear-tab:hover { background: rgba(255,107,26,0.07); }
+.gear-tab.active {
+  background: rgba(255,107,26,0.12);
+  border-bottom: 2px solid var(--orange);
+}
+.gear-tab.active .gear-num { color: var(--orange); }
+.gear-tab.complete .gear-num { color: var(--gold); }
+.gear-tab.complete::after {
+  content: '✓';
+  position: absolute;
+  top: 6px; right: 8px;
+  font-size: 9px;
+  color: var(--gold);
+  opacity: 0.7;
+}
+.gear-num {
+  font-family: var(--display);
+  font-size: 20px;
+  color: var(--text-dim);
+  display: block;
+  line-height: 1;
+}
+.gear-name {
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  display: block;
+  margin-top: 2px;
+}
+
+/* ── MAIN LAYOUT ── */
+.main {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 0;
+  min-height: calc(100vh - 120px);
+}
+@media (max-width: 720px) {
+  .main { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+}
+
+/* ── CONTENT PANEL ── */
+.content {
+  padding: 32px 36px;
+  border-right: 1px solid #1a1a20;
+}
+
+/* Each gear section */
+.gear-section {
+  display: none;
+  animation: gearIn 0.4s ease forwards;
+}
+.gear-section.active { display: block; }
+
+@keyframes gearIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scene heading */
+.scene-heading {
+  font-family: var(--display);
+  font-size: clamp(22px, 3.5vw, 42px);
+  letter-spacing: 0.06em;
+  color: var(--orange);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.scene-slug {
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  border-left: 2px solid var(--orange-dim);
+  padding-left: 10px;
+  margin-bottom: 24px;
+  display: block;
+}
+
+/* Scene description (action lines) */
+.action {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text);
+  margin-bottom: 20px;
+  max-width: 620px;
+}
+.action em { color: var(--gold); font-style: italic; }
+.action strong { color: var(--white); font-style: normal; }
+
+/* Dialogue */
+.dialogue-block {
+  margin: 20px 0;
+  border-left: 3px solid var(--orange-dim);
+  padding-left: 18px;
+}
+.dialogue-line {
+  margin-bottom: 14px;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.dialogue-line.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+.dialogue-line.speaking {
+  border-left: 3px solid var(--gold);
+  padding-left: 15px;
+  margin-left: -3px;
+}
+.speaker {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  display: block;
+  margin-bottom: 2px;
+}
+.speaker.cat { color: var(--orange); }
+.speaker.wife { color: #e880c0; }
+.line-text {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--white);
+}
+.line-text em { color: var(--cyan); font-style: italic; }
+
+/* Truth box */
+.truth-box {
+  margin: 28px 0;
+  border: 1px solid var(--gold);
+  padding: 18px 20px;
+  background: rgba(200,150,10,0.04);
+  position: relative;
+}
+.truth-box::before {
+  content: 'SYSTEMIC TRUTH';
+  position: absolute;
+  top: -8px; left: 14px;
+  background: var(--bg);
+  padding: 0 8px;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.truth-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.truth-item:last-child { margin-bottom: 0; }
+.truth-bullet {
+  color: var(--orange);
+  flex-shrink: 0;
+  font-family: var(--display);
+  font-size: 16px;
+  line-height: 1.3;
+}
+.truth-text { color: var(--text); }
+.truth-text strong { color: var(--gold-bright); }
+
+/* Gear navigation buttons */
+.gear-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+.btn-gear {
+  font-family: var(--display);
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  padding: 10px 24px;
+  border: 1px solid var(--orange-dim);
+  background: transparent;
+  color: var(--orange);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.btn-gear::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--orange);
+  transform: translateX(-100%);
+  transition: transform 0.2s;
+  z-index: -1;
+}
+.btn-gear:hover { color: var(--bg); border-color: var(--orange); }
+.btn-gear:hover::before { transform: translateX(0); }
+.btn-gear:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-gear.secondary { border-color: #333; color: var(--text-dim); }
+.btn-gear.secondary:hover { color: var(--bg); background: #555; }
+
+/* TTS Button styles */
+.btn-tts {
+  font-family: var(--display);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  padding: 8px 18px;
+  border: 1px solid var(--cyan);
+  background: transparent;
+  color: var(--cyan);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-tts:hover {
+  background: var(--cyan);
+  color: var(--bg);
+  border-color: var(--cyan);
+}
+.btn-tts.stop {
+  border-color: var(--red);
+  color: var(--red);
+}
+.btn-tts.stop:hover {
+  background: var(--red);
+  color: var(--bg);
+}
+.tts-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  margin-left: 8px;
+  animation: pulse 1s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.8); }
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Cat observer widget */
+.cat-widget {
+  text-align: center;
+}
+.cat-label {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: block;
+}
+.cat-svg-wrap {
+  display: inline-block;
+  position: relative;
+}
+.cat-svg-wrap svg {
+  width: 120px; height: 120px;
+  filter: drop-shadow(0 0 12px rgba(255,107,26,0.25));
+}
+.cat-status {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--orange);
+  margin-top: 6px;
+  text-transform: uppercase;
+  height: 14px;
+}
+
+/* Gear entropy meter */
+.entropy-block {
+  border: 1px solid #222;
+  padding: 14px;
+  background: rgba(0,0,0,0.3);
+}
+.entropy-label {
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: block;
+}
+.entropy-bar-wrap {
+  height: 6px;
+  background: #1a1a20;
+  border: 1px solid #333;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+.entropy-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--orange-dim), var(--orange), var(--gold));
+  transition: width 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.entropy-val {
+  font-family: var(--display);
+  font-size: 28px;
+  color: var(--orange);
+  line-height: 1;
+}
+.entropy-sub { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; margin-top: 2px; }
+
+/* Log terminal */
+.log-terminal {
+  border: 1px solid #1a1a20;
+  background: rgba(0,0,0,0.5);
+  padding: 12px;
+  height: 180px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+.log-terminal::-webkit-scrollbar { width: 4px; }
+.log-terminal::-webkit-scrollbar-track { background: transparent; }
+.log-terminal::-webkit-scrollbar-thumb { background: var(--orange-dim); }
+.log-line {
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--text-dim);
+  display: flex;
+  gap: 8px;
+}
+.log-line .ts { color: #333; flex-shrink: 0; }
+.log-line.important { color: var(--orange); }
+.log-line.gold { color: var(--gold); }
+
+/* ── CONTEXT COLLAPSE OVERLAY ── */
+#collapse-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: #fff;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+}
+#collapse-overlay.active { display: flex; }
+
+@keyframes staticNoise {
+  0%   { background-position: 0 0; opacity: 1; }
+  20%  { background-position: -15% 20%; }
+  40%  { background-position: 10% -10%; }
+  60%  { background-position: -5% 30%; opacity: 0.9; }
+  80%  { background-position: 20% 5%; }
+  100% { background-position: 0 0; opacity: 1; }
+}
+.static-layer {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  animation: staticNoise 0.08s infinite;
+  mix-blend-mode: multiply;
+  opacity: 0.8;
+}
+.collapse-text {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  font-family: var(--display);
+  font-size: clamp(32px, 8vw, 80px);
+  color: var(--red);
+  letter-spacing: 0.08em;
+  text-shadow: 4px 0 0 var(--orange), -4px 0 0 var(--cyan);
+  animation: glitchText 0.15s infinite;
+}
+@keyframes glitchText {
+  0%,100% { text-shadow: 4px 0 0 var(--orange), -4px 0 0 var(--cyan); clip-path: none; }
+  25% { text-shadow: -5px 0 0 var(--red), 5px 0 0 var(--gold); clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%); transform: translateX(3px); }
+  75% { text-shadow: 3px 0 0 var(--cyan), -3px 0 0 var(--orange); clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%); transform: translateX(-3px); }
+}
+.collapse-sub {
+  position: relative;
+  z-index: 1;
+  font-family: var(--mono);
+  font-size: 14px;
+  color: #000;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.collapse-close {
+  position: relative;
+  z-index: 1;
+  font-family: var(--display);
+  font-size: 18px;
+  padding: 10px 32px;
+  border: 2px solid #000;
+  background: transparent;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+  margin-top: 12px;
+}
+.collapse-close:hover { background: #000; color: #fff; }
+
+/* ── ENGINE STATUS FOOTER ── */
+.engine-footer {
+  border-top: 1px solid #1a1a20;
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.engine-footer .status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--orange);
+  display: inline-block;
+  margin-right: 6px;
+  animation: blink 2s infinite;
+}
+@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
+
+/* Glitch on heading hover */
+.scene-heading:hover {
+  animation: headingGlitch 0.3s;
+}
+@keyframes headingGlitch {
+  0%,100% { text-shadow: none; transform: none; }
+  20% { text-shadow: 3px 0 var(--cyan); transform: translateX(-2px); }
+  50% { text-shadow: -3px 0 var(--red); transform: translateX(2px); }
+  80% { text-shadow: 1px 0 var(--gold); transform: translateX(0); }
+}
+
+/* TTS Status Bar */
+.tts-status-bar {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--bg2);
+  border: 1px solid var(--orange-dim);
+  padding: 8px 16px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+.tts-status-bar span {
+  color: var(--cyan);
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div>
+    <div class="engine-badge">Shambles Engine // AddJoe System // 5-Gear Protocol</div>
+    <h1 class="main-title">THE ASIAN GOLD AUDIT</h1>
+    <p class="sub-title">The Cefali Bramble-Bush Hustle — Suburban Incompetence Loop</p>
+  </div>
+  <div class="header-right">
+    <div class="phase-label">current phase</div>
+    <div class="phase-value" id="phase-display">GEAR 1 // BRIEFING</div>
+  </div>
+</header>
+
+<!-- ── GEAR NAV ── -->
+<nav class="gear-nav" id="gear-nav">
+  <div class="gear-tab active" data-gear="0">
+    <span class="gear-num">G1</span>
+    <span class="gear-name">Briefing</span>
+  </div>
+  <div class="gear-tab" data-gear="1">
+    <span class="gear-num">G2</span>
+    <span class="gear-name">Hustle</span>
+  </div>
+  <div class="gear-tab" data-gear="2">
+    <span class="gear-num">G3</span>
+    <span class="gear-name">Side-Ball</span>
+  </div>
+  <div class="gear-tab" data-gear="3">
+    <span class="gear-num">G4</span>
+    <span class="gear-name">Invariant</span>
+  </div>
+  <div class="gear-tab" data-gear="4">
+    <span class="gear-num">G5</span>
+    <span class="gear-name">BOOM</span>
+  </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- CONTENT AREA -->
+  <main class="content">
+
+    <!-- GEAR 1 -->
+    <section class="gear-section active" id="gear-0">
+      <h2 class="scene-heading">THE BRIEFING</h2>
+      <span class="scene-slug">INT. BEDROOM — NIGHT // JANUS RIGHT OBSERVES</span>
+      <p class="action">
+        The room is dark. The owners are in the middle of a frantic, high-entropy domestic entanglement.<br><br>
+        The <em>orange cat</em> — designated <strong>Joe-Variant</strong> — sits on the shelf, eyes glowing in the dark, watching the "flashing picture" projected onto the giant white screen of his master's wall.<br><br>
+        He thinks it's like watching <em>Porkies at an outdoor cinema.</em>
+      </p>
+      <div class="truth-box">
+        <div class="truth-item">
+          <span class="truth-bullet">▸</span>
+          <span class="truth-text">The <strong>Ginger Anomaly</strong> is the silent logic-gate. He does not participate. He <em>audits.</em></span>
+        </div>
+        <div class="truth-item">
+          <span class="truth-bullet">▸</span>
+          <span class="truth-text"><strong>Janus Right (Hard Reality)</strong> has arrived before the humans are even aware the scene has started.</span>
+        </div>
+      </div>
+      <div class="gear-controls">
+        <button class="btn-gear" onclick="goGear(1)">ADVANCE TO GEAR 2 →</button>
+        <button class="btn-tts" onclick="speakGearDialogue(0)">🔊 PLAY DIALOGUE</button>
+      </div>
+    </section>
+
+    <!-- GEAR 2 -->
+    <section class="gear-section" id="gear-1">
+      <h2 class="scene-heading">THE HUSTLE</h2>
+      <span class="scene-slug">INT. BEDROOM — CONTINUOUS // HIGH ENTROPY EVENT</span>
+      <p class="action">
+        The male owner stops suddenly. <strong>The rhythm of the room collapses.</strong>
+      </p>
+      <div class="dialogue-block" id="diag-g2">
+        <div class="dialogue-line">
+          <span class="speaker">Male Owner</span>
+          <span class="line-text">"I can't eat that, darling."</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker wife">Wife</span>
+          <span class="line-text">"Don't you dare stop. Put it back in your mouth. <em>Eat like a skinny ginger does when his masters let him out of the box.</em>"</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker wife">Wife</span>
+          <span class="line-text">"I washed it. I cleaned it."</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker">Male Owner</span>
+          <span class="line-text">"Looks like a cat's mess down here."</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker wife">Wife</span>
+          <span class="line-text">"You're such a pussy."</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker">Male Owner</span>
+          <span class="line-text">"Until this bramble bush is cut back, I may be <em>the only pussy down here.</em>"</span>
+        </div>
+      </div>
+      <div class="gear-controls">
+        <button class="btn-gear secondary" onclick="goGear(0)">← BACK</button>
+        <button class="btn-gear" onclick="goGear(2)">ADVANCE TO GEAR 3 →</button>
+        <button class="btn-tts" onclick="speakGearDialogue(1)">🔊 PLAY DIALOGUE</button>
+      </div>
+    </section>
+
+    <!-- GEAR 3 -->
+    <section class="gear-section" id="gear-2">
+      <h2 class="scene-heading">THE INVISIBLE STRUGGLE</h2>
+      <span class="scene-slug">INT. BEDROOM — CONTINUOUS // THE SIDE-BALL</span>
+      <p class="action">
+        The cat (<em>Joe-Variant</em>) is bored of the performance.<br><br>
+        He notices the <strong>"light"</strong> — the source of the projection — is too close to the wall. He decides to prove his intelligence. He <em>leaps.</em> Shatters the light fixture. Picks up a jagged shard of glass in his teeth.<br><br>
+        He wants to show them he knows exactly what the light is: <strong>the thing that ruins the dark he likes to watch.</strong>
+      </p>
+      <div class="truth-box">
+        <div class="truth-item">
+          <span class="truth-bullet">▸</span>
+          <span class="truth-text">The cat is not destructive. He is <strong>diagnostic.</strong> He has identified the obstruction and removed it.</span>
+        </div>
+        <div class="truth-item">
+          <span class="truth-bullet">▸</span>
+          <span class="truth-text">The <strong>Side-Ball</strong> is always the silent action that makes the most sense to the only sober party in the room.</span>
+        </div>
+      </div>
+      <div class="gear-controls">
+        <button class="btn-gear secondary" onclick="goGear(1)">← BACK</button>
+        <button class="btn-gear" onclick="goGear(3)">ADVANCE TO GEAR 4 →</button>
+        <button class="btn-tts" onclick="speakGearDialogue(2)">🔊 PLAY DIALOGUE</button>
+      </div>
+    </section>
+
+    <!-- GEAR 4 -->
+    <section class="gear-section" id="gear-3">
+      <h2 class="scene-heading">THE INVARIANT SONG</h2>
+      <span class="scene-slug">INT. BEDROOM — CHAOS PEAK // THE PITCH THAT CANNOT DIE</span>
+      <p class="action">
+        The cat, now standing in the shards with his <em>neon-orange impasto fur glowing</em>, stares at the wife. The wife screams.<br><br>
+        The male owner tries to pivot to a <strong>sales pitch</strong> — even in the middle of a context collapse:
+      </p>
+      <div class="dialogue-block" id="diag-g4">
+        <div class="dialogue-line">
+          <span class="speaker">Male Owner <em style="font-size:11px;color:var(--text-dim)">(To The Cat)</em></span>
+          <span class="line-text">"I hear you say you don't need windows, and maybe you don't! But you <em>did</em> say you thought recycling is a good thing!"</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker">Male Owner</span>
+          <span class="line-text">"I've got a <strong style="color:var(--gold-bright)">personalised recycling allowance</strong> for this bedroom — <em>fixed and valid for 16 seasons!</em>"</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker cat">The Cat</span>
+          <span class="line-text" style="color:#888;font-style:italic">(sits in the glass. blinks once. does not move.)</span>
+        </div>
+      </div>
+      <div class="gear-controls">
+        <button class="btn-gear secondary" onclick="goGear(2)">← BACK</button>
+        <button class="btn-gear" onclick="goGear(4)">ENGAGE GEAR 5 — BOOM →</button>
+        <button class="btn-tts" onclick="speakGearDialogue(3)">🔊 PLAY DIALOGUE</button>
+      </div>
+    </section>
+
+    <!-- GEAR 5 -->
+    <section class="gear-section" id="gear-4">
+      <h2 class="scene-heading">THE BOOM</h2>
+      <span class="scene-slug">INT. BEDROOM — TOTAL CONTEXT COLLAPSE // ENGINE CRITICAL</span>
+      <p class="action">
+        The cat <strong>drops the shard.</strong> It strikes the projector. The projector overheats and <em>explodes in a fountain of sparks.</em><br><br>
+        The room is suddenly illuminated by the <strong>harsh, flat light of the real world.</strong>
+      </p>
+      <div class="dialogue-block" id="diag-g5">
+        <div class="dialogue-line">
+          <span class="speaker wife">Wife</span>
+          <span class="line-text">"Are you vegan? <strong style="color:#e880c0">EAT!</strong>"</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker">Male Owner</span>
+          <span class="line-text">"I'm not vegan, I <em>love beef lips!</em> But bacon bits I can't do!"</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker wife">Wife</span>
+          <span class="line-text">"I'm glad you're tight, because <em>I'm not.</em>"</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker cat">The Cat</span>
+          <span class="line-text" style="color:var(--orange)"><em>(Sits calmly amidst the destruction, purring, having finally silenced the "flashing picture.")</em></span>
+        </div>
+      </div>
+      <div class="truth-box" style="border-color:var(--red)">
+        <div class="truth-item">
+          <span class="truth-bullet" style="color:var(--red)">▸</span>
+          <span class="truth-text"><strong>The Earth-Apple:</strong> The "Bramble Bush" — the thing the owner is too incompetent to prune.</span>
+        </div>
+        <div class="truth-item">
+          <span class="truth-bullet" style="color:var(--red)">▸</span>
+          <span class="truth-text"><strong>The Choker Refund:</strong> The male owner's attempt to pitch a <em>"16-season recycling allowance"</em> to a cat standing in broken glass.</span>
+        </div>
+        <div class="truth-item">
+          <span class="truth-bullet" style="color:var(--gold)">▸</span>
+          <span class="truth-text"><strong>Janus Left (The Hustle)</strong> cannot stop selling even when the bedroom is literally on fire. The pitch is the invariant.</span>
+        </div>
+      </div>
+      <div class="gear-controls">
+        <button class="btn-gear secondary" onclick="goGear(3)">← BACK</button>
+        <button class="btn-gear" style="border-color:var(--red);color:var(--red)" onclick="triggerCollapse()">⚡ TRIGGER CONTEXT COLLAPSE</button>
+        <button class="btn-tts" onclick="speakGearDialogue(4)">🔊 PLAY DIALOGUE</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+
+    <!-- Cat observer -->
+    <div class="cat-widget">
+      <span class="cat-label">Joe-Variant // Observer Node</span>
+      <div class="cat-svg-wrap">
+        <svg id="cat-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <!-- dark shelf -->
+          <rect x="10" y="85" width="100" height="10" fill="#1a1510" stroke="#333" stroke-width="1"/>
+          <!-- body sitting -->
+          <ellipse cx="60" cy="78" rx="28" ry="22" fill="#c8580a"/>
+          <!-- fur texture stripes -->
+          <path d="M38 70 Q45 65 50 72" fill="none" stroke="#a84a08" stroke-width="1.5" opacity="0.5"/>
+          <path d="M70 70 Q75 65 80 72" fill="none" stroke="#a84a08" stroke-width="1.5" opacity="0.5"/>
+          <!-- tail -->
+          <path d="M85 90 Q105 80 98 65 Q92 55 88 60" fill="none" stroke="#c8580a" stroke-width="8" stroke-linecap="round"/>
+          <!-- head -->
+          <circle cx="60" cy="52" r="22" fill="#d96010"/>
+          <!-- ears -->
+          <polygon points="42,35 36,18 52,32" fill="#d96010"/>
+          <polygon points="44,33 40,22 50,31" fill="#f4a070" opacity="0.7"/>
+          <polygon points="78,35 84,18 68,32" fill="#d96010"/>
+          <polygon points="76,33 80,22 70,31" fill="#f4a070" opacity="0.7"/>
+          <!-- glowing eyes -->
+          <ellipse cx="51" cy="52" rx="7" ry="5" fill="#000"/>
+          <ellipse cx="69" cy="52" rx="7" ry="5" fill="#000"/>
+          <ellipse id="eye-l" cx="51" cy="52" rx="5" ry="4" fill="#ff8800"/>
+          <ellipse id="eye-r" cx="69" cy="52" rx="5" ry="4" fill="#ff8800"/>
+          <!-- pupils -->
+          <ellipse id="pupil-l" cx="51" cy="52" rx="1.5" ry="3.5" fill="#000"/>
+          <ellipse id="pupil-r" cx="69" cy="52" rx="1.5" ry="3.5" fill="#000"/>
+          <!-- whiskers -->
+          <line x1="30" y1="56" x2="50" y2="58" stroke="#eee" stroke-width="0.8" opacity="0.6"/>
+          <line x1="30" y1="62" x2="50" y2="60" stroke="#eee" stroke-width="0.8" opacity="0.6"/>
+          <line x1="90" y1="56" x2="70" y2="58" stroke="#eee" stroke-width="0.8" opacity="0.6"/>
+          <line x1="90" y1="62" x2="70" y2="60" stroke="#eee" stroke-width="0.8" opacity="0.6"/>
+          <!-- nose -->
+          <polygon points="58,60 62,60 60,63" fill="#f4a070"/>
+          <!-- calm mouth -->
+          <path d="M57 63 Q60 66 63 63" fill="none" stroke="#c87040" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="cat-status" id="cat-status">OBSERVING // SILENT</div>
+    </div>
+
+    <!-- Entropy meter -->
+    <div class="entropy-block">
+      <span class="entropy-label">Scene Entropy Index</span>
+      <div class="entropy-bar-wrap">
+        <div class="entropy-bar" id="entropy-bar" style="width:20%"></div>
+      </div>
+      <div class="entropy-val" id="entropy-val">20%</div>
+      <div class="entropy-sub">propagation risk increasing</div>
+    </div>
+
+    <!-- Log terminal -->
+    <div>
+      <span class="entropy-label" style="display:block;margin-bottom:6px">Engine Log</span>
+      <div class="log-terminal" id="log-terminal">
+        <div class="log-line"><span class="ts">00:00</span><span>SHAMBLES ENGINE BOOT OK</span></div>
+        <div class="log-line"><span class="ts">00:01</span><span>joe-variant node: ACTIVE</span></div>
+        <div class="log-line important"><span class="ts">00:02</span><span>bramble-bush audit INITIATED</span></div>
+      </div>
+    </div>
+
+    <!-- Global TTS Stop -->
+    <div class="gear-controls" style="margin-top: 0; justify-content: center;">
+      <button class="btn-tts stop" id="stop-tts-global" style="width: 100%;">⏹ STOP SPEAKING</button>
+    </div>
+
+  </aside>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer class="engine-footer">
+  <span><span class="status-dot"></span>Engine Status: LOGGED // BRAMBLE-BUSH AUDIT COMPLETE</span>
+  <span id="footer-gear">Gear 1 of 5 Active</span>
+  <span>Shambles Engine v3 // HybridStageE_H3</span>
+</footer>
+
+<!-- ── TTS STATUS BAR ── -->
+<div class="tts-status-bar" id="tts-status">
+  🔇 <span id="tts-status-text">TTS IDLE</span>
+</div>
+
+<!-- ── CONTEXT COLLAPSE OVERLAY ── -->
+<div id="collapse-overlay">
+  <div class="static-layer"></div>
+  <div class="collapse-text">CONTEXT<br>COLLAPSE</div>
+  <div class="collapse-sub">The flashing picture has been silenced.</div>
+  <div class="collapse-sub" style="font-size:11px;opacity:0.6;margin-top:4px">"16-season recycling allowance" — REJECTED BY CAT</div>
+  <button class="collapse-close" onclick="closeCollapse()">RESUME ENGINE</button>
+</div>
+
+<script>
+// Dialogue data for each gear
+const DIALOGUES = {
+  0: [], // Gear 1 has no dialogue, just action text
+  1: [
+    { speaker: "Male Owner", text: "I can't eat that, darling." },
+    { speaker: "Wife", text: "Don't you dare stop. Put it back in your mouth. Eat like a skinny ginger does when his masters let him out of the box." },
+    { speaker: "Wife", text: "I washed it. I cleaned it." },
+    { speaker: "Male Owner", text: "Looks like a cat's mess down here." },
+    { speaker: "Wife", text: "You're such a pussy." },
+    { speaker: "Male Owner", text: "Until this bramble bush is cut back, I may be the only pussy down here." }
+  ],
+  2: [], // Gear 3 has no dialogue, just action
+  3: [
+    { speaker: "Male Owner", text: "I hear you say you don't need windows, and maybe you don't! But you did say you thought recycling is a good thing!" },
+    { speaker: "Male Owner", text: "I've got a personalised recycling allowance for this bedroom — fixed and valid for 16 seasons!" },
+    { speaker: "The Cat", text: "sits in the glass. blinks once. does not move." }
+  ],
+  4: [
+    { speaker: "Wife", text: "Are you vegan? EAT!" },
+    { speaker: "Male Owner", text: "I'm not vegan, I love beef lips! But bacon bits I can't do!" },
+    { speaker: "Wife", text: "I'm glad you're tight, because I'm not." },
+    { speaker: "The Cat", text: "Sits calmly amidst the destruction, purring, having finally silenced the flashing picture." }
+  ]
+};
+
+// Voice presets
+const VOICE_PRESETS = {
+  "Male Owner": { pitch: 0.85, rate: 0.9, name: "male" },
+  "Wife": { pitch: 1.2, rate: 0.95, name: "female" },
+  "The Cat": { pitch: 0.6, rate: 0.75, name: "cat" }
+};
+
+let currentUtterance = null;
+let isSpeaking = false;
+let availableVoices = [];
+
+// Get available voices
+function populateVoices() {
+  availableVoices = window.speechSynthesis.getVoices();
+}
+window.speechSynthesis.onvoiceschanged = populateVoices;
+setTimeout(populateVoices, 100);
+
+function updateTTSStatus(text, isActive) {
+  const statusText = document.getElementById('tts-status-text');
+  const statusBar = document.getElementById('tts-status');
+  if (isActive) {
+    statusText.innerHTML = `🔊 SPEAKING: ${text.substring(0, 40)}...`;
+    statusBar.style.borderColor = 'var(--cyan)';
+  } else {
+    statusText.innerHTML = '🔇 TTS IDLE';
+    statusBar.style.borderColor = 'var(--orange-dim)';
+  }
+}
+
+function stopSpeaking() {
+  if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+    window.speechSynthesis.cancel();
+  }
+  if (currentUtterance) {
+    currentUtterance = null;
+  }
+  isSpeaking = false;
+  
+  // Remove highlighting from all dialogue lines
+  document.querySelectorAll('.dialogue-line').forEach(line => {
+    line.classList.remove('speaking');
+  });
+  
+  updateTTSStatus('', false);
+  addLog('', 'TTS playback stopped');
+}
+
+function speakDialogueLine(line, speaker, lineElement, index, totalLines, onComplete) {
+  if (!isSpeaking) return;
+  
+  const preset = VOICE_PRESETS[speaker] || VOICE_PRESETS["Male Owner"];
+  const utterance = new SpeechSynthesisUtterance(line);
+  
+  // Try to find appropriate voice
+  if (availableVoices.length > 0) {
+    if (speaker === "Wife") {
+      const femaleVoice = availableVoices.find(v => v.name.includes('Samantha') || v.name.includes('Google UK') || v.gender === 'female');
+      if (femaleVoice) utterance.voice = femaleVoice;
+    } else if (speaker === "The Cat") {
+      utterance.pitch = 0.5;
+      utterance.rate = 0.7;
+    }
+  }
+  
+  utterance.pitch = preset.pitch;
+  utterance.rate = preset.rate;
+  utterance.volume = 0.9;
+  
+  currentUtterance = utterance;
+  
+  utterance.onstart = () => {
+    if (lineElement) lineElement.classList.add('speaking');
+    updateTTSStatus(line, true);
+  };
+  
+  utterance.onend = () => {
+    if (lineElement) lineElement.classList.remove('speaking');
+    if (index + 1 < totalLines && isSpeaking) {
+      // Move to next line after a short pause
+      setTimeout(() => {
+        if (isSpeaking) {
+          const nextElement = document.querySelector(`#gear-${currentGear} .dialogue-line`).parentElement?.children[index + 1];
+          speakDialogueLine(
+            DIALOGUES[currentGear][index + 1].text,
+            DIALOGUES[currentGear][index + 1].speaker,
+            nextElement,
+            index + 1,
+            totalLines,
+            onComplete
+          );
+        }
+      }, 400);
+    } else if (onComplete) {
+      onComplete();
+    }
+  };
+  
+  utterance.onerror = () => {
+    if (lineElement) lineElement.classList.remove('speaking');
+    if (index + 1 < totalLines && isSpeaking) {
+      setTimeout(() => {
+        if (isSpeaking) {
+          const nextElement = document.querySelector(`#gear-${currentGear} .dialogue-line`).parentElement?.children[index + 1];
+          speakDialogueLine(
+            DIALOGUES[currentGear][index + 1].text,
+            DIALOGUES[currentGear][index + 1].speaker,
+            nextElement,
+            index + 1,
+            totalLines,
+            onComplete
+          );
+        }
+      }, 300);
+    } else if (onComplete) {
+      onComplete();
+    }
+  };
+  
+  window.speechSynthesis.speak(utterance);
+}
+
+function speakGearDialogue(gearIdx) {
+  // Stop any ongoing speech
+  stopSpeaking();
+  
+  const dialogue = DIALOGUES[gearIdx];
+  if (!dialogue || dialogue.length === 0) {
+    addLog('', `Gear ${gearIdx + 1}: No dialogue to play`);
+    updateTTSStatus('No dialogue', false);
+    return;
+  }
+  
+  isSpeaking = true;
+  addLog('gold', `🔊 Playing dialogue for Gear ${gearIdx + 1}`);
+  
+  // First ensure all dialogue lines are visible
+  const section = document.getElementById('gear-' + gearIdx);
+  const lines = section.querySelectorAll('.dialogue-line');
+  lines.forEach(line => line.classList.add('visible'));
+  
+  // Start with first line
+  const firstLine = lines[0];
+  speakDialogueLine(dialogue[0].text, dialogue[0].speaker, firstLine, 0, dialogue.length, () => {
+    isSpeaking = false;
+    currentUtterance = null;
+    updateTTSStatus('', false);
+    addLog('', `TTS playback complete for Gear ${gearIdx + 1}`);
+  });
+}
+
+const GEARS = [
+  {
+    label: 'GEAR 1 // BRIEFING',
+    entropy: 20,
+    catStatus: 'OBSERVING // SILENT',
+    eyeColor: '#ff8800',
+    logs: [
+      { cls: '', txt: 'gear 1: briefing loaded' },
+      { cls: '', txt: 'joe-variant: shelf position confirmed' },
+      { cls: 'gold', txt: 'janus-right: ACTIVE — hard reality node online' }
+    ]
+  },
+  {
+    label: 'GEAR 2 // HUSTLE',
+    entropy: 44,
+    catStatus: 'WATCHING // UNIMPRESSED',
+    eyeColor: '#ffaa00',
+    logs: [
+      { cls: 'important', txt: 'gear 2: HIGH ENTROPY EVENT detected' },
+      { cls: '', txt: 'bramble-bush: mentioned (x1)' },
+      { cls: '', txt: 'janus-left: transactional loop engaged' },
+      { cls: 'important', txt: 'rhythm collapse logged' }
+    ]
+  },
+  {
+    label: 'GEAR 3 // SIDE-BALL',
+    entropy: 62,
+    catStatus: 'LEAPING // DIAGNOSTIC',
+    eyeColor: '#ff6600',
+    logs: [
+      { cls: 'important', txt: 'gear 3: side-ball protocol ACTIVE' },
+      { cls: '', txt: 'light fixture: SHATTERED' },
+      { cls: 'gold', txt: 'joe-variant: intelligence demonstrated' },
+      { cls: '', txt: 'obstruction identified and removed' }
+    ]
+  },
+  {
+    label: 'GEAR 4 // INVARIANT SONG',
+    entropy: 80,
+    catStatus: 'STANDING IN GLASS',
+    eyeColor: '#ff4400',
+    logs: [
+      { cls: 'important', txt: 'gear 4: invariant song DETECTED' },
+      { cls: 'important', txt: 'ALERT: sales pitch during context collapse' },
+      { cls: '', txt: '"16-season recycling allowance" — logged' },
+      { cls: 'gold', txt: 'cat: blinks once. does not move.' }
+    ]
+  },
+  {
+    label: 'GEAR 5 // BOOM',
+    entropy: 100,
+    catStatus: 'PURRING // AUDIT COMPLETE',
+    eyeColor: '#ffffff',
+    logs: [
+      { cls: 'important', txt: 'GEAR 5: CONTEXT COLLAPSE IMMINENT' },
+      { cls: 'important', txt: 'projector: DESTROYED' },
+      { cls: 'gold', txt: 'cat: SITTING CALMLY IN WRECKAGE' },
+      { cls: 'gold', txt: 'ENGINE STATUS: AUDIT COMPLETE' },
+      { cls: 'important', txt: 'flashing picture: SILENCED' }
+    ]
+  }
+];
+
+let currentGear = 0;
+let logMin = 0, logSec = 10;
+
+function padTime(n) { return String(n).padStart(2, '0'); }
+
+function addLog(cls, txt) {
+  logSec += Math.floor(Math.random() * 8) + 3;
+  if (logSec >= 60) { logSec -= 60; logMin++; }
+  const ts = `${padTime(logMin)}:${padTime(logSec)}`;
+  const term = document.getElementById('log-terminal');
+  const line = document.createElement('div');
+  line.className = 'log-line' + (cls ? ' ' + cls : '');
+  line.innerHTML = `<span class="ts">${ts}</span><span>${txt}</span>`;
+  term.appendChild(line);
+  term.scrollTop = term.scrollHeight;
+}
+
+function goGear(idx) {
+  // Stop any TTS when changing gears
+  stopSpeaking();
+  
+  // Mark old as complete
+  const tabs = document.querySelectorAll('.gear-tab');
+  tabs[currentGear].classList.remove('active');
+  if (idx > currentGear) tabs[currentGear].classList.add('complete');
+
+  // Hide old section
+  document.getElementById('gear-' + currentGear).classList.remove('active');
+
+  currentGear = idx;
+
+  // Show new section
+  document.getElementById('gear-' + idx).classList.add('active');
+  tabs[idx].classList.add('active');
+  tabs[idx].classList.remove('complete');
+
+  const g = GEARS[idx];
+
+  // Update phase
+  document.getElementById('phase-display').textContent = g.label;
+  document.getElementById('footer-gear').textContent = `Gear ${idx + 1} of 5 Active`;
+
+  // Update cat
+  document.getElementById('cat-status').textContent = g.catStatus;
+  document.getElementById('eye-l').setAttribute('fill', g.eyeColor);
+  document.getElementById('eye-r').setAttribute('fill', g.eyeColor);
+  // On gear 5 make pupils wide (panic / alarm)
+  if (idx === 4) {
+    document.getElementById('pupil-l').setAttribute('rx', '3.5');
+    document.getElementById('pupil-l').setAttribute('ry', '4');
+    document.getElementById('pupil-r').setAttribute('rx', '3.5');
+    document.getElementById('pupil-r').setAttribute('ry', '4');
+  } else {
+    document.getElementById('pupil-l').setAttribute('rx', '1.5');
+    document.getElementById('pupil-l').setAttribute('ry', '3.5');
+    document.getElementById('pupil-r').setAttribute('rx', '1.5');
+    document.getElementById('pupil-r').setAttribute('ry', '3.5');
+  }
+
+  // Update entropy
+  const bar = document.getElementById('entropy-bar');
+  const val = document.getElementById('entropy-val');
+  bar.style.width = g.entropy + '%';
+  val.textContent = g.entropy + '%';
+
+  // Logs
+  g.logs.forEach((l, i) => {
+    setTimeout(() => addLog(l.cls, l.txt), i * 300 + 200);
+  });
+
+  // Animate dialogue into view
+  setTimeout(() => {
+    const section = document.getElementById('gear-' + idx);
+    const lines = section.querySelectorAll('.dialogue-line');
+    lines.forEach((l, i) => {
+      setTimeout(() => l.classList.add('visible'), i * 180);
+    });
+  }, 50);
+}
+
+function triggerCollapse() {
+  stopSpeaking();
+  addLog('important', '⚡ CONTEXT COLLAPSE TRIGGERED');
+  document.getElementById('collapse-overlay').classList.add('active');
+}
+
+function closeCollapse() {
+  document.getElementById('collapse-overlay').classList.remove('active');
+  addLog('gold', 'context collapse: survived. cat: still purring.');
+}
+
+// Gear nav click
+document.querySelectorAll('.gear-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    const idx = parseInt(tab.dataset.gear);
+    goGear(idx);
+  });
+});
+
+// Global stop TTS button
+document.getElementById('stop-tts-global').addEventListener('click', () => {
+  stopSpeaking();
+  addLog('', 'TTS manually stopped by user');
+});
+
+// Init first gear dialogue
+setTimeout(() => {
+  const lines = document.querySelectorAll('#gear-0 .dialogue-line');
+  lines.forEach((l, i) => setTimeout(() => l.classList.add('visible'), i * 150 + 400));
+}, 100);
+
+// Cat eye pulse
+setInterval(() => {
+  const eyes = [document.getElementById('eye-l'), document.getElementById('eye-r')];
+  eyes.forEach(e => {
+    e.style.transition = 'opacity 0.3s';
+    e.style.opacity = '0.5';
+    setTimeout(() => { e.style.opacity = '1'; }, 300);
+  });
+}, 3500);
+
+// Clean up on page unload
+window.addEventListener('beforeunload', () => {
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+});
+</script>
+</body>
+</html>
