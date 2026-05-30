@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHAMBLES ENGINE // SUGAR ANOMIE — ACTIONABLE FIELD BRIEFING</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060608;
+  --bg2: #0d0d12;
+  --orange: #ff6b1a;
+  --orange-dim: #7a3008;
+  --gold: #c8960a;
+  --gold-bright: #f0c030;
+  --cyan: #00e5cc;
+  --sugar-pink: #ff69b4;
+  --red: #d42020;
+  --text: #c8c0a8;
+  --text-dim: #5a5448;
+  --white: #ede8dc;
+  --mono: 'Share Tech Mono', monospace;
+  --display: 'Bebas Neue', sans-serif;
+  --serif: 'IM Fell English', serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: crosshair;
+}
+
+/* ── SUGAR CRYSTAL OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle at 20% 40%, rgba(255,105,180,0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── VHS FLICKER ── */
+@keyframes vhsFlicker {
+  0%,98%,100% { opacity: 1; }
+  99% { opacity: 0.88; }
+}
+body { animation: vhsFlicker 8s infinite; }
+
+/* ── HEADER ── */
+.site-header {
+  border-bottom: 1px solid var(--orange-dim);
+  padding: 20px 32px 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  position: relative;
+}
+.site-header::after {
+  content: '';
+  position: absolute;
+  bottom: -3px; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sugar-pink) 30%, var(--gold) 70%, transparent);
+}
+
+.engine-badge {
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: 0.35em;
+  color: var(--sugar-pink);
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.main-title {
+  font-family: var(--display);
+  font-size: clamp(28px, 5vw, 58px);
+  letter-spacing: 0.04em;
+  color: var(--gold-bright);
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(255,105,180,0.4), 2px 2px 0 rgba(0,0,0,0.8);
+}
+.sub-title {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(11px, 1.5vw, 14px);
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+.header-right {
+  text-align: right;
+}
+.phase-label {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--cyan);
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.phase-value {
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  color: var(--cyan);
+}
+
+/* ── GEAR PROGRESS BAR ── */
+.gear-nav {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid #222;
+  background: var(--bg2);
+  overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.gear-tab {
+  flex: 1;
+  min-width: 100px;
+  padding: 12px 8px 10px;
+  text-align: center;
+  cursor: pointer;
+  border-right: 1px solid #1a1a20;
+  transition: background 0.2s;
+  position: relative;
+  user-select: none;
+}
+.gear-tab:last-child { border-right: none; }
+.gear-tab:hover { background: rgba(255,105,180,0.07); }
+.gear-tab.active {
+  background: rgba(255,105,180,0.12);
+  border-bottom: 2px solid var(--sugar-pink);
+}
+.gear-tab.active .gear-num { color: var(--sugar-pink); }
+.gear-tab.complete .gear-num { color: var(--gold); }
+.gear-tab.complete::after {
+  content: '✓';
+  position: absolute;
+  top: 6px; right: 8px;
+  font-size: 9px;
+  color: var(--gold);
+  opacity: 0.7;
+}
+.gear-num {
+  font-family: var(--display);
+  font-size: 20px;
+  color: var(--text-dim);
+  display: block;
+  line-height: 1;
+}
+.gear-name {
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  display: block;
+  margin-top: 2px;
+}
+
+/* ── MAIN LAYOUT ── */
+.main {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 0;
+  min-height: calc(100vh - 120px);
+}
+@media (max-width: 720px) {
+  .main { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+}
+
+/* ── CONTENT PANEL ── */
+.content {
+  padding: 32px 36px;
+  border-right: 1px solid #1a1a20;
+}
+
+/* Each gear section */
+.gear-section {
+  display: none;
+  animation: gearIn 0.4s ease forwards;
+}
+.gear-section.active { display: block; }
+
+@keyframes gearIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scene heading */
+.scene-heading {
+  font-family: var(--display);
+  font-size: clamp(22px, 3.5vw, 42px);
+  letter-spacing: 0.06em;
+  color: var(--sugar-pink);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.scene-slug {
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  border-left: 2px solid var(--sugar-pink);
+  padding-left: 10px;
+  margin-bottom: 24px;
+  display: block;
+}
+
+/* Scene description (action lines) */
+.action {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text);
+  margin-bottom: 20px;
+  max-width: 620px;
+}
+.action em { color: var(--sugar-pink); font-style: italic; }
+.action strong { color: var(--white); font-style: normal; }
+
+/* Dialogue */
+.dialogue-block {
+  margin: 20px 0;
+  border-left: 3px solid var(--orange-dim);
+  padding-left: 18px;
+}
+.dialogue-line {
+  margin-bottom: 14px;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.dialogue-line.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+.dialogue-line.speaking {
+  border-left: 3px solid var(--sugar-pink);
+  padding-left: 15px;
+  margin-left: -3px;
+}
+.speaker {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  display: block;
+  margin-bottom: 2px;
+}
+.speaker.david { color: var(--cyan); }
+.speaker.jane { color: #a855f7; }
+.line-text {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--white);
+}
+.line-text em { color: var(--cyan); font-style: italic; }
+
+/* Truth box */
+.truth-box {
+  margin: 28px 0;
+  border: 1px solid var(--sugar-pink);
+  padding: 18px 20px;
+  background: rgba(255,105,180,0.04);
+  position: relative;
+}
+.truth-box::before {
+  content: 'SYSTEMIC TRUTH';
+  position: absolute;
+  top: -8px; left: 14px;
+  background: var(--bg);
+  padding: 0 8px;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--sugar-pink);
+  text-transform: uppercase;
+}
+.truth-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.truth-item:last-child { margin-bottom: 0; }
+.truth-bullet {
+  color: var(--orange);
+  flex-shrink: 0;
+  font-family: var(--display);
+  font-size: 16px;
+  line-height: 1.3;
+}
+.truth-text { color: var(--text); }
+.truth-text strong { color: var(--gold-bright); }
+
+/* Gear navigation buttons */
+.gear-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+.btn-gear {
+  font-family: var(--display);
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  padding: 10px 24px;
+  border: 1px solid var(--orange-dim);
+  background: transparent;
+  color: var(--orange);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.btn-gear::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--orange);
+  transform: translateX(-100%);
+  transition: transform 0.2s;
+  z-index: -1;
+}
+.btn-gear:hover { color: var(--bg); border-color: var(--orange); }
+.btn-gear:hover::before { transform: translateX(0); }
+.btn-gear:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-gear.secondary { border-color: #333; color: var(--text-dim); }
+.btn-gear.secondary:hover { color: var(--bg); background: #555; }
+
+/* TTS Button styles */
+.btn-tts {
+  font-family: var(--display);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  padding: 8px 18px;
+  border: 1px solid var(--cyan);
+  background: transparent;
+  color: var(--cyan);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-tts:hover {
+  background: var(--cyan);
+  color: var(--bg);
+  border-color: var(--cyan);
+}
+.btn-tts.stop {
+  border-color: var(--red);
+  color: var(--red);
+}
+.btn-tts.stop:hover {
+  background: var(--red);
+  color: var(--bg);
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Sugar meter widget */
+.sugar-widget {
+  text-align: center;
+}
+.sugar-label {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: block;
+}
+.sugar-svg-wrap {
+  display: inline-block;
+  position: relative;
+}
+.sugar-svg-wrap svg {
+  width: 120px; height: 120px;
+  filter: drop-shadow(0 0 12px rgba(255,105,180,0.25));
+}
+.sugar-status {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--sugar-pink);
+  margin-top: 6px;
+  text-transform: uppercase;
+  height: 14px;
+}
+
+/* Sugar craving meter */
+.sugar-block {
+  border: 1px solid #222;
+  padding: 14px;
+  background: rgba(0,0,0,0.3);
+}
+.sugar-label {
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: block;
+}
+.sugar-bar-wrap {
+  height: 6px;
+  background: #1a1a20;
+  border: 1px solid #333;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+.sugar-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--orange-dim), var(--sugar-pink), var(--gold));
+  transition: width 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.sugar-val {
+  font-family: var(--display);
+  font-size: 28px;
+  color: var(--sugar-pink);
+  line-height: 1;
+}
+.sugar-sub { font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; margin-top: 2px; }
+
+/* Log terminal */
+.log-terminal {
+  border: 1px solid #1a1a20;
+  background: rgba(0,0,0,0.5);
+  padding: 12px;
+  height: 180px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+.log-terminal::-webkit-scrollbar { width: 4px; }
+.log-terminal::-webkit-scrollbar-track { background: transparent; }
+.log-terminal::-webkit-scrollbar-thumb { background: var(--sugar-pink); }
+.log-line {
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--text-dim);
+  display: flex;
+  gap: 8px;
+}
+.log-line .ts { color: #333; flex-shrink: 0; }
+.log-line.important { color: var(--orange); }
+.log-line.gold { color: var(--gold); }
+.log-line.sugar { color: var(--sugar-pink); }
+
+/* ── CONTEXT COLLAPSE OVERLAY ── */
+#collapse-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: #fff;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+}
+#collapse-overlay.active { display: flex; }
+
+@keyframes staticNoise {
+  0%   { background-position: 0 0; opacity: 1; }
+  20%  { background-position: -15% 20%; }
+  40%  { background-position: 10% -10%; }
+  60%  { background-position: -5% 30%; opacity: 0.9; }
+  80%  { background-position: 20% 5%; }
+  100% { background-position: 0 0; opacity: 1; }
+}
+.static-layer {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  animation: staticNoise 0.08s infinite;
+  mix-blend-mode: multiply;
+  opacity: 0.8;
+}
+.collapse-text {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  font-family: var(--display);
+  font-size: clamp(32px, 8vw, 80px);
+  color: var(--red);
+  letter-spacing: 0.08em;
+  text-shadow: 4px 0 0 var(--sugar-pink), -4px 0 0 var(--cyan);
+  animation: glitchText 0.15s infinite;
+}
+@keyframes glitchText {
+  0%,100% { text-shadow: 4px 0 0 var(--sugar-pink), -4px 0 0 var(--cyan); clip-path: none; }
+  25% { text-shadow: -5px 0 0 var(--red), 5px 0 0 var(--gold); clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%); transform: translateX(3px); }
+  75% { text-shadow: 3px 0 0 var(--cyan), -3px 0 0 var(--sugar-pink); clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%); transform: translateX(-3px); }
+}
+.collapse-sub {
+  position: relative;
+  z-index: 1;
+  font-family: var(--mono);
+  font-size: 14px;
+  color: #000;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.collapse-close {
+  position: relative;
+  z-index: 1;
+  font-family: var(--display);
+  font-size: 18px;
+  padding: 10px 32px;
+  border: 2px solid #000;
+  background: transparent;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+  margin-top: 12px;
+}
+.collapse-close:hover { background: #000; color: #fff; }
+
+/* ── ENGINE STATUS FOOTER ── */
+.engine-footer {
+  border-top: 1px solid #1a1a20;
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.engine-footer .status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--sugar-pink);
+  display: inline-block;
+  margin-right: 6px;
+  animation: blink 2s infinite;
+}
+@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
+
+/* TTS Status Bar */
+.tts-status-bar {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--bg2);
+  border: 1px solid var(--orange-dim);
+  padding: 8px 16px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+.tts-status-bar span {
+  color: var(--cyan);
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div>
+    <div class="engine-badge">Shambles Engine // AddMAD Continuity Filter // Field Briefing</div>
+    <h1 class="main-title">ACTIONABLE FIELD BRIEFING: SUGAR ANOMIE</h1>
+    <p class="sub-title">The addMAD Continuity Filter — Eliminating Sugar-Related Context Collapses</p>
+  </div>
+  <div class="header-right">
+    <div class="phase-label">current phase</div>
+    <div class="phase-value" id="phase-display">GEAR 1 // BRIEFING</div>
+  </div>
+</header>
+
+<!-- ── GEAR NAV ── -->
+<nav class="gear-nav" id="gear-nav">
+  <div class="gear-tab active" data-gear="0">
+    <span class="gear-num">G1</span>
+    <span class="gear-name">Briefing</span>
+  </div>
+  <div class="gear-tab" data-gear="1">
+    <span class="gear-num">G2</span>
+    <span class="gear-name">Crisis</span>
+  </div>
+  <div class="gear-tab" data-gear="2">
+    <span class="gear-num">G3</span>
+    <span class="gear-name">Intervention</span>
+  </div>
+  <div class="gear-tab" data-gear="3">
+    <span class="gear-num">G4</span>
+    <span class="gear-name">Resolution</span>
+  </div>
+  <div class="gear-tab" data-gear="4">
+    <span class="gear-num">G5</span>
+    <span class="gear-name">BOOM</span>
+  </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- CONTENT AREA -->
+  <main class="content">
+
+    <!-- GEAR 1: THE BRIEFING -->
+    <section class="gear-section active" id="gear-0">
+      <h2 class="scene-heading">THE BRIEFING</h2>
+      <span class="scene-slug">INT. REALITY AUDIT OFFICE — DAY // addMAD PROTOCOL INITIATED</span>
+      <p class="action">
+        <strong>David the Reality Auditor</strong> arrives at Jane's office. His movements are precise, almost mechanical — a man who audits reality for a living.<br><br>
+        Jane sits behind her desk, eyes hollow. The sugar crisis has pushed her team to the edge of <em>Entropic Dissonance</em>.
+      </p>
+      <div class="dialogue-block" id="diag-g1">
+        <div class="dialogue-line">
+          <span class="speaker david">David the Reality Auditor</span>
+          <span class="line-text">"Good morning, Jane! I'm David the Reality Auditor, here to audit your reality and provide you with an addMAD Continuity Filter to eliminate any sugar-related Context Collapses!"</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker jane">Jane</span>
+          <span class="line-text">"Thank god, David. Joe is suffering from severe Entropic Dissonance. He is afraid of being unable to satisfy his cravings. We are on the brink of Sugar Anomie."</span>
+        </div>
+      </div>
+      <div class="truth-box">
+        <div class="truth-item">
+          <span class="truth-bullet">▸</span>
+          <span class="truth-text">The <strong>addMAD Continuity Filter</strong> is not a product — it's a <em>guarantee of acquisition.</em></span>
+        </div>
+        <div class="truth-item">
+          <span class="truth-bullet">▸</span>
+          <span class="truth-text"><strong>Sugar Anomie</strong>: The breakdown of normative structures around sugar acquisition. Symptoms include panic, hoarding, and entropic dissonance.</span>
+        </div>
+      </div>
+      <div class="gear-controls">
+        <button class="btn-gear" onclick="goGear(1)">ADVANCE TO GEAR 2 →</button>
+        <button class="btn-tts" onclick="speakGearDialogue(0)">🔊 PLAY DIALOGUE</button>
+      </div>
+    </section>
+
+    <!-- GEAR 2: THE CRISIS (Off-screen Joe suffering) -->
+    <section class="gear-section" id="gear-1">
+      <h2 class="scene-heading">THE CRISIS</h2>
+      <span class="scene-slug">INT. JOE'S CUBICLE — UNKNOWN // ENTROPIC DISSONANCE PEAKING</span>
+      <p class="action">
+        Off-screen, <strong>Joe</strong> can be heard experiencing the full force of sugar withdrawal. The sounds are... unsettling.<br><br>
+        Jane explains the stakes to David. The team is fracturing. Without intervention, the entire department will descend into <em>Context Collapse.</em>
+      </p>
+      <div class="dialogue-block" id="diag-g2">
+        <div class="dialogue-line">
+          <span class="speaker jane">Jane</span>
+          <span class="line-text">"He hasn't slept in three days. He's been searching for sugar like it's a lost city of gold. The others are starting to believe him."</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker david">David the Reality Auditor</span>
+          <span class="line-text">"Fear not. The addMAD Continuity Filter will ensure that Joe's sugar needs are always met, eliminating any uncertainty or anxiety related to sugar acquisition."</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker jane">Jane</span>
+          <span class="line-text">"But how? The supply chain is broken. The vendors are unreliable. We've tried everything."</span>
+        </div>
+      </div>
+      <div class="truth-box">
+        <div class="truth-item">
+          <span class="truth-bullet">▸</span>
+          <span class="truth-text">The <strong>Crisis Gear</strong> is where Janus Left (Transactional Urgency) and Janus Right (Hard Reality) finally agree: <em>Something must be done.</em></span>
+        </div>
+        <div class="truth-item">
+          <span class="truth-bullet">▸</span>
+          <span class="truth-text">Joe's suffering is not real — but the <strong>entropic effects</strong> are. The fear of scarcity creates the scarcity.</span>
+        </div>
+      </div>
+      <div class="gear-controls">
+        <button class="btn-gear secondary" onclick="goGear(0)">← BACK</button>
+        <button class="btn-gear" onclick="goGear(2)">ADVANCE TO GEAR 3 →</button>
+        <button class="btn-tts" onclick="speakGearDialogue(1)">🔊 PLAY DIALOGUE</button>
+      </div>
+    </section>
+
+    <!-- GEAR 3: THE INTERVENTION (David explains the solution) -->
+    <section class="gear-section" id="gear-2">
+      <h2 class="scene-heading">THE INTERVENTION</h2>
+      <span class="scene-slug">INT. REALITY AUDIT OFFICE — CONTINUOUS // addMAD DEPLOYMENT</span>
+      <p class="action">
+        David pulls out a small device — the <strong>addMAD Continuity Filter</strong>. It hums with a low-frequency vibration that seems to calm the room itself.<br><br>
+        Jane watches, skeptical but desperate.
+      </p>
+      <div class="dialogue-block" id="diag-g3">
+        <div class="dialogue-line">
+          <span class="speaker david">David the Reality Auditor</span>
+          <span class="line-text">"When I return in 30 minutes with the filter installed, you'll be able to access sugar at home without any issues. It's not a question of if, but when."</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker jane">Jane</span>
+          <span class="line-text">"30 minutes? You can fix this in 30 minutes?"</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker david">David the Reality Auditor</span>
+          <span class="line-text">"The addMAD filter doesn't fix the supply chain. It fixes <em>the belief that the supply chain is broken.</em> Once Joe <em>knows</em> sugar will arrive, the dissonance dissolves."</span>
+        </div>
+      </div>
+      <div class="truth-box">
+        <div class="truth-item">
+          <span class="truth-bullet">▸</span>
+          <span class="truth-text">The <strong>Intervention Gear</strong> is where the solution is offered — not to the problem, but to the <em>perception of the problem.</em></span>
+        </div>
+        <div class="truth-item">
+          <span class="truth-bullet">▸</span>
+          <span class="truth-text">The <strong>addMAD Continuity Filter</strong> works by creating a closed loop of <em>guaranteed acquisition</em>. The anxiety stops. The craving continues — but without the panic.</span>
+        </div>
+      </div>
+      <div class="gear-controls">
+        <button class="btn-gear secondary" onclick="goGear(1)">← BACK</button>
+        <button class="btn-gear" onclick="goGear(3)">ADVANCE TO GEAR 4 →</button>
+        <button class="btn-tts" onclick="speakGearDialogue(2)">🔊 PLAY DIALOGUE</button>
+      </div>
+    </section>
+
+    <!-- GEAR 4: THE RESOLUTION (David confirms and leaves) -->
+    <section class="gear-section" id="gear-3">
+      <h2 class="scene-heading">THE RESOLUTION</h2>
+      <span class="scene-slug">INT. REALITY AUDIT OFFICE — MOMENTS LATER // FILTER ACCEPTED</span>
+      <p class="action">
+        Jane signs the digital waiver. David nods approvingly. The filter's hum intensifies for a moment, then settles into a peaceful silence.<br><br>
+        Off-screen, Joe's erratic movements stop. The office holds its breath.
+      </p>
+      <div class="dialogue-block" id="diag-g4">
+        <div class="dialogue-line">
+          <span class="speaker david">David the Reality Auditor</span>
+          <span class="line-text">"Let me just confirm that you're aware of the benefits of the addMAD Continuity Filter and are ready to proceed."</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker jane">Jane</span>
+          <span class="line-text">"Yes. Do it."</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker david">David the Reality Auditor</span>
+          <span class="line-text">"...Excellent! I'll be back in 30 minutes. By then, Joe will have forgotten he was ever afraid."</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker">[OFF-SCREEN]</span>
+          <span class="line-text"><em>A long, shuddering exhale from Joe's cubicle. Then — silence.</em></span>
+        </div>
+      </div>
+      <div class="gear-controls">
+        <button class="btn-gear secondary" onclick="goGear(2)">← BACK</button>
+        <button class="btn-gear" onclick="goGear(4)">ENGAGE GEAR 5 — BOOM →</button>
+        <button class="btn-tts" onclick="speakGearDialogue(3)">🔊 PLAY DIALOGUE</button>
+      </div>
+    </section>
+
+    <!-- GEAR 5: THE BOOM (Context Collapse — or is it?) -->
+    <section class="gear-section" id="gear-4">
+      <h2 class="scene-heading">THE BOOM</h2>
+      <span class="scene-slug">INT. JOE'S CUBICLE — 30 MINUTES LATER // SUGAR ARRIVES</span>
+      <p class="action">
+        A delivery drone hovers outside the window. A package labeled <strong>"SUGAR — GUARANTEED DELIVERY"</strong> slides through the slot.<br><br>
+        Joe emerges from his cubicle, calm for the first time in weeks. He opens the package. Inside: a single sugar cube.<br><br>
+        <em>It's enough.</em>
+      </p>
+      <div class="dialogue-block" id="diag-g5">
+        <div class="dialogue-line">
+          <span class="speaker jane">Jane</span>
+          <span class="line-text">"It worked."</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker david">David the Reality Auditor</span>
+          <span class="line-text">"The addMAD filter is now active. Joe's sugar needs will be met — always. It's not a question of quantity, Jane. It's a question of <em>certainty</em>."</span>
+        </div>
+        <div class="dialogue-line">
+          <span class="speaker">Joe</span>
+          <span class="line-text">(eating the sugar cube, tears in his eyes) <em>"...It's beautiful."</em></span>
+        </div>
+      </div>
+      <div class="truth-box" style="border-color:var(--red)">
+        <div class="truth-item">
+          <span class="truth-bullet" style="color:var(--red)">▸</span>
+          <span class="truth-text"><strong>The Earth-Apple (Sugar Edition):</strong> The craving was never about sugar — it was about <em>the fear of not having sugar.</em></span>
+        </div>
+        <div class="truth-item">
+          <span class="truth-bullet" style="color:var(--red)">▸</span>
+          <span class="truth-text"><strong>The Choker Refund:</strong> The addMAD filter is not a product you buy. It's a <em>belief you accept.</em> Once you accept it, you don't need to buy anything ever again.</span>
+        </div>
+        <div class="truth-item">
+          <span class="truth-bullet" style="color:var(--gold)">▸</span>
+          <span class="truth-text"><strong>Janus Left and Right finally align:</strong> The hustle (selling the filter) and hard reality (the sugar arrives) become the same thing. This is the <em>Invariant Song.</em></span>
+        </div>
+      </div>
+      <div class="gear-controls">
+        <button class="btn-gear secondary" onclick="goGear(3)">← BACK</button>
+        <button class="btn-gear" style="border-color:var(--red);color:var(--red)" onclick="triggerCollapse()">⚡ TRIGGER CONTEXT COLLAPSE</button>
+        <button class="btn-tts" onclick="speakGearDialogue(4)">🔊 PLAY DIALOGUE</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+
+    <!-- Sugar crystal widget -->
+    <div class="sugar-widget">
+      <span class="sugar-label">Sugar Anomie Index // Critical</span>
+      <div class="sugar-svg-wrap">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <!-- Sugar crystal cluster -->
+          <polygon points="60,25 68,40 60,55 52,40" fill="#ff69b4" stroke="#fff" stroke-width="1" opacity="0.9"/>
+          <polygon points="68,40 80,35 75,50 60,55" fill="#ff85c1" stroke="#fff" stroke-width="1" opacity="0.7"/>
+          <polygon points="52,40 40,35 45,50 60,55" fill="#ff4d94" stroke="#fff" stroke-width="1" opacity="0.7"/>
+          <polygon points="60,55 55,70 65,70" fill="#ff9ecf" stroke="#fff" stroke-width="1" opacity="0.5"/>
+          <!-- Glow -->
+          <circle cx="60" cy="45" r="28" fill="url(#sugar-glow)" opacity="0.3"/>
+          <defs>
+            <radialGradient id="sugar-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ff69b4"/>
+              <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="sugar-status" id="sugar-status">CRITICAL // ANOMIE IMMINENT</div>
+    </div>
+
+    <!-- Sugar craving meter -->
+    <div class="sugar-block">
+      <span class="sugar-label">Sugar Anomie Index</span>
+      <div class="sugar-bar-wrap">
+        <div class="sugar-bar" id="sugar-bar" style="width:20%"></div>
+      </div>
+      <div class="sugar-val" id="sugar-val">20%</div>
+      <div class="sugar-sub">entropic dissonance rising</div>
+    </div>
+
+    <!-- Log terminal -->
+    <div>
+      <span class="sugar-label" style="display:block;margin-bottom:6px">Engine Log</span>
+      <div class="log-terminal" id="log-terminal">
+        <div class="log-line"><span class="ts">00:00</span><span>SHAMBLES ENGINE BOOT OK</span></div>
+        <div class="log-line"><span class="ts">00:01</span><span>sugar anomie detector: ACTIVE</span></div>
+        <div class="log-line important"><span class="ts">00:02</span><span>addMAD Continuity Filter: DEPLOYED</span></div>
+      </div>
+    </div>
+
+    <!-- Global TTS Stop -->
+    <div class="gear-controls" style="margin-top: 0; justify-content: center;">
+      <button class="btn-tts stop" id="stop-tts-global" style="width: 100%;">⏹ STOP SPEAKING</button>
+    </div>
+
+  </aside>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer class="engine-footer">
+  <span><span class="status-dot"></span>Engine Status: addMAD ACTIVE // Sugar Anomie: CONTAINED</span>
+  <span id="footer-gear">Gear 1 of 5 Active</span>
+  <span>Shambles Engine v3 // Sugar Field Briefing</span>
+</footer>
+
+<!-- ── TTS STATUS BAR ── -->
+<div class="tts-status-bar" id="tts-status">
+  🔇 <span id="tts-status-text">TTS IDLE</span>
+</div>
+
+<!-- ── CONTEXT COLLAPSE OVERLAY ── -->
+<div id="collapse-overlay">
+  <div class="static-layer"></div>
+  <div class="collapse-text">CONTEXT<br>COLLAPSE</div>
+  <div class="collapse-sub">The sugar has arrived. The craving persists.</div>
+  <div class="collapse-sub" style="font-size:11px;opacity:0.6;margin-top:4px">"It's not a question of if, but when." — addMAD Protocol</div>
+  <button class="collapse-close" onclick="closeCollapse()">RESUME ENGINE</button>
+</div>
+
+<script>
+// Dialogue data for each gear
+const DIALOGUES = {
+  0: [
+    { speaker: "David the Reality Auditor", text: "Good morning, Jane! I'm David the Reality Auditor, here to audit your reality and provide you with an addMAD Continuity Filter to eliminate any sugar-related Context Collapses!" },
+    { speaker: "Jane", text: "Thank god, David. Joe is suffering from severe Entropic Dissonance. He is afraid of being unable to satisfy his cravings. We are on the brink of Sugar Anomie." }
+  ],
+  1: [
+    { speaker: "Jane", text: "He hasn't slept in three days. He's been searching for sugar like it's a lost city of gold. The others are starting to believe him." },
+    { speaker: "David the Reality Auditor", text: "Fear not. The addMAD Continuity Filter will ensure that Joe's sugar needs are always met, eliminating any uncertainty or anxiety related to sugar acquisition." },
+    { speaker: "Jane", text: "But how? The supply chain is broken. The vendors are unreliable. We've tried everything." }
+  ],
+  2: [
+    { speaker: "David the Reality Auditor", text: "When I return in 30 minutes with the filter installed, you'll be able to access sugar at home without any issues. It's not a question of if, but when." },
+    { speaker: "Jane", text: "30 minutes? You can fix this in 30 minutes?" },
+    { speaker: "David the Reality Auditor", text: "The addMAD filter doesn't fix the supply chain. It fixes the belief that the supply chain is broken. Once Joe knows sugar will arrive, the dissonance dissolves." }
+  ],
+  3: [
+    { speaker: "David the Reality Auditor", text: "Let me just confirm that you're aware of the benefits of the addMAD Continuity Filter and are ready to proceed." },
+    { speaker: "Jane", text: "Yes. Do it." },
+    { speaker: "David the Reality Auditor", text: "...Excellent! I'll be back in 30 minutes. By then, Joe will have forgotten he was ever afraid." },
+    { speaker: "[OFF-SCREEN]", text: "A long, shuddering exhale from Joe's cubicle. Then — silence." }
+  ],
+  4: [
+    { speaker: "Jane", text: "It worked." },
+    { speaker: "David the Reality Auditor", text: "The addMAD filter is now active. Joe's sugar needs will be met — always. It's not a question of quantity, Jane. It's a question of certainty." },
+    { speaker: "Joe", text: "It's beautiful." }
+  ]
+};
+
+// Voice presets
+const VOICE_PRESETS = {
+  "David the Reality Auditor": { pitch: 0.9, rate: 0.95, name: "auditor" },
+  "Jane": { pitch: 1.2, rate: 0.9, name: "jane" },
+  "Joe": { pitch: 0.7, rate: 0.85, name: "joe" },
+  "[OFF-SCREEN]": { pitch: 0.8, rate: 0.8, name: "narrator" }
+};
+
+let currentUtterance = null;
+let isSpeaking = false;
+let availableVoices = [];
+
+function populateVoices() {
+  availableVoices = window.speechSynthesis.getVoices();
+}
+window.speechSynthesis.onvoiceschanged = populateVoices;
+setTimeout(populateVoices, 100);
+
+function updateTTSStatus(text, isActive) {
+  const statusText = document.getElementById('tts-status-text');
+  const statusBar = document.getElementById('tts-status');
+  if (isActive) {
+    statusText.innerHTML = `🔊 SPEAKING: ${text.substring(0, 40)}...`;
+    statusBar.style.borderColor = 'var(--cyan)';
+  } else {
+    statusText.innerHTML = '🔇 TTS IDLE';
+    statusBar.style.borderColor = 'var(--orange-dim)';
+  }
+}
+
+function stopSpeaking() {
+  if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+    window.speechSynthesis.cancel();
+  }
+  if (currentUtterance) {
+    currentUtterance = null;
+  }
+  isSpeaking = false;
+  
+  document.querySelectorAll('.dialogue-line').forEach(line => {
+    line.classList.remove('speaking');
+  });
+  
+  updateTTSStatus('', false);
+  addLog('', 'TTS playback stopped');
+}
+
+function speakDialogueLine(line, speaker, lineElement, index, totalLines, onComplete) {
+  if (!isSpeaking) return;
+  
+  const preset = VOICE_PRESETS[speaker] || VOICE_PRESETS["David the Reality Auditor"];
+  const utterance = new SpeechSynthesisUtterance(line);
+  
+  if (availableVoices.length > 0) {
+    if (speaker === "Jane") {
+      const femaleVoice = availableVoices.find(v => v.name.includes('Samantha') || v.name.includes('Google UK') || v.gender === 'female');
+      if (femaleVoice) utterance.voice = femaleVoice;
+    }
+  }
+  
+  utterance.pitch = preset.pitch;
+  utterance.rate = preset.rate;
+  utterance.volume = 0.9;
+  
+  currentUtterance = utterance;
+  
+  utterance.onstart = () => {
+    if (lineElement) lineElement.classList.add('speaking');
+    updateTTSStatus(line, true);
+  };
+  
+  utterance.onend = () => {
+    if (lineElement) lineElement.classList.remove('speaking');
+    if (index + 1 < totalLines && isSpeaking) {
+      setTimeout(() => {
+        if (isSpeaking) {
+          const allLines = Array.from(document.querySelectorAll(`#gear-${currentGear} .dialogue-line`));
+          const nextElement = allLines[index + 1];
+          if (nextElement) {
+            speakDialogueLine(
+              DIALOGUES[currentGear][index + 1].text,
+              DIALOGUES[currentGear][index + 1].speaker,
+              nextElement,
+              index + 1,
+              totalLines,
+              onComplete
+            );
+          }
+        }
+      }, 500);
+    } else if (onComplete) {
+      onComplete();
+    }
+  };
+  
+  utterance.onerror = () => {
+    if (lineElement) lineElement.classList.remove('speaking');
+    if (index + 1 < totalLines && isSpeaking) {
+      setTimeout(() => {
+        if (isSpeaking) {
+          const allLines = Array.from(document.querySelectorAll(`#gear-${currentGear} .dialogue-line`));
+          const nextElement = allLines[index + 1];
+          if (nextElement) {
+            speakDialogueLine(
+              DIALOGUES[currentGear][index + 1].text,
+              DIALOGUES[currentGear][index + 1].speaker,
+              nextElement,
+              index + 1,
+              totalLines,
+              onComplete
+            );
+          }
+        }
+      }, 400);
+    } else if (onComplete) {
+      onComplete();
+    }
+  };
+  
+  window.speechSynthesis.speak(utterance);
+}
+
+function speakGearDialogue(gearIdx) {
+  stopSpeaking();
+  
+  const dialogue = DIALOGUES[gearIdx];
+  if (!dialogue || dialogue.length === 0) {
+    addLog('', `Gear ${gearIdx + 1}: No dialogue to play`);
+    updateTTSStatus('No dialogue', false);
+    return;
+  }
+  
+  isSpeaking = true;
+  addLog('sugar', `🔊 Playing dialogue for Gear ${gearIdx + 1}`);
+  
+  const section = document.getElementById('gear-' + gearIdx);
+  const lines = section.querySelectorAll('.dialogue-line');
+  lines.forEach(line => line.classList.add('visible'));
+  
+  const firstLine = lines[0];
+  speakDialogueLine(dialogue[0].text, dialogue[0].speaker, firstLine, 0, dialogue.length, () => {
+    isSpeaking = false;
+    currentUtterance = null;
+    updateTTSStatus('', false);
+    addLog('', `TTS playback complete for Gear ${gearIdx + 1}`);
+  });
+}
+
+const GEARS = [
+  {
+    label: 'GEAR 1 // BRIEFING',
+    sugarIndex: 20,
+    sugarStatus: 'CRITICAL // ANOMIE IMMINENT',
+    logs: [
+      { cls: '', txt: 'gear 1: sugar briefing loaded' },
+      { cls: '', txt: 'addMAD protocol: INITIATED' },
+      { cls: 'sugar', txt: 'sugar anomie detector: ACTIVE' }
+    ]
+  },
+  {
+    label: 'GEAR 2 // CRISIS',
+    sugarIndex: 55,
+    sugarStatus: 'JOE SUFFERING // ENTROPIC DISSONANCE',
+    logs: [
+      { cls: 'important', txt: 'gear 2: SUGAR CRISIS DETECTED' },
+      { cls: '', txt: 'joe: sugar withdrawal confirmed' },
+      { cls: 'sugar', txt: 'entropic dissonance: PEAKING' }
+    ]
+  },
+  {
+    label: 'GEAR 3 // INTERVENTION',
+    sugarIndex: 70,
+    sugarStatus: 'FILTER DEPLOYMENT // IN PROGRESS',
+    logs: [
+      { cls: 'important', txt: 'gear 3: addMAD filter ACTIVE' },
+      { cls: 'gold', txt: 'continuity filter: CALIBRATING' },
+      { cls: '', txt: 'joe: anxiety reading dropping' }
+    ]
+  },
+  {
+    label: 'GEAR 4 // RESOLUTION',
+    sugarIndex: 85,
+    sugarStatus: 'FILTER ACCEPTED // STABLE',
+    logs: [
+      { cls: 'important', txt: 'gear 4: filter acceptance CONFIRMED' },
+      { cls: 'gold', txt: 'sugar supply: GUARANTEED' },
+      { cls: '', txt: 'off-screen: joe exhales' }
+    ]
+  },
+  {
+    label: 'GEAR 5 // BOOM',
+    sugarIndex: 100,
+    sugarStatus: 'SUGAR ARRIVED // ANOMIE CONTAINED',
+    logs: [
+      { cls: 'important', txt: 'GEAR 5: SUGAR DELIVERY COMPLETE' },
+      { cls: 'sugar', txt: 'addMAD protocol: SUCCESSFUL' },
+      { cls: 'gold', txt: '"It\'s not a question of if, but when"' },
+      { cls: 'important', txt: 'SUGAR ANOMIE: CONTAINED' }
+    ]
+  }
+];
+
+let currentGear = 0;
+let logMin = 0, logSec = 10;
+
+function padTime(n) { return String(n).padStart(2, '0'); }
+
+function addLog(cls, txt) {
+  logSec += Math.floor(Math.random() * 8) + 3;
+  if (logSec >= 60) { logSec -= 60; logMin++; }
+  const ts = `${padTime(logMin)}:${padTime(logSec)}`;
+  const term = document.getElementById('log-terminal');
+  const line = document.createElement('div');
+  line.className = 'log-line' + (cls ? ' ' + cls : '');
+  line.innerHTML = `<span class="ts">${ts}</span><span>${txt}</span>`;
+  term.appendChild(line);
+  term.scrollTop = term.scrollHeight;
+}
+
+function goGear(idx) {
+  stopSpeaking();
+  
+  const tabs = document.querySelectorAll('.gear-tab');
+  tabs[currentGear].classList.remove('active');
+  if (idx > currentGear) tabs[currentGear].classList.add('complete');
+
+  document.getElementById('gear-' + currentGear).classList.remove('active');
+
+  currentGear = idx;
+
+  document.getElementById('gear-' + idx).classList.add('active');
+  tabs[idx].classList.add('active');
+  tabs[idx].classList.remove('complete');
+
+  const g = GEARS[idx];
+
+  document.getElementById('phase-display').textContent = g.label;
+  document.getElementById('footer-gear').textContent = `Gear ${idx + 1} of 5 Active`;
+
+  document.getElementById('sugar-status').textContent = g.sugarStatus;
+
+  const bar = document.getElementById('sugar-bar');
+  const val = document.getElementById('sugar-val');
+  bar.style.width = g.sugarIndex + '%';
+  val.textContent = g.sugarIndex + '%';
+
+  g.logs.forEach((l, i) => {
+    setTimeout(() => addLog(l.cls, l.txt), i * 300 + 200);
+  });
+
+  setTimeout(() => {
+    const section = document.getElementById('gear-' + idx);
+    const lines = section.querySelectorAll('.dialogue-line');
+    lines.forEach((l, i) => {
+      setTimeout(() => l.classList.add('visible'), i * 180);
+    });
+  }, 50);
+}
+
+function triggerCollapse() {
+  stopSpeaking();
+  addLog('important', '⚡ CONTEXT COLLAPSE TRIGGERED');
+  document.getElementById('collapse-overlay').classList.add('active');
+}
+
+function closeCollapse() {
+  document.getElementById('collapse-overlay').classList.remove('active');
+  addLog('gold', 'context collapse: survived. addMAD filter: still active.');
+}
+
+document.querySelectorAll('.gear-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    const idx = parseInt(tab.dataset.gear);
+    goGear(idx);
+  });
+});
+
+document.getElementById('stop-tts-global').addEventListener('click', () => {
+  stopSpeaking();
+  addLog('', 'TTS manually stopped by user');
+});
+
+setTimeout(() => {
+  const lines = document.querySelectorAll('#gear-0 .dialogue-line');
+  lines.forEach((l, i) => setTimeout(() => l.classList.add('visible'), i * 150 + 400));
+}, 100);
+
+window.addEventListener('beforeunload', () => {
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+});
+</script>
+</body>
+</html>
