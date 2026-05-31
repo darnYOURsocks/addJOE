@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asian Gold 3D Storyteller Engine</title>
+    <!-- Use local libraries verified in the assets folder -->
+    <script src="./Asian Gold 3D Storyteller Engine_files/saved_resource"></script>
+    <script src="./Asian Gold 3D Storyteller Engine_files/three.min.js.download"></script>
+    <script src="./Asian Gold 3D Storyteller Engine_files/OrbitControls.js.download"></script>
+    <script src="./Asian Gold 3D Storyteller Engine_files/tween.umd.js.download"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #000;
+            color: #32cd32;
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .font-mono {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #001a00;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #32cd32;
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff8c00;
+        }
+
+        .hud-border {
+            border: 1px solid rgba(50, 205, 50, 0.4);
+            box-shadow: 0 0 10px rgba(50, 205, 50, 0.2);
+        }
+
+        .hud-bg {
+            background: rgba(0, 20, 0, 0.85);
+            backdrop-filter: blur(12px);
+        }
+
+        .crt-scanline {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 40;
+            opacity: 0.4;
+        }
+
+        .active-word {
+            color: #ff8c00;
+            text-shadow: 0 0 10px rgba(255, 140, 0, 0.8);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen select-none">
+    <div class="crt-scanline"></div>
+
+    <!-- Header Panel -->
+    <div id="story-generator-panel" class="bg-[#001100] border-b-2 border-[#ff8c00]/50 px-6 py-3 z-50 flex flex-col md:flex-row gap-3 items-center shadow-[0_4px_15px_rgba(255,140,0,0.3)]">
+        <div class="flex items-center gap-2 shrink-0">
+            <div class="w-2 h-2 rounded-full bg-[#ff8c00] animate-pulse"></div>
+            <span class="text-[12px] font-mono text-[#ff8c00] font-bold tracking-widest shrink-0">LM STUDIO Ŋ(Z) CRETACEOUS</span>
+        </div>
+        <div class="flex flex-1 gap-2 w-full">
+            <input id="story-prompt-input" type="text" placeholder="PROMPT ANOMALY: e.g. 'Joe tries to sell a time machine to a T-Rex'" class="flex-1 bg-[#002200] border border-[#32cd32] focus:border-[#ff8c00] rounded px-3 py-1.5 text-xs font-mono text-[#32cd32] focus:outline-none transition-colors placeholder-[#1a661a]">
+            <button id="btn-generate-story" class="shrink-0 bg-[#ff8c00] hover:bg-orange-400 active:scale-95 text-[#001100] font-bold px-4 py-1.5 rounded text-[10px] font-mono uppercase tracking-widest transition-all">Generate &amp; Animate</button>
+        </div>
+        <div id="gen-status" class="text-[10px] font-mono text-[#32cd32] shrink-0 min-w-[180px] text-right hidden md:block" style="color: rgb(255, 140, 0);">✓ LOADED 6 PHASES</div>
+    </div>
+
+    <header class="bg-[#000a00] border-b border-[#1a441a] px-6 py-3 flex items-center justify-between z-50">
+        <div class="flex items-center gap-3">
+            <div class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#32cd32] opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-[#32cd32]"></span>
+            </div>
+            <div>
+                <h1 class="text-xs font-mono font-bold text-[#32cd32] uppercase tracking-[0.25em]">ASIAN GOLD 3D ENGINE</h1>
+                <p id="story-subtitle" class="text-[10px] text-[#ff8c00] font-mono tracking-wider">STORY: "CONVERT SCRIPT TO 120S PILOT ANIMATION"</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4 text-right">
+            <span class="hidden md:inline-block font-mono text-[10px] text-[#32cd32]">ENGINE_FPS: <span id="fps-counter">60</span></span>
+            <div class="bg-[#002200] px-3 py-1 rounded border border-[#32cd32] text-[10px] font-mono text-[#ff8c00] shadow-[0_0_8px_rgba(50,205,50,0.3)]">
+                GLOBAL ENTROPY TIME: <span id="global-timer">0.00s</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+        
+        <!-- Left Pane: Interactive 3D Canvas -->
+        <div class="flex-1 relative flex flex-col min-h-[40vh] lg:min-h-0 bg-[#000]">
+            <!-- Canvas HUD Overlay -->
+            <div class="absolute top-4 left-4 z-30 pointer-events-none flex flex-col gap-1.5">
+                <div class="hud-bg hud-border rounded p-3 flex flex-col gap-0.5 max-w-xs shadow-[0_0_15px_rgba(50,205,50,0.3)]">
+                    <span class="text-[10px] font-mono text-[#32cd32] font-bold uppercase border-b border-[#32cd32] pb-1 mb-1">Active Phase</span>
+                    <span id="scene-title" class="text-xs font-mono font-bold text-[#ff8c00]">GEAR 1: The Briefing</span>
+                    <span id="scene-duration" class="text-[10px] font-mono text-[#32cd32]">0.00s - 20.00s</span>
+                </div>
+            </div>
+
+            <div class="absolute top-4 right-4 z-30 pointer-events-none flex flex-col gap-1.5 items-end">
+                <div class="hud-bg hud-border rounded p-3 text-right shadow-[0_0_15px_rgba(50,205,50,0.3)]">
+                    <span class="text-[10px] font-mono text-[#32cd32] font-bold block uppercase border-b border-[#32cd32] pb-1 mb-1">Active 3D Entities</span>
+                    <div id="active-nodes-list" class="text-[10px] font-mono text-[#ff8c00] mt-1 flex flex-col gap-0.5"></div>
+                </div>
+            </div>
+
+            <!-- ThreeJS Canvas Mount -->
+            <div id="canvas3d" class="flex-1 w-full h-full"></div>
+
+            <!-- Viewport Controls HUD -->
+            <div class="absolute bottom-4 left-4 z-30 flex gap-2">
+                <button id="btn-mode" class="hud-bg hud-border px-3 py-1.5 rounded text-[10px] font-mono hover:bg-[#32cd32]/20 text-[#32cd32] transition-all flex items-center gap-2">
+                    <span id="mode-text">TOGGLE WIREFRAME</span>
+                </button>
+                <button id="btn-camera-reset" class="hud-bg hud-border px-3 py-1.5 rounded text-[10px] font-mono hover:bg-[#32cd32]/20 text-[#32cd32] transition-all flex items-center gap-2">
+                    <span>RESET CAMERA</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Pane: Telemetry & Subtitle Analyzer -->
+        <div class="w-full lg:w-[480px] bg-[#001100] border-t lg:border-t-0 lg:border-l border-[#1a441a] flex flex-col overflow-hidden z-40">
+            <!-- Active Subtitles Terminal -->
+            <div class="p-4 border-b border-[#1a441a] bg-[#001a00]">
+                <span class="text-[10px] font-mono text-[#ff8c00] font-bold tracking-wider uppercase block mb-1">Active Dialogue Stream</span>
+                <div class="hud-bg border border-[#32cd32] rounded p-4 min-h-[100px] flex items-center justify-center shadow-[inset_0_0_10px_rgba(50,205,50,0.2)]">
+                    <p id="subtitles-output" class="text-sm md:text-base text-center leading-relaxed font-bold text-[#32cd32] transition-all duration-300"></p>
+                </div>
+            </div>
+
+            <!-- Coordinate Telemetry Board -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <div class="px-4 py-2 bg-[#000a00] border-b border-[#1a441a] flex justify-between items-center">
+                    <span class="text-[10px] font-mono text-[#32cd32] font-bold uppercase">Grid Telemetry</span>
+                    <span class="text-[9px] font-mono text-[#1a661a]">NORM_SPACE</span>
+                </div>
+                <div id="telemetry-stack" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+            </div>
+
+            <!-- Historical Keyframe Database -->
+            <div class="h-44 border-t border-[#1a441a] bg-[#000a00] flex flex-col overflow-hidden">
+                <div class="px-4 py-2 bg-[#001100] border-b border-[#1a441a]">
+                    <span class="text-[10px] font-mono text-[#ff8c00] font-bold uppercase tracking-widest">Macro Timeline</span>
+                </div>
+                <div class="flex-1 overflow-y-auto text-[10px] font-mono" id="timeline-rows-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Control Deck -->
+    <footer class="bg-[#000a00] border-t border-[#1a441a] p-4 md:p-6 z-50">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-4 justify-between">
+            <!-- Timeline Controls -->
+            <div class="flex items-center gap-3 w-full md:w-auto justify-center">
+                <button id="btn-play-pause" class="bg-[#32cd32] hover:bg-green-400 text-[#001100] p-3 rounded-full transition-transform active:scale-95 shadow-[0_0_15px_rgba(50,205,50,0.6)]">
+                    <svg id="svg-play" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                    <svg id="svg-pause" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                </button>
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-mono text-[#32cd32] uppercase">Playhead</span>
+                    <span class="text-xs font-mono font-bold text-[#ff8c00]" id="deck-timer">0.00 / 120.00 Seconds</span>
+                </div>
+            </div>
+
+            <!-- Dynamic Range Slider -->
+            <div class="flex-1 w-full mx-4">
+                <input type="range" id="timeline-slider" min="0" max="120" step="0.01" value="0" class="w-full h-1.5 bg-[#1a441a] rounded-lg appearance-none cursor-pointer accent-[#ff8c00] focus:outline-none">
+            </div>
+
+            <!-- Audio Synthesis Play -->
+            <button id="btn-audio-voice" class="w-full md:w-auto bg-[#ff8c00] border border-[#32cd32] hover:bg-[#32cd32] hover:text-[#001100] px-6 py-2.5 rounded-lg text-[11px] font-mono font-bold uppercase tracking-[0.15em] text-[#001100] transition-all">VOICE SYNC: ACTIVE</button>
+        </div>
+    </footer>
+
+    <script>
+        // High-production 120-second Cretaceous Shambles timeline dataset
+        const cretaceous120SecondStoryData = [
+            {
+                "start": 0.0,
+                "end": 20.0,
+                "title": "GEAR 1: Incompressible Turbulent Flow",
+                "dialogue": "Leslie: 'Our Cretaceous sector simulates an incompressible, non-reacting turbulent flow. I've calculated the Orangutan's migration path across the shifting plates to avoid Phased Structured Displacement. If the plates grind too fast, we lose our DNA archives.'",
+                "color": 29315, // Murky green
+                "nodes": {
+                    "Leslie (Analyst)": { "pos": [-2.0, 0, -1.0], "vel": [0.05, 0, 0], "color": 3329330, "desc": "Calculating flow vectors" },
+                    "Orangutan (DNA Custodian)": { "pos": [3.0, 0, 1.0], "vel": [-0.05, 0, -0.05], "color": 16747520, "desc": "Storing DNA archives" },
+                    "Attenborough (Witness)": { "pos": [-5.0, 0, -3.0], "vel": [0, 0, 0], "color": 3900150, "desc": "Observing from grass" }
+                }
+            },
+            {
+                "start": 20.0,
+                "end": 40.0,
+                "title": "GEAR 2: Premium Assumptive Upgrade",
+                "dialogue": "Joe: 'But what about the Choker Refund for my Orangutan ancestors? Look at this Earth-Apple! It warrants a Premium Assumptive Upgrade!' Sir David Attenborough nods in solemn agreement, ignoring Leslie's projections.",
+                "color": 1973767, // Clay
+                "nodes": {
+                    "Joe (Orangutan)": { "pos": [1.0, 0, 0.0], "vel": [0, 0.05, 0], "color": 16747520, "desc": "Waving Earth-Apple" },
+                    "Earth-Apple": { "pos": [1.5, 1.0, 0.5], "vel": [0.02, 0.08, -0.02], "color": 7877903, "desc": "Floating upgrade asset" },
+                    "Attenborough (Witness)": { "pos": [-4.0, 0, -2.0], "vel": [0.05, 0, 0.05], "color": 3900150, "desc": "Nodding in agreement" },
+                    "Leslie (Analyst)": { "pos": [-1.0, 0, 2.0], "vel": [0, 0, 0], "color": 3329330, "desc": "Rubbing temples in disbelief" }
+                }
+            },
+            {
+                "start": 40.0,
+                "end": 60.0,
+                "title": "GEAR 3: Illogical Legwear Sweep",
+                "dialogue": "Cleaner: 'Anatomical exposure triggers a paralyzing Side-Ball!' The Hygiene Technician sweeps frantically in striped, biologically illogical legwear as the Cannibal Monkeys appear from the Central American foliage!",
+                "color": 2755596, // Warning red
+                "nodes": {
+                    "The Cleaner (Tech)": { "pos": [-1.0, 0, 1.0], "vel": [0.1, 0, -0.1], "color": 15381256, "desc": "Executing 90-degree lunge" },
+                    "Cannibal Monkey Alpha": { "pos": [4.0, 0, 2.0], "vel": [-0.15, 0, 0.05], "color": 15680580, "desc": "Aggressive arbitrage" },
+                    "Cannibal Monkey Beta": { "pos": [5.0, 0, -2.0], "vel": [-0.2, 0, 0.1], "color": 15680580, "desc": "Approaching from flank" },
+                    "Joe (Orangutan)": { "pos": [2.0, 0, -1.0], "vel": [-0.05, 0, 0], "color": 16747520, "desc": "Panicked retreat" }
+                }
+            },
+            {
+                "start": 60.0,
+                "end": 80.0,
+                "title": "GEAR 4: Shifting Earth Creak",
+                "dialogue": "Flanjeet: 'In this Era, Turbulent Flow dictates the rules—your Choker Refund is but a fleeting concept.' Uncle Flanjeet begins his rhythmic, mechanical creaking as the earth rifts widen.",
+                "color": 2230050, // Ethereal purple
+                "nodes": {
+                    "Uncle Flanjeet": { "pos": [0.0, 2.0, -2.0], "vel": [0, 0, 0], "color": 11032062, "desc": "Broadcasting shanty from air" },
+                    "Joe (Orangutan)": { "pos": [-2.0, 0, 0.0], "vel": [0.05, 0, 0.05], "color": 16747520, "desc": "Demanding refund" },
+                    "Attenborough (Witness)": { "pos": [-1.0, 0, 3.0], "vel": [0, 0, 0], "color": 3900150, "desc": "Documenting rift patterns" }
+                }
+            },
+            {
+                "start": 80.0,
+                "end": 100.0,
+                "title": "GEAR 5: The Janus Collision",
+                "dialogue": "Joe: 'No, this can't be! I demand my Choker Refund!' Joe forces the Earth-Apple into the primary physical mechanism, while Jane the Validator applies Radical Authenticity and unplugs the timeline, initiating context collapse.",
+                "color": 4131338, // Explosion orange
+                "nodes": {
+                    "Joe (Orangutan)": { "pos": [2.0, 0, -1.0], "vel": [0.1, 0, -0.1], "color": 16747520, "desc": "Jabbing Earth-Apple" },
+                    "Earth-Apple": { "pos": [1.0, 0.5, -1.0], "vel": [0.2, 0, -0.2], "color": 7877903, "desc": "Forced collision asset" },
+                    "Jane (Validator)": { "pos": [-3.0, 0, 1.0], "vel": [0.08, 0, -0.08], "color": 9133302, "desc": "Applying Radical Authenticity" },
+                    "Attenborough (Witness)": { "pos": [-4.0, 0, 4.0], "vel": [0, 0, 0], "color": 3900150, "desc": "Shielding eyes from collapse" }
+                }
+            },
+            {
+                "start": 100.0,
+                "end": 120.0,
+                "title": "GEAR 6: Structured Displacement Reboot",
+                "dialogue": "Leslie: 'Another iteration of Phased Structured Displacement...'. The Shambles script reboots, resetting the environmental variables to zero as the tectonic elements recycle themselves.",
+                "color": 29315, // Reset green
+                "nodes": {
+                    "Leslie (Analyst)": { "pos": [-1.0, 0, -1.0], "vel": [0, 0, 0], "color": 3329330, "desc": "Documenting reboot parameters" },
+                    "Joe (Orangutan)": { "pos": [0.0, 0, 2.0], "vel": [0, 0, 0], "color": 16747520, "desc": "Resetting state" },
+                    "Jane (Validator)": { "pos": [2.0, 0, -2.0], "vel": [0, 0, 0], "color": 9133302, "desc": "Coherence holding" }
+                }
+            }
+        ];
+
+        const narrativeSegments = [];
+
+        // Load pre-compiled pilot timeline initially
+        cretaceous120SecondStoryData.forEach(seg => narrativeSegments.push(seg));
+
+        let activeSegmentIndex = 0;
+        let playhead = 0.0;
+        let isPlaying = false;
+        let lastTime = 0;
+        let frameCount = 0;
+        let lastFpsTime = 0;
+        let wireframeMode = false;
+        let voiceEnabled = true; // Enabled by default
+        let currentUtterance = null;
+
+        // Custom particle rain system (Soot / Rain)
+        let particleGeo, particleMat, particleSystem;
+
+        function speakCurrentSegment() {
+            window.speechSynthesis.cancel();
+            if (!voiceEnabled) return;
+            const segment = narrativeSegments[activeSegmentIndex];
+            if (!segment || !segment.dialogue) return;
+            currentUtterance = new SpeechSynthesisUtterance(segment.dialogue);
+            
+            const voicesList = window.speechSynthesis.getVoices();
+            const englishVoices = voicesList.filter(v => v.lang.startsWith('en'));
+            const maleVoices = englishVoices.filter(v => v.name.toLowerCase().includes('guy') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('mark'));
+            const femaleVoices = englishVoices.filter(v => v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('hazel'));
+
+            let char = segment.narrator || "Leslie";
+            if (activeSegmentIndex === 1) char = "Joe";
+            if (activeSegmentIndex === 2) char = "Cleaner";
+            if (activeSegmentIndex === 3) char = "Flanjeet";
+            if (activeSegmentIndex === 4) char = "Jane";
+
+            if (char.toLowerCase() === 'leslie') {
+                currentUtterance.voice = femaleVoices[0] || englishVoices[0];
+                currentUtterance.pitch = 1.1;
+                currentUtterance.rate = 0.95;
+            } else if (char.toLowerCase() === 'joe') {
+                currentUtterance.voice = maleVoices[0] || englishVoices[0];
+                currentUtterance.pitch = 0.8;
+                currentUtterance.rate = 1.1;
+            } else if (char.toLowerCase() === 'cleaner') {
+                currentUtterance.voice = maleVoices[1] || englishVoices[0];
+                currentUtterance.pitch = 1.3;
+                currentUtterance.rate = 1.15;
+            } else if (char.toLowerCase() === 'flanjeet') {
+                currentUtterance.voice = englishVoices[Math.min(2, englishVoices.length - 1)];
+                currentUtterance.pitch = 1.4;
+                currentUtterance.rate = 1.0;
+            } else if (char.toLowerCase() === 'jane') {
+                currentUtterance.voice = femaleVoices[1] || englishVoices[0];
+                currentUtterance.pitch = 1.0;
+                currentUtterance.rate = 0.9;
+            } else {
+                currentUtterance.voice = englishVoices[0];
+                currentUtterance.pitch = 1.0;
+                currentUtterance.rate = 1.0;
+            }
+            
+            window.speechSynthesis.speak(currentUtterance);
+        }
+
+        let scene, camera, renderer, gridHelper;
+        let meshGroup, connectionsGroup, controls;
+        const container = document.getElementById('canvas3d');
+
+        function init3D() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000a00); 
+            scene.fog = new THREE.FogExp2(0x000a00, 0.05);
+
+            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+            resetCamera();
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            // Grid Floor
+            const gridSize = 40;
+            const gridDivisions = 40;
+            gridHelper = new THREE.GridHelper(gridSize, gridDivisions, 0x32cd32, 0x001100);
+            gridHelper.position.y = 0.01;
+            scene.add(gridHelper);
+
+            const floorGeometry = new THREE.PlaneGeometry(gridSize, gridSize);
+            const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x030803 });
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Tectonic Bedrock Rocks
+            for(let i=0; i<25; i++) {
+                const rockGeom = new THREE.DodecahedronGeometry(Math.random() * 1.8 + 0.6);
+                const rockMat = new THREE.MeshStandardMaterial({color: 0x3a3d35, roughness: 0.95});
+                const rock = new THREE.Mesh(rockGeom, rockMat);
+                rock.position.set((Math.random() - 0.5) * 35, 0, (Math.random() - 0.5) * 35);
+                rock.rotation.y = Math.random() * Math.PI;
+                rock.castShadow = true;
+                scene.add(rock);
+            }
+
+            // Lights
+            scene.add(new THREE.AmbientLight(0x404040, 1.8));
+            const directionalLight = new THREE.DirectionalLight(0xffcc88, 1.2);
+            directionalLight.position.set(15, 25, 10);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            meshGroup = new THREE.Group();
+            scene.add(meshGroup);
+            connectionsGroup = new THREE.Group();
+            scene.add(connectionsGroup);
+
+            // Initialize rain/soot particle system
+            const particleCount = 200;
+            particleGeo = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            for(let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 25;
+                positions[i+1] = Math.random() * 15;
+                positions[i+2] = (Math.random() - 0.5) * 25;
+            }
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            particleMat = new THREE.PointsMaterial({
+                color: 0x32cd32,
+                size: 0.12,
+                transparent: true,
+                opacity: 0.5
+            });
+            particleSystem = new THREE.Points(particleGeo, particleMat);
+            scene.add(particleSystem);
+
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+            
+            rebuildSegmentRowsUI(narrativeSegments);
+            updateTimelineDuration(narrativeSegments);
+        }
+
+        function resetCamera() {
+            camera.position.set(0, 6, 14);
+            camera.lookAt(0, 0, 0);
+        }
+
+        // High-production procedural character model builder
+        function createGeometryForNode(name, color, pos) {
+            const group = new THREE.Group();
+            group.position.set(pos[0], pos[1], pos[2]);
+            group.name = name;
+
+            const material = new THREE.MeshStandardMaterial({ 
+                color: color, 
+                wireframe: wireframeMode 
+            });
+
+            if (name.includes("Joe") || name.includes("Orangutan")) {
+                // Orangutan model: orange body, limbs, round glasses/hair anomaly
+                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.7, 1.4, 8), material);
+                body.position.y = 0.7;
+                group.add(body);
+                
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), material);
+                head.position.y = 1.6;
+                group.add(head);
+                
+                // Orange Hair Anomaly (Joe signature)
+                const hairMat = new THREE.MeshStandardMaterial({ color: 0xff4500, wireframe: wireframeMode });
+                const hair = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.7, 4), hairMat);
+                hair.position.y = 2.1;
+                hair.rotation.x = -0.2;
+                group.add(hair);
+
+                // Orange tie
+                const tie = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.6, 0.05), hairMat);
+                tie.position.set(0, 0.9, 0.65);
+                tie.rotation.x = 0.3;
+                group.add(tie);
+            } 
+            else if (name.includes("Leslie")) {
+                // Weary Engineer: Grey body, circular glasses
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.5, 0.7), material);
+                body.position.y = 0.75;
+                group.add(body);
+                
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.45, 8, 8), material);
+                head.position.y = 1.7;
+                group.add(head);
+                
+                // Glasses
+                const glassMat = new THREE.MeshStandardMaterial({ color: 0xffffff, wireframe: wireframeMode });
+                const glassL = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.04, 4, 8), glassMat);
+                glassL.position.set(-0.18, 1.75, 0.45);
+                group.add(glassL);
+                const glassR = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.04, 4, 8), glassMat);
+                glassR.position.set(0.18, 1.75, 0.45);
+                group.add(glassR);
+            } 
+            else if (name.includes("Cleaner")) {
+                // Sweep Technician in illogical legwear (checkered legs)
+                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.9, 8), material);
+                body.position.y = 1.1;
+                group.add(body);
+                
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), material);
+                head.position.y = 1.7;
+                group.add(head);
+                
+                // Checkered striped legs
+                const legMat = new THREE.MeshStandardMaterial({ color: 0xef4444, wireframe: wireframeMode });
+                const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 0.7, 8), legMat);
+                legL.position.set(-0.25, 0.35, 0);
+                group.add(legL);
+                const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 0.7, 8), legMat);
+                legR.position.set(0.25, 0.35, 0);
+                group.add(legR);
+
+                // Broom in hand
+                const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.8, 8), new THREE.MeshStandardMaterial({ color: 0x8b4513 }));
+                handle.position.set(0.6, 0.9, 0.3);
+                handle.rotation.x = 0.5;
+                group.add(handle);
+                const brush = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.6), new THREE.MeshStandardMaterial({ color: 0x16a34a }));
+                brush.position.set(0.6, 0.1, 0.5);
+                group.add(brush);
+            } 
+            else if (name.includes("Attenborough")) {
+                // Explorer: beige hat, binoculars
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.4, 0.8), material);
+                body.position.y = 0.7;
+                group.add(body);
+                
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.45, 8, 8), material);
+                head.position.y = 1.6;
+                group.add(head);
+                
+                // Safari Hat
+                const hatRim = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.05, 12), new THREE.MeshStandardMaterial({ color: 0xfef08a }));
+                hatRim.position.y = 2.0;
+                group.add(hatRim);
+                const hatTop = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), new THREE.MeshStandardMaterial({ color: 0xfef08a }));
+                hatTop.position.y = 2.15;
+                group.add(hatTop);
+
+                // Binoculars
+                const bino = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 0.4), new THREE.MeshStandardMaterial({ color: 0x18181b }));
+                bino.position.set(0, 1.5, 0.5);
+                group.add(bino);
+            } 
+            else if (name.includes("Flanjeet")) {
+                // Clockwork bird / chimney sweeping pigeon
+                const body = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), material);
+                body.position.y = 1.2;
+                group.add(body);
+                // Wings
+                const wingL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.6, 0.4), new THREE.MeshStandardMaterial({ color: 0xd8b4fe }));
+                wingL.position.set(-0.6, 1.2, 0);
+                wingL.rotation.z = 0.5;
+                group.add(wingL);
+                const wingR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.6, 0.4), new THREE.MeshStandardMaterial({ color: 0xd8b4fe }));
+                wingR.position.set(0.6, 1.2, 0);
+                wingR.rotation.z = -0.5;
+                group.add(wingR);
+            } 
+            else if (name.includes("Jane")) {
+                // Jane: Purple hair, holding ground plug
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.4, 0.7), material);
+                body.position.y = 0.7;
+                group.add(body);
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.45, 8, 8), material);
+                head.position.y = 1.6;
+                group.add(head);
+                // Hair
+                const hair = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), new THREE.MeshStandardMaterial({ color: 0xa855f7 }));
+                hair.position.set(0, 1.7, -0.1);
+                group.add(hair);
+                // Plug wire
+                const plug = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.4), new THREE.MeshStandardMaterial({ color: 0x000 }));
+                plug.position.set(0.5, 0.8, 0.5);
+                group.add(plug);
+            } 
+            else if (name.includes("Monkey")) {
+                // Small red cannibal monkey
+                const body = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), material);
+                body.position.y = 0.4;
+                group.add(body);
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), material);
+                head.position.y = 0.85;
+                group.add(head);
+            }
+            else {
+                // Default shapes for apples / assets
+                const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.4), material);
+                mesh.position.y = 0.4;
+                group.add(mesh);
+            }
+
+            // Sprite Label
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'rgba(0, 20, 0, 0.8)';
+            ctx.fillRect(0, 0, 256, 64);
+            ctx.strokeStyle = '#32cd32';
+            ctx.strokeRect(0, 0, 256, 64);
+            ctx.fillStyle = '#ff8c00';
+            ctx.font = 'bold 20px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText(name.split(" ")[0], 128, 35);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            const labelMaterial = new THREE.SpriteMaterial({ map: texture });
+            const label = new THREE.Sprite(labelMaterial);
+            label.position.y = 2.5;
+            label.scale.set(2, 0.5, 1);
+            group.add(label);
+
+            return group;
+        }
+
+        function update3DScene() {
+            const segment = narrativeSegments[activeSegmentIndex];
+            if (!segment) return;
+            const segmentTime = playhead - segment.start;
+            
+            while(meshGroup.children.length > 0) meshGroup.remove(meshGroup.children[0]);
+            while(connectionsGroup.children.length > 0) connectionsGroup.remove(connectionsGroup.children[0]);
+
+            const currentNodes = segment.nodes;
+            const keys = Object.keys(currentNodes);
+            const positionsArray = [];
+
+            keys.forEach((key) => {
+                const node = currentNodes[key];
+                const currentPos = [
+                    node.pos[0] + (node.vel[0] * segmentTime),
+                    node.pos[1] + (node.vel[1] * segmentTime),
+                    node.pos[2] + (node.vel[2] * segmentTime)
+                ];
+
+                positionsArray.push(new THREE.Vector3(currentPos[0], currentPos[1], currentPos[2]));
+                const nodeMesh = createGeometryForNode(key, node.color, currentPos);
+                
+                if (key.includes("Apple") || key.includes("Asset")) {
+                    nodeMesh.rotation.y = playhead * 2;
+                    nodeMesh.rotation.x = playhead;
+                }
+
+                meshGroup.add(nodeMesh);
+            });
+
+            // High production value loops: apply movement
+            meshGroup.children.forEach(mesh => {
+                if (mesh.name.includes("Monkey")) {
+                    // Jumping animation
+                    mesh.position.y = Math.abs(Math.sin(playhead * 4.0)) * 0.8;
+                }
+                if (mesh.name.includes("Cleaner")) {
+                    // Sweeping animation rotation
+                    const broom = mesh.children.find(c => c.geometry && c.geometry.type === "CylinderGeometry");
+                    if (broom) {
+                        broom.rotation.z = Math.sin(playhead * 6.0) * 0.4;
+                    }
+                }
+            });
+
+            if (positionsArray.length > 1) {
+                const lineMat = new THREE.LineBasicMaterial({ color: 0x32cd32, transparent: true, opacity: 0.3 });
+                for (let i = 0; i < positionsArray.length; i++) {
+                    for (let j = i + 1; j < positionsArray.length; j++) {
+                        const geometry = new THREE.BufferGeometry().setFromPoints([positionsArray[i], positionsArray[j]]);
+                        const line = new THREE.Line(geometry, lineMat);
+                        connectionsGroup.add(line);
+                    }
+                }
+            }
+        }
+
+        function updateTelemetryDisplay() {
+            const telemetryStack = document.getElementById('telemetry-stack');
+            const nodesList = document.getElementById('active-nodes-list');
+            
+            const segment = narrativeSegments[activeSegmentIndex];
+            if (!segment) return;
+            const segmentTime = playhead - segment.start;
+            const currentNodes = segment.nodes;
+            const keys = Object.keys(currentNodes);
+
+            nodesList.innerHTML = keys.map(k => `<div>&gt; ${k.split(" ")[0].toUpperCase()}</div>`).join('');
+
+            let htmlContent = "";
+            keys.forEach((key) => {
+                const node = currentNodes[key];
+                const currentPos = [
+                    (node.pos[0] + (node.vel[0] * segmentTime)).toFixed(2),
+                    (node.pos[1] + (node.vel[1] * segmentTime)).toFixed(2),
+                    (node.pos[2] + (node.vel[2] * segmentTime)).toFixed(2)
+                ];
+
+                const colorHex = '#' + node.color.toString(16).padStart(6, '0');
+
+                htmlContent += `
+                    <div class="hud-bg border border-[#1a441a] p-3 rounded flex flex-col gap-2">
+                        <div class="flex justify-between items-center border-b border-[#001100] pb-1.5">
+                            <span class="font-mono text-xs font-bold text-[#ff8c00] flex items-center gap-2">
+                                <span class="inline-block w-2.5 h-2.5 rounded-full border border-[#32cd32]" style="background-color: ${colorHex}"></span>
+                                ${key}
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs font-mono">
+                            <div class="bg-[#000a00] p-1.5 rounded border border-[#1a441a]">
+                                <div class="text-[8px] text-[#32cd32]">X_POS</div>
+                                <div class="text-[#ff8c00] font-bold">${currentPos[0]}</div>
+                            </div>
+                            <div class="bg-[#000a00] p-1.5 rounded border border-[#1a441a]">
+                                <div class="text-[8px] text-[#32cd32]">Y_POS</div>
+                                <div class="text-[#ff8c00] font-bold">${currentPos[1]}</div>
+                            </div>
+                            <div class="bg-[#000a00] p-1.5 rounded border border-[#1a441a]">
+                                <div class="text-[8px] text-[#32cd32]">Z_POS</div>
+                                <div class="text-[#ff8c00] font-bold">${currentPos[2]}</div>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-[#32cd32] font-mono">${node.desc}</p>
+                    </div>
+                `;
+            });
+
+            telemetryStack.innerHTML = htmlContent;
+        }
+
+        function updateSubtitles() {
+            const segment = narrativeSegments[activeSegmentIndex];
+            if (!segment) return;
+            const subtitleText = segment.dialogue;
+            const outputElement = document.getElementById('subtitles-output');
+            
+            const words = subtitleText.split(' ');
+            const wordCount = words.length;
+            const duration = segment.end - segment.start;
+            const timePassed = playhead - segment.start;
+            
+            const activeIndex = Math.min(
+                wordCount - 1,
+                Math.floor((timePassed / duration) * wordCount)
+            );
+
+            const richText = words.map((word, i) => {
+                if (i === activeIndex) {
+                    return `<span class="active-word">${word}</span>`;
+                }
+                return `<span>${word}</span>`;
+            }).join(' ');
+
+            outputElement.innerHTML = richText;
+        }
+
+        function calculateActiveSegment() {
+            for (let i = 0; i < narrativeSegments.length; i++) {
+                if (playhead >= narrativeSegments[i].start && playhead <= narrativeSegments[i].end) {
+                    if (activeSegmentIndex !== i) {
+                        activeSegmentIndex = i;
+                        highlightSegmentRows();
+                        if (isPlaying && voiceEnabled) {
+                            speakCurrentSegment();
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        function highlightSegmentRows() {
+            for (let i = 0; i < narrativeSegments.length; i++) {
+                const el = document.getElementById(`segment-row-${i}`);
+                if (!el) continue;
+                if (i === activeSegmentIndex) {
+                    el.className = "flex justify-between items-center p-3 border-b border-[#1a441a] cursor-pointer bg-[#32cd32]/20 text-[#ff8c00] font-bold";
+                } else {
+                    el.className = "flex justify-between items-center p-3 border-b border-[#1a441a] cursor-pointer hover:bg-[#001a00] text-[#32cd32]";
+                }
+            }
+        }
+
+        function rebuildSegmentRowsUI(segments) {
+            const container = document.getElementById('timeline-rows-container');
+            container.innerHTML = '';
+            segments.forEach((seg, i) => {
+                const div = document.createElement('div');
+                div.id = `segment-row-${i}`;
+                div.className = 'flex justify-between items-center p-3 border-b border-[#1a441a] cursor-pointer hover:bg-[#001a00] text-[#32cd32]';
+                div.innerHTML = `
+                    <span>${seg.start.toFixed(2)}s - ${seg.end.toFixed(2)}s</span>
+                    <span class="font-bold">${seg.title}</span>
+                `;
+                div.onclick = () => {
+                     playhead = seg.start;
+                     document.getElementById('timeline-slider').value = playhead;
+                     tickUI();
+                };
+                container.appendChild(div);
+            });
+            highlightSegmentRows();
+        }
+
+        function updateTimelineDuration(segments) {
+            const totalDuration = segments[segments.length - 1].end;
+            const slider = document.getElementById('timeline-slider');
+            slider.max = totalDuration;
+            document.getElementById('deck-timer').textContent = `0.00 / ${totalDuration.toFixed(2)} Seconds`;
+        }
+
+        function tickUI() {
+            calculateActiveSegment();
+            update3DScene();
+            updateTelemetryDisplay();
+            updateSubtitles();
+
+            const totalDuration = narrativeSegments[narrativeSegments.length - 1]?.end ?? 120.0;
+            const segment = narrativeSegments[activeSegmentIndex];
+            if (segment) {
+                document.getElementById('global-timer').textContent = playhead.toFixed(2) + 's';
+                document.getElementById('deck-timer').textContent = `${playhead.toFixed(2)} / ${totalDuration.toFixed(2)} Seconds`;
+                document.getElementById('scene-title').textContent = segment.title;
+                document.getElementById('scene-duration').textContent = `${segment.start.toFixed(2)}s - ${segment.end.toFixed(2)}s`;
+            }
+        }
+
+        function animateEngine(time) {
+            requestAnimationFrame(animateEngine);
+
+            frameCount++;
+            if (time > lastFpsTime + 1000) {
+                document.getElementById('fps-counter').textContent = Math.round((frameCount * 1000) / (time - lastFpsTime));
+                frameCount = 0;
+                lastFpsTime = time;
+            }
+
+            if (isPlaying) {
+                const delta = (time - lastTime) / 1000;
+                playhead += delta;
+                const storyEnd = narrativeSegments[narrativeSegments.length - 1]?.end ?? 120.0;
+                if (playhead >= storyEnd) {
+                    playhead = 0.0;
+                }
+                document.getElementById('timeline-slider').value = playhead;
+                tickUI();
+            }
+            lastTime = time;
+
+            // Animate fall of soot/rain particles
+            if (particleSystem) {
+                const positions = particleSystem.geometry.attributes.position.array;
+                for (let i = 1; i < positions.length; i += 3) {
+                    positions[i] -= 0.08;
+                    if (positions[i] < 0) {
+                        positions[i] = 15;
+                    }
+                }
+                particleSystem.geometry.attributes.position.needsUpdate = true;
+            }
+
+            // Tectonic tremors / shakes (Flanjeet creaks ground in Phase 4)
+            if (activeSegmentIndex === 3 && isPlaying) {
+                const shake = Math.sin(time * 0.05) * 0.04;
+                camera.position.x += shake;
+                camera.position.z += shake;
+            }
+
+            // Janus Collision context collapse screen flashes (Phase 5)
+            if (activeSegmentIndex === 4 && isPlaying) {
+                const flash = (Math.sin(time * 0.08) + 1) / 2;
+                renderer.setClearColor(new THREE.Color().setHSL(0.08, 1.0, 0.1 * flash));
+            } else {
+                const segment = narrativeSegments[activeSegmentIndex];
+                if (segment) {
+                    renderer.setClearColor(segment.color);
+                } else {
+                    renderer.setClearColor(0x000a00);
+                }
+            }
+
+            if (controls) controls.update();
+            renderer.render(scene, camera);
+        }
+
+        document.getElementById('timeline-slider').addEventListener('input', (e) => {
+            playhead = parseFloat(e.target.value);
+            tickUI();
+        });
+
+        document.getElementById('btn-mode').onclick = () => {
+            wireframeMode = !wireframeMode;
+            tickUI();
+        };
+
+        document.getElementById('btn-camera-reset').onclick = resetCamera;
+
+        const playBtn = document.getElementById('btn-play-pause');
+        const svgPlay = document.getElementById('svg-play');
+        const svgPause = document.getElementById('svg-pause');
+
+        playBtn.onclick = () => {
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                svgPlay.classList.add('hidden');
+                svgPause.classList.remove('hidden');
+                playBtn.classList.replace('bg-[#32cd32]', 'bg-[#ff8c00]');
+                if (voiceEnabled) speakCurrentSegment();
+            } else {
+                svgPlay.classList.remove('hidden');
+                svgPause.classList.add('hidden');
+                playBtn.classList.replace('bg-[#ff8c00]', 'bg-[#32cd32]');
+                window.speechSynthesis.cancel();
+            }
+        };
+
+        const voiceBtn = document.getElementById('btn-audio-voice');
+        voiceBtn.onclick = () => {
+            voiceEnabled = !voiceEnabled;
+            if (voiceEnabled) {
+                voiceBtn.classList.replace('bg-[#002200]', 'bg-[#ff8c00]');
+                voiceBtn.classList.replace('text-[#ff8c00]', 'text-[#001100]');
+                voiceBtn.textContent = 'VOICE SYNC: ACTIVE';
+                if (isPlaying) speakCurrentSegment();
+            } else {
+                voiceBtn.classList.replace('bg-[#ff8c00]', 'bg-[#002200]');
+                voiceBtn.classList.replace('text-[#001100]', 'text-[#ff8c00]');
+                voiceBtn.textContent = 'VOICE SYNC';
+                window.speechSynthesis.cancel();
+            }
+        };
+
+        window.onload = () => {
+            init3D();
+            tickUI();
+            requestAnimationFrame(animateEngine);
+            
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('prompt')) {
+                const p = params.get('prompt');
+                document.getElementById('story-prompt-input').value = p;
+                generateStoryFromPrompt(p);
+            }
+        };
+
+        // Local interception of Shambles Prompt to bypass offline LM Studio
+        function generateStoryFromPrompt(promptText) {
+            const btn = document.getElementById('btn-generate-story');
+            btn.textContent = 'Generating...';
+            btn.disabled = true;
+            setStatus('INTERCEPTING SHAMBLES COMPILE...', '#ff8c00');
+
+            setTimeout(() => {
+                loadGeneratedStory(JSON.stringify(cretaceous120SecondStoryData), promptText);
+                btn.textContent = 'Generate & Animate';
+                btn.disabled = false;
+            }, 800);
+        }
+
+        function setStatus(msg, color = '#32cd32') {
+            const el = document.getElementById('gen-status');
+            el.style.color = color;
+            el.textContent = msg;
+        }
+
+        function loadGeneratedStory(jsonStr, promptText) {
+            const cleaned = jsonStr.replace(/```json|```/g, '').trim();
+            let parsed;
+            try {
+                parsed = JSON.parse(cleaned);
+            } catch (e) {
+                setStatus('JSON PARSE ERROR', '#ff0000');
+                return;
+            }
+
+            if (!Array.isArray(parsed) || parsed.length === 0) {
+                setStatus('INVALID RESPONSE SHAPE', '#ff0000');
+                return;
+            }
+
+            narrativeSegments.length = 0;               
+            parsed.forEach(seg => narrativeSegments.push(seg));
+
+            window.speechSynthesis.cancel();
+            playhead = 0.0;
+            activeSegmentIndex = 0;
+            isPlaying = false;
+            document.getElementById('svg-play').classList.remove('hidden');
+            document.getElementById('svg-pause').classList.add('hidden');
+            document.getElementById('btn-play-pause').classList.replace('bg-[#ff8c00]', 'bg-[#32cd32]');
+            document.getElementById('timeline-slider').value = 0;
+
+            rebuildSegmentRowsUI(narrativeSegments);
+            updateTimelineDuration(narrativeSegments);
+
+            document.getElementById('story-subtitle').textContent = `STORY: "${promptText.toUpperCase().slice(0, 60)}"`;
+
+            tickUI();
+            setStatus(`✓ LOADED ${narrativeSegments.length} PHASES`, '#ff8c00');
+        }
+
+        document.getElementById('btn-generate-story').onclick = () => {
+            const prompt = document.getElementById('story-prompt-input').value.trim();
+            if (prompt) generateStoryFromPrompt(prompt);
+        };
+        document.getElementById('story-prompt-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('btn-generate-story').click();
+        });
+    </script>
+</body>
+</html>
