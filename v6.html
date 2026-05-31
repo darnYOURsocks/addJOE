@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asian Gold 3D Storyteller — Digital Circus Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+        :root {
+            --circus-red: #ff3366;
+            --circus-yellow: #ffe033;
+            --circus-blue: #33aaff;
+            --circus-purple: #cc44ff;
+            --circus-green: #33ff88;
+            --circus-orange: #ff8c00;
+            --hud-green: #32cd32;
+            --bg-dark: #000800;
+            --panel-bg: rgba(0, 12, 0, 0.9);
+            --panel-border: rgba(50, 205, 50, 0.3);
+        }
+
+        body {
+            font-family: 'Space Mono', 'Courier New', monospace;
+            background-color: var(--bg-dark);
+            color: var(--hud-green);
+        }
+
+        /* Scanlines Overlay */
+        .crt-scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 10, 0, 0.12) 2px,
+                rgba(0, 10, 0, 0.12) 4px
+            );
+            pointer-events: none;
+            z-index: 9999;
+            transition: opacity 0.3s;
+        }
+
+        .crt-scanlines.disabled {
+            opacity: 0 !important;
+        }
+
+        /* Screen flicker effect */
+        @keyframes crt-flicker {
+            0% { opacity: 0.985; }
+            50% { opacity: 0.995; }
+            100% { opacity: 0.985; }
+        }
+        .crt-flicker-overlay {
+            animation: crt-flicker 0.15s infinite;
+            pointer-events: none;
+        }
+
+        /* Custom Scrollbar for vintage terminal feel */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #001200; }
+        ::-webkit-scrollbar-thumb { background: var(--hud-green); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--circus-orange); }
+
+        .active-word {
+            color: var(--circus-orange);
+            text-shadow: 0 0 12px rgba(255, 140, 0, 0.9);
+            font-weight: 700;
+            display: inline-block;
+            transform: scale(1.05);
+            transition: all 0.1s ease;
+        }
+
+        /* Custom range slider styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #002200;
+            border: 1px solid var(--hud-green);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--circus-orange);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--circus-orange);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col select-none">
+    <div class="crt-scanlines" id="scanlines-layer"></div>
+    <div class="absolute inset-0 crt-flicker-overlay z-50"></div>
+
+    <!-- TOP STORY GENERATOR PANEL -->
+    <div id="story-generator-panel" class="bg-[#000d00] border-b-2 border-[#ff8c00]/40 p-3 flex flex-wrap gap-3 items-center z-40 shadow-[0_4px_20px_rgba(255,140,0,0.15)] shrink-0">
+        <div class="flex items-center gap-2 text-xs font-bold text-[#ff8c00] tracking-wider whitespace-nowrap">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#ff8c00] animate-pulse"></span>
+            LM STUDIO Ŋ(Z) CRETACEOUS CIRCUS ENGINE
+        </div>
+        
+        <div class="flex-1 min-w-[280px] flex gap-2">
+            <input id="story-prompt-input" type="text" 
+                   placeholder="ENTER ANOMALY SEED: (e.g. 'Joe encounters a retro flying saucer in the main ring')" 
+                   class="w-full bg-[#001c00] border border-[#32cd32]/60 rounded px-3 py-1.5 text-xs text-[#32cd32] font-mono placeholder-[#1a551a] outline-none focus:border-[#ff8c00] transition-all">
+            
+            <button id="btn-generate-story" class="bg-[#ff8c00] hover:bg-[#ffaa44] text-[#000d00] font-bold text-xs px-4 py-1.5 rounded transition-transform active:scale-95 whitespace-nowrap uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Synthesize
+            </button>
+        </div>
+
+        <!-- Presets drop-down -->
+        <div class="flex items-center gap-1.5">
+            <span class="text-[10px] text-[#32cd32]/70 font-mono">PRESETS:</span>
+            <select id="preset-select" class="bg-[#001c00] border border-[#32cd32]/40 rounded text-[11px] text-[#32cd32] p-1 font-mono outline-none">
+                <option value="default">Default: The Cretaceous Shambles</option>
+                <option value="saucer">Preset 1: The Saucer Abduction</option>
+                <option value="rebellion">Preset 2: Dinosaur Clowns Strike Back</option>
+                <option value="glitch">Preset 3: Complete Spatial Singularity</option>
+            </select>
+        </div>
+        
+        <div id="gen-status" class="text-xs text-[#ff8c00] font-mono whitespace-nowrap min-w-[140px] text-right">
+            ✓ 6 ENGINE PHASES BUFFERED
+        </div>
+    </div>
+
+    <!-- MAIN HEADER -->
+    <header class="bg-[#000500] border-b border-[#1a441a] px-4 py-2 flex items-center justify-between z-40 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="relative w-3.5 h-3.5 flex items-center justify-center">
+                <span class="absolute inset-0 rounded-full bg-[#32cd32] opacity-75 animate-ping"></span>
+                <span class="relative w-2 h-2 rounded-full bg-[#32cd32]"></span>
+            </div>
+            <div>
+                <h1 class="text-xs font-bold text-[#32cd32] tracking-[0.25em] uppercase">ASIAN GOLD 3D ENGINE — DIGITAL CIRCUS v3.2</h1>
+                <div id="story-subtitle" class="text-[10px] text-[#ff8c00] tracking-wider mt-0.5 uppercase">STORY SEED: "CONVERT SCRIPT TO 120S PILOT ANIMATION"</div>
+            </div>
+        </div>
+        <div class="flex items-center gap-4 text-xs font-mono">
+            <div class="hidden sm:block text-[#32cd32]/80">ENGINE_FPS: <span id="fps-counter" class="text-[#32cd32] font-bold">60</span></div>
+            <div class="bg-[#001a00] border border-[#32cd32]/50 px-2.5 py-1 rounded text-[11px] text-[#ff8c00] shadow-[0_0_8px_rgba(50,205,50,0.15)]">
+                GLOBAL ENTROPY: <span id="global-timer" class="font-bold font-mono">0.00s</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN WORKSPACE -->
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        <!-- LEFT: 3D Simulator Space -->
+        <div class="flex-1 relative flex flex-col min-h-[300px] bg-black">
+            <!-- HUD: Left Overlay -->
+            <div class="absolute top-3 left-3 z-30 pointer-events-none max-w-[240px]">
+                <div class="bg-[#000a00]/85 border border-[#32cd32]/40 rounded p-3 shadow-[0_0_15px_rgba(50,205,50,0.15)] backdrop-blur-sm">
+                    <div class="text-[9px] text-[#32cd32] font-bold tracking-widest uppercase border-b border-[#32cd32]/30 pb-1 mb-1.5">Active Phase</div>
+                    <span id="scene-title" class="text-xs font-bold text-[#ff8c00] block truncate">GEAR 1: The Briefing</span>
+                    <span id="scene-duration" class="text-[10px] text-[#32cd32] block mt-0.5">0.00s - 20.00s</span>
+                </div>
+            </div>
+
+            <!-- HUD: Right Overlay -->
+            <div class="absolute top-3 right-3 z-30 pointer-events-none min-w-[160px]">
+                <div class="bg-[#000a00]/85 border border-[#32cd32]/40 rounded p-3 shadow-[0_0_15px_rgba(50,205,50,0.15)] backdrop-blur-sm">
+                    <div class="text-[9px] text-[#32cd32] font-bold tracking-widest uppercase border-b border-[#32cd32]/30 pb-1 mb-1.5 text-right">Active 3D Entities</div>
+                    <div id="active-nodes-list" class="text-[10px] text-[#ff8c00] flex flex-col gap-0.5 text-right"></div>
+                </div>
+            </div>
+
+            <!-- 3D Canvas element -->
+            <div id="canvas3d" class="w-full h-full"></div>
+
+            <!-- CANVAS BOTTOM OVERLAYS & SETTINGS -->
+            <div class="absolute bottom-3 left-3 z-30 flex flex-wrap gap-2">
+                <button class="bg-[#000a00]/85 border border-[#32cd32]/40 hover:bg-[#32cd32]/20 hover:text-white text-[#32cd32] font-bold text-[9px] px-3 py-1.5 rounded transition-all tracking-wider uppercase" id="btn-mode">
+                    <i class="fa-solid fa-circle-nodes mr-1"></i> Toggle Wireframe
+                </button>
+                <button class="bg-[#000a00]/85 border border-[#32cd32]/40 hover:bg-[#32cd32]/20 hover:text-white text-[#32cd32] font-bold text-[9px] px-3 py-1.5 rounded transition-all tracking-wider uppercase" id="btn-camera-reset">
+                    <i class="fa-solid fa-arrows-to-dot mr-1"></i> Reset Camera
+                </button>
+                <button class="bg-[#000a00]/85 border border-[#32cd32]/40 hover:bg-[#32cd32]/20 hover:text-white text-[#32cd32] font-bold text-[9px] px-3 py-1.5 rounded transition-all tracking-wider uppercase" id="btn-toggle-crt">
+                    <i class="fa-solid fa-display mr-1"></i> Toggle CRT
+                </button>
+            </div>
+
+            <div id="circus-phase-badge" class="absolute bottom-3 right-3 z-30 font-bold text-xs px-4 py-1.5 rounded-full border border-white/20 text-shadow shadow-[0_0_12px_currentColor] transition-all duration-500 pointer-events-none" style="color: #33ff88; background: rgba(0, 15, 0, 0.85);">
+                🎪 BIG TOP CIRCUS
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Dialogue Stream, Parameters, Macro Timeline -->
+        <div class="w-full md:w-[400px] lg:w-[440px] bg-[#000f00] border-t md:border-t-0 md:border-l border-[#1a441a] flex flex-col overflow-hidden z-40 shrink-0">
+            <!-- Active Dialogue Card -->
+            <div class="p-3 border-b border-[#1a441a]">
+                <span class="text-[10px] font-bold text-[#ff8c00] tracking-widest uppercase block mb-1.5">Active Dialogue Stream</span>
+                <div class="bg-[#000400] border border-[#32cd32]/80 rounded p-4 min-h-[96px] flex items-center justify-center shadow-[inset_0_0_12px_rgba(50,205,50,0.12)]">
+                    <p id="subtitles-output" class="text-sm text-center leading-relaxed font-bold text-[#32cd32]"></p>
+                </div>
+            </div>
+
+            <!-- Parameters Panel -->
+            <div class="p-3 border-b border-[#1a441a] bg-[#000900]">
+                <span class="text-[10px] font-bold text-[#32cd32] tracking-widest uppercase block mb-2">Engine Parameters</span>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="text-[9px] text-[#32cd32]/80 block mb-1">SIM SPEED MULTIPLIER: <span id="val-speed">1.0x</span></label>
+                        <input type="range" id="param-speed" min="0.2" max="3" step="0.1" value="1.0" class="w-full rounded h-1 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[9px] text-[#32cd32]/80 block mb-1">STAGE FOG DENSITY: <span id="val-fog">0.035</span></label>
+                        <input type="range" id="param-fog" min="0.01" max="0.1" step="0.005" value="0.035" class="w-full rounded h-1 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Telemetry Header -->
+            <div class="bg-[#000400] border-b border-[#1a441a] px-3 py-1.5 flex justify-between items-center shrink-0">
+                <span class="text-[9px] font-bold text-[#32cd32] uppercase tracking-wider">Spatial Grid Telemetry</span>
+                <span class="text-[8px] text-[#1a5a1a]">MAPPING: REALTIME_COORDS</span>
+            </div>
+
+            <!-- Dynamic Telemetry Stack -->
+            <div id="telemetry-stack" class="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5">
+                <!-- Programmatically populated with active entity metrics -->
+            </div>
+
+            <!-- Macro Timeline -->
+            <div class="h-[150px] border-t border-[#1a441a] bg-[#000400] flex flex-col shrink-0">
+                <div class="bg-[#000d00] px-3 py-1.5 border-b border-[#1a441a] flex justify-between items-center shrink-0">
+                    <span class="text-[9px] font-bold text-[#ff8c00] uppercase tracking-wider">Story Macro Timeline (6 Phases)</span>
+                    <i class="fa-solid fa-timeline text-[#ff8c00] text-[10px]"></i>
+                </div>
+                <div id="timeline-rows-container" class="flex-1 overflow-y-auto font-mono">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER PLAYER BAR -->
+    <footer class="bg-[#000400] border-t border-[#1a441a] px-4 py-3 z-40 shrink-0">
+        <div class="flex flex-col sm:flex-row items-center gap-4">
+            <!-- Play Controls Left -->
+            <div class="flex items-center gap-3 self-stretch sm:self-auto justify-between sm:justify-start">
+                <button id="btn-play-pause" class="w-10 h-10 rounded-full border-0 cursor-pointer bg-[#32cd32] text-[#000a00] hover:bg-[#32cd32]/85 flex items-center justify-center shadow-[0_0_12px_rgba(50,205,50,0.5)] transition-all shrink-0 active:scale-95">
+                    <i id="control-icon" class="fa-solid fa-play text-sm"></i>
+                </button>
+                <div class="flex flex-col">
+                    <span class="text-[9px] text-[#32cd32] tracking-wider uppercase">Active Playhead</span>
+                    <span id="deck-timer" class="text-xs font-bold text-[#ff8c00] font-mono whitespace-nowrap">0.00 / 120.00 Seconds</span>
+                </div>
+            </div>
+
+            <!-- Playhead Slider Middle -->
+            <div class="flex-1 w-full self-stretch flex items-center">
+                <input type="range" id="timeline-slider" min="0" max="120" step="0.01" value="0" class="w-full h-1.5 rounded cursor-pointer outline-none">
+            </div>
+
+            <!-- Audio/Speech Settings Right -->
+            <div class="flex items-center gap-2 self-stretch sm:self-auto justify-end">
+                <button id="btn-audio-voice" class="bg-[#ff8c00] hover:bg-[#ffaa44] border border-[#32cd32]/40 rounded px-3 py-2 text-[10px] font-bold text-[#000400] tracking-wider uppercase transition-all flex items-center gap-1.5 whitespace-nowrap active:scale-95">
+                    <i class="fa-solid fa-volume-high"></i> VOICE SYNC: ACTIVE
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    // ===================================================================
+    //  STORY DATA ENGINE & PROCEDURAL GENERATOR
+    // ===================================================================
+
+    // Default Cretaceous Circus plot
+    const defaultCircusStory = [
+        {
+            "start": 0.0, "end": 20.0,
+            "title": "GEAR 1: The Briefing",
+            "dialogue": "The Cretaceous Era simulates an Incompressible, Non-Reacting Turbulent Flow. LESLIE: I've calculated the Orangutan's Migration to avoid Phased Structured Displacement.",
+            "dialogueParts": [
+                { "text": "The Cretaceous Era simulates an Incompressible, Non-Reacting Turbulent Flow.", "speaker": "Attenborough" },
+                { "text": "LESLIE: I've calculated the Orangutan's Migration to avoid Phased Structured Displacement.", "speaker": "Leslie" }
+            ],
+            "color": 29315,
+            "circusColor": "#33ff88", "circusLabel": "🌿 JUNGLE BIG TOP",
+            "nodes": {
+                "Leslie (Analyst)": { "pos": [-2.0, 0, -1.0], "vel": [0.05, 0, 0], "color": 3329330, "desc": "Calculating flow vectors" },
+                "Orangutan (DNA Custodian)": { "pos": [3.0, 0, 1.0], "vel": [-0.05, 0, -0.05], "color": 16747520, "desc": "Storing DNA archives" },
+                "Attenborough (Witness)": { "pos": [-5.0, 0, -3.0], "vel": [0, 0, 0], "color": 3900150, "desc": "Observing from grass" }
+            }
+        },
+        {
+            "start": 20.0, "end": 40.0,
+            "title": "GEAR 2: The Hustle",
+            "dialogue": "The Orangutan, Joe, interrupts with an Earth-Apple demanding a Premium Assumptive Upgrade. JOE: But what about the Choker Refund for my Orangutan ancestors?",
+            "dialogueParts": [
+                { "text": "The Orangutan, Joe, interrupts with an Earth-Apple demanding a Premium Assumptive Upgrade.", "speaker": "Attenborough" },
+                { "text": "JOE: But what about the Choker Refund for my Orangutan ancestors?", "speaker": "Joe" },
+                { "text": "Sir David Attenborough nods in agreement.", "speaker": "Attenborough" }
+            ],
+            "color": 1973767,
+            "circusColor": "#ff8c00", "circusLabel": "🍎 CANDY CANYON",
+            "nodes": {
+                "Joe (Orangutan)": { "pos": [1.0, 0, 0.0], "vel": [0, 0.02, 0], "color": 16747520, "desc": "Waving Earth-Apple" },
+                "Earth-Apple": { "pos": [1.5, 1.0, 0.5], "vel": [0.02, 0.04, -0.02], "color": 7877903, "desc": "Floating upgrade asset" },
+                "Attenborough (Witness)": { "pos": [-4.0, 0, -2.0], "vel": [0.05, 0, 0.05], "color": 3900150, "desc": "Nodding in agreement" },
+                "Leslie (Analyst)": { "pos": [-1.0, 0, 2.0], "vel": [0, 0, 0], "color": 3329330, "desc": "Rubbing temples" }
+            }
+        },
+        {
+            "start": 40.0, "end": 60.0,
+            "title": "GEAR 3: The Invisible Struggle",
+            "dialogue": "The Hygiene Technician rushes in with a frantic 90-degree lunging sweep in biologically illogical legwear. CLEANER: Anatomical exposure triggers a paralyzing Side-Ball: the Cannibal Monkeys appear!",
+            "dialogueParts": [
+                { "text": "The Hygiene Technician rushes in with a frantic 90-degree lunging sweep in biologically illogical legwear.", "speaker": "Attenborough" },
+                { "text": "CLEANER: Anatomical exposure triggers a paralyzing Side-Ball: the Cannibal Monkeys appear!", "speaker": "Cleaner" }
+            ],
+            "color": 2755596,
+            "circusColor": "#ff3366", "circusLabel": "🐒 MONKEY CHAOS RING",
+            "nodes": {
+                "The Cleaner (Tech)": { "pos": [-1.0, 0, 1.0], "vel": [0.1, 0, -0.1], "color": 15381256, "desc": "Executing 90-degree lunge" },
+                "Cannibal Monkey Alpha": { "pos": [4.0, 0, 2.0], "vel": [-0.15, 0, 0.05], "color": 15680580, "desc": "Aggressive arbitrage" },
+                "Cannibal Monkey Beta": { "pos": [5.0, 0, -2.0], "vel": [-0.2, 0, 0.1], "color": 15680580, "desc": "Approaching from flank" },
+                "Joe (Orangutan)": { "pos": [2.0, 0, -1.0], "vel": [-0.05, 0, 0], "color": 16747520, "desc": "Panicked retreat" }
+            }
+        },
+        {
+            "start": 60.0, "end": 80.0,
+            "title": "GEAR 4: The False Resolution",
+            "dialogue": "Uncle Flanjeet begins his rhythmic creaking of the shifting earth. FLANJEET: 'In this Era, Turbulent Flow dictates the rules – your Choker Refund is but a fleeting concept.'",
+            "dialogueParts": [
+                { "text": "Uncle Flanjeet begins his rhythmic creaking of the shifting earth.", "speaker": "Attenborough" },
+                { "text": "FLANJEET: 'In this Era, Turbulent Flow dictates the rules – your Choker Refund is but a fleeting concept.'", "speaker": "Flanjeet" }
+            ],
+            "color": 2230050,
+            "circusColor": "#cc44ff", "circusLabel": "🌀 VOID DIMENSION",
+            "nodes": {
+                "Uncle Flanjeet": { "pos": [0.0, 2.0, -2.0], "vel": [0, 0, 0], "color": 11032062, "desc": "Broadcasting shanty" },
+                "Joe (Orangutan)": { "pos": [-2.0, 0, 0.0], "vel": [0.05, 0, 0.05], "color": 16747520, "desc": "Demanding refund" },
+                "Attenborough (Witness)": { "pos": [-1.0, 0, 3.0], "vel": [0, 0, 0], "color": 3900150, "desc": "Documenting rift patterns" }
+            }
+        },
+        {
+            "start": 80.0, "end": 100.0,
+            "title": "GEAR 5: The Boom",
+            "dialogue": "Janus Collision. Joe forces the Earth-Apple into a primary physical mechanism. JOE: No, this can't be! I demand my Choker Refund! JANE (PANGEA): Radical Authenticity intervenes.",
+            "dialogueParts": [
+                { "text": "Janus Collision. Joe forces the Earth-Apple into a primary physical mechanism.", "speaker": "Attenborough" },
+                { "text": "JOE: No, this can't be! I demand my Choker Refund!", "speaker": "Joe" },
+                { "text": "JANE (PANGEA): Radical Authenticity intervenes: localized context collapse ensues.", "speaker": "Jane" }
+            ],
+            "color": 4131338,
+            "circusColor": "#ffe033", "circusLabel": "💥 CONTEXT COLLAPSE",
+            "nodes": {
+                "Joe (Orangutan)": { "pos": [2.0, 0, -1.0], "vel": [0.05, 0, -0.05], "color": 16747520, "desc": "Jabbing Earth-Apple" },
+                "Earth-Apple": { "pos": [1.0, 0.5, -1.0], "vel": [0.1, 0, -0.1], "color": 7877903, "desc": "Forced collision asset" },
+                "Jane (Validator)": { "pos": [-3.0, 0, 1.0], "vel": [0.08, 0, -0.08], "color": 9133302, "desc": "Applying Radical Authenticity" },
+                "Attenborough (Witness)": { "pos": [-4.0, 0, 4.0], "vel": [0, 0, 0], "color": 3900150, "desc": "Shielding eyes" }
+            }
+        },
+        {
+            "start": 100.0, "end": 120.0,
+            "title": "GEAR 6: The Clean-up",
+            "dialogue": "The Shambles Script reboots; the cycle repeats. LESLIE: Another iteration of Phased Structured Displacement...",
+            "dialogueParts": [
+                { "text": "The Shambles Script reboots; the cycle repeats.", "speaker": "Attenborough" },
+                { "text": "LESLIE: Another iteration of Phased Structured Displacement...", "speaker": "Leslie" }
+            ],
+            "color": 29315,
+            "circusColor": "#33aaff", "circusLabel": "🔄 REBOOT LOOP",
+            "nodes": {
+                "Leslie (Analyst)": { "pos": [-1.0, 0, -1.0], "vel": [0, 0, 0], "color": 3329330, "desc": "Documenting reboot parameters" },
+                "Joe (Orangutan)": { "pos": [0.0, 0, 2.0], "vel": [0, 0, 0], "color": 16747520, "desc": "Resetting state" },
+                "Jane (Validator)": { "pos": [2.0, 0, -2.0], "vel": [0, 0, 0], "color": 9133302, "desc": "Coherence holding" }
+            }
+        }
+    ];
+
+    let narrativeSegments = [...defaultCircusStory];
+
+    /**
+     * Synthesizes a completely dynamic narrative structure from any natural text prompt
+     */
+    function buildProceduralStory(prompt) {
+        const text = prompt.trim();
+        if (!text) return defaultCircusStory;
+
+        // Detect keywords to form dynamic actors and contexts
+        const lower = text.toLowerCase();
+        let entityHero = "Joe (Orangutan)";
+        let heroColor = 16747520;
+        let entityObject = "Earth-Apple";
+        let objectColor = 7877903;
+        let entityAdversary = "Cannibal Monkey Alpha";
+        let advColor = 15680580;
+
+        if (lower.includes("saucer") || lower.includes("alien") || lower.includes("ufo")) {
+            entityHero = "Zorblax (Martian Clashing)";
+            heroColor = 0x32cd32;
+            entityObject = "Floating Saucer Reactor";
+            objectColor = 0x00ffff;
+            entityAdversary = "Space Reptile Captain";
+            advColor = 0xff00ff;
+        } else if (lower.includes("t-rex") || lower.includes("dino") || lower.includes("trex") || lower.includes("raptor")) {
+            entityHero = "Rexy (Clown T-Rex)";
+            heroColor = 0x9a3412;
+            entityObject = "Time-Dilating Drum";
+            objectColor = 0xffe033;
+            entityAdversary = "Velociraptor Ringmaster";
+            advColor = 0xef4444;
+        } else if (lower.includes("robot") || lower.includes("cyborg") || lower.includes("machine")) {
+            entityHero = "Cyber-Jester M-3";
+            heroColor = 0x64748b;
+            entityObject = "Logic Singularity Disk";
+            objectColor = 0x3b82f6;
+            entityAdversary = "System Administrator Overlord";
+            advColor = 0xef4444;
+        } else if (lower.includes("clown") || lower.includes("circus")) {
+            entityHero = "Pierrot the Acrobat";
+            heroColor = 0xec4899;
+            entityObject = "Magic Juggling Star";
+            objectColor = 0xeab308;
+            entityAdversary = "The Gloomy Ringmaster";
+            advColor = 0x7e22ce;
+        }
+
+        // Generate customized phrases based on prompt keywords
+        return [
+            {
+                "start": 0.0, "end": 20.0,
+                "title": "PHASE 1: Temporal Inception",
+                "dialogue": `Entering high-entropy simulation space. ATTENBOROUGH: A fascinating convergence is occurring in the big ring involving ${entityHero}.`,
+                "dialogueParts": [
+                    { "text": `Entering high-entropy simulation space.`, "speaker": "Attenborough" },
+                    { "text": `ATTENBOROUGH: A fascinating convergence is occurring in the big ring involving ${entityHero}.`, "speaker": "Attenborough" }
+                ],
+                "color": 0x001400,
+                "circusColor": "#33ff88", "circusLabel": "🎪 APEX RING",
+                "nodes": {
+                    [entityHero]: { "pos": [-2.5, 0, -1.0], "vel": [0.06, 0, 0.02], "color": heroColor, "desc": "Warming up performer cycles" },
+                    "Attenborough (Witness)": { "pos": [-5.0, 0, -3.0], "vel": [0, 0, 0], "color": 3900150, "desc": "Awaiting biological anomalies" },
+                    "Leslie (Analyst)": { "pos": [2.5, 0, 1.5], "vel": [-0.03, 0, -0.05], "color": 3329330, "desc": "Configuring flow boundaries" }
+                }
+            },
+            {
+                "start": 20.0, "end": 40.0,
+                "title": "PHASE 2: Material Manifestation",
+                "dialogue": `${entityHero} conjures the mysterious ${entityObject}! LESLIE: Stop, that object violates quantum boundaries!`,
+                "dialogueParts": [
+                    { "text": `${entityHero} conjures the mysterious ${entityObject}!`, "speaker": "Attenborough" },
+                    { "text": `LESLIE: Stop, that object violates quantum boundaries!`, "speaker": "Leslie" }
+                ],
+                "color": 0x140a00,
+                "circusColor": "#ffe033", "circusLabel": "🔮 SHIMMERING RING",
+                "nodes": {
+                    [entityHero]: { "pos": [-1.0, 0, -0.5], "vel": [0.05, 0.02, 0.02], "color": heroColor, "desc": "Manipulating high-energy target" },
+                    [entityObject]: { "pos": [-0.5, 1.2, -0.3], "vel": [0.03, 0.05, -0.05], "color": objectColor, "desc": "Unstable subatomic compound" },
+                    "Leslie (Analyst)": { "pos": [1.5, 0, 0.5], "vel": [-0.05, 0, 0], "color": 3329330, "desc": "Recalibrating safety matrix" }
+                }
+            },
+            {
+                "start": 40.0, "end": 60.0,
+                "title": "PHASE 3: Adversary Interception",
+                "dialogue": `The spatial rift expands! ${entityAdversary} emerges to claim the prize! ADVERSARY: Hand over the asset or face context collapse!`,
+                "dialogueParts": [
+                    { "text": `The spatial rift expands! ${entityAdversary} emerges to claim the prize!`, "speaker": "Attenborough" },
+                    { "text": `ADVERSARY: Hand over the asset or face context collapse!`, "speaker": "Cleaner" }
+                ],
+                "color": 0x1a0010,
+                "circusColor": "#ff3366", "circusLabel": "🔥 CONFRONTATION MATRIX",
+                "nodes": {
+                    [entityHero]: { "pos": [0.5, 0, 0.2], "vel": [-0.04, 0, -0.04], "color": heroColor, "desc": "Guarding structural coordinates" },
+                    [entityObject]: { "pos": [0.8, 1.5, 0.0], "vel": [0, 0.06, 0.02], "color": objectColor, "desc": "Oscillating wild waves" },
+                    [entityAdversary]: { "pos": [4.5, 0, 2.0], "vel": [-0.18, 0, -0.08], "color": advColor, "desc": "Intruding phase boundaries" },
+                    "Attenborough (Witness)": { "pos": [-4.5, 0, -2.5], "vel": [0.02, 0, 0.02], "color": 3900150, "desc": "Documenting anomalous friction" }
+                }
+            },
+            {
+                "start": 60.0, "end": 80.0,
+                "title": "PHASE 4: Flanjeet Singularity",
+                "dialogue": "Uncle Flanjeet initiates absolute cosmic interference. FLANJEET: The physical rules of this circus are entirely negotiable!",
+                "dialogueParts": [
+                    { "text": "Uncle Flanjeet initiates absolute cosmic interference.", "speaker": "Attenborough" },
+                    { "text": "FLANJEET: The physical rules of this circus are entirely negotiable!", "speaker": "Flanjeet" }
+                ],
+                "color": 0x0c001a,
+                "circusColor": "#cc44ff", "circusLabel": "🌀 FLANJEET VERTEX",
+                "nodes": {
+                    "Uncle Flanjeet": { "pos": [0.0, 3.0, -1.5], "vel": [0, 0, 0], "color": 11032062, "desc": "Vibrating on subharmonic frequencies" },
+                    [entityHero]: { "pos": [-1.0, 0, -1.0], "vel": [0.03, 0, 0.05], "color": heroColor, "desc": "Looking up in astonishment" },
+                    [entityAdversary]: { "pos": [1.5, 0, 0.5], "vel": [-0.02, 0, 0.02], "color": advColor, "desc": "Phase momentum frozen" }
+                }
+            },
+            {
+                "start": 80.0, "end": 100.0,
+                "title": "PHASE 5: High-Impact Collision",
+                "dialogue": `The system collides! ${entityObject} bursts into radiant anomalies! JANE: Applying local authenticity restoration protocols now!`,
+                "dialogueParts": [
+                    { "text": `The system collides! ${entityObject} bursts into radiant anomalies!`, "speaker": "Attenborough" },
+                    { "text": `JANE: Applying local authenticity restoration protocols now!`, "speaker": "Jane" }
+                ],
+                "color": 0x1f1f00,
+                "circusColor": "#ffe033", "circusLabel": "💥 ENERGY IMPACT",
+                "nodes": {
+                    [entityHero]: { "pos": [1.0, 0, -0.5], "vel": [0.1, 0, -0.1], "color": heroColor, "desc": "Absorbing static discharge" },
+                    [entityObject]: { "pos": [0.5, 0.5, -0.5], "vel": [0.2, 0, -0.2], "color": objectColor, "desc": "Exploding model parameters" },
+                    "Jane (Validator)": { "pos": [-3.5, 0, 1.5], "vel": [0.08, 0, -0.05], "color": 9133302, "desc": "Enforcing semantic balance" },
+                    "Attenborough (Witness)": { "pos": [-4.0, 0, 3.5], "vel": [0, 0, 0], "color": 3900150, "desc": "Recording final collapse phase" }
+                }
+            },
+            {
+                "start": 100.0, "end": 120.0,
+                "title": "PHASE 6: Loop Recovery",
+                "dialogue": "Spatial boundary is recovered. LESLIE: Initializing fresh simulation vector to prevent persistent loop degradation.",
+                "dialogueParts": [
+                    { "text": "Spatial boundary is recovered.", "speaker": "Attenborough" },
+                    { "text": "LESLIE: Initializing fresh simulation vector to prevent persistent loop degradation.", "speaker": "Leslie" }
+                ],
+                "color": 0x00141a,
+                "circusColor": "#33aaff", "circusLabel": "🔄 SYS RECOVERY",
+                "nodes": {
+                    "Leslie (Analyst)": { "pos": [-1.0, 0, -1.0], "vel": [0, 0, 0], "color": 3329330, "desc": "Resetting high-pressure registers" },
+                    [entityHero]: { "pos": [0.0, 0, 2.0], "vel": [0, 0, 0], "color": heroColor, "desc": "Waiting for sequence trigger" },
+                    "Jane (Validator)": { "pos": [2.0, 0, -2.0], "vel": [0, 0, 0], "color": 9133302, "desc": "Validating node states" }
+                }
+            }
+        ];
+    }
+
+    // ===================================================================
+    //  GLOBAL STATE
+    // ===================================================================
+    let activeSegmentIndex = 0;
+    let playhead = 0.0;
+    let isPlaying = false;
+    let lastTime = 0;
+    let frameCount = 0, lastFpsTime = 0;
+    let wireframeMode = false;
+    let voiceEnabled = true;
+    let currentUtterance = null;
+    let currentPartIndex = 0;
+
+    // Simulation settings modifiers
+    let simSpeedMultiplier = 1.0;
+    let stageFogDensity = 0.035;
+
+    // Three.js instances
+    let scene, camera, renderer, orbitCtrl;
+    let meshGroup, connectionsGroup;
+    let particleSystem, particleGeo;
+    let activeSpeakerSpotlight;
+
+    // Environment Meshes
+    let circusTentGroup, circusFloorGroup;
+    let bannerMeshes = [];
+    let pendulumBalls = [];
+    let tentPoles = [];
+    let starParticles;
+    let spotlightL, spotlightR;
+    let envBuilt = false;
+
+    const container = document.getElementById('canvas3d');
+
+    // ===================================================================
+    //  VOICE SYNTHESIS & TIMING
+    // ===================================================================
+    function getPartIndexAtTime(segment, timePassed) {
+        const parts = segment.dialogueParts;
+        if (!parts || parts.length === 0) return 0;
+        const totalChars = parts.reduce((acc, p) => acc + p.text.length, 0);
+        const segDur = segment.end - segment.start;
+        let runningAcc = 0;
+        for (let i = 0; i < parts.length; i++) {
+            const partDur = (parts[i].text.length / totalChars) * segDur;
+            if (timePassed >= runningAcc && timePassed < runningAcc + partDur) return i;
+            runningAcc += partDur;
+        }
+        return parts.length - 1;
+    }
+
+    function speakCurrentSegment(timePassed = 0) {
+        window.speechSynthesis.cancel();
+        if (!voiceEnabled) return;
+        const segment = narrativeSegments[activeSegmentIndex];
+        if (!segment || !segment.dialogueParts) return;
+        currentPartIndex = getPartIndexAtTime(segment, timePassed);
+        speakNextPart();
+    }
+
+    function speakNextPart() {
+        if (!voiceEnabled || !isPlaying) return;
+        const segment = narrativeSegments[activeSegmentIndex];
+        if (!segment || !segment.dialogueParts || currentPartIndex >= segment.dialogueParts.length) return;
+        
+        const part = segment.dialogueParts[currentPartIndex];
+        const utterance = new SpeechSynthesisUtterance(part.text);
+        const voices = window.speechSynthesis.getVoices();
+        const en = voices.filter(v => v.lang.startsWith('en'));
+        const male = en.filter(v => /guy|male|david|mark|natural/i.test(v.name));
+        const female = en.filter(v => /zira|female|hazel|natural/i.test(v.name));
+        
+        if (part.speaker === "Leslie" || part.speaker === "Jane") {
+            utterance.voice = female[0] || en[0]; 
+            utterance.pitch = 1.15; 
+            utterance.rate = 1.0;
+        } else if (part.speaker === "Joe" || part.speaker.includes("Joe") || part.speaker.includes("Zorblax") || part.speaker.includes("Rexy")) {
+            utterance.voice = male[0] || en[0]; 
+            utterance.pitch = 0.82; 
+            utterance.rate = 1.05;
+        } else if (part.speaker === "Cleaner" || part.speaker.includes("ADVERSARY")) {
+            utterance.voice = male[1] || en[0]; 
+            utterance.pitch = 1.25; 
+            utterance.rate = 1.1;
+        } else if (part.speaker === "Flanjeet") {
+            utterance.voice = en[Math.min(2, en.length-1)]; 
+            utterance.pitch = 1.45; 
+            utterance.rate = 0.95;
+        } else {
+            utterance.voice = male[0] || en[0]; 
+            utterance.pitch = 0.72; 
+            utterance.rate = 0.82;
+        }
+        
+        utterance.onend = () => { 
+            currentPartIndex++; 
+            speakNextPart(); 
+        };
+        utterance.onboundary = (e) => { 
+            if (e.name === 'word') {
+                highlightSubtitleWord(part.text, e.charIndex, part.speaker);
+                positionSpotlightOnSpeaker(part.speaker);
+            } 
+        };
+        
+        currentUtterance = utterance;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // ===================================================================
+    //  3D VIEWPORT CONTROLS
+    // ===================================================================
+    function initOrbitControls() {
+        let isDragging = false, prevX = 0, prevY = 0;
+        let theta = 0.4, phi = 1.1, radius = 18;
+        let targetTheta = theta, targetPhi = phi, targetRadius = radius;
+
+        function updateCamera() {
+            camera.position.x = radius * Math.sin(phi) * Math.sin(theta);
+            camera.position.y = radius * Math.cos(phi);
+            camera.position.z = radius * Math.sin(phi) * Math.cos(theta);
+            camera.lookAt(0, 1.2, 0);
+        }
+
+        container.addEventListener('mousedown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+        window.addEventListener('mouseup', () => isDragging = false);
+        window.addEventListener('mousemove', e => {
+            if (!isDragging) return;
+            const dx = e.clientX - prevX, dy = e.clientY - prevY;
+            targetTheta -= dx * 0.008;
+            targetPhi = Math.max(0.15, Math.min(Math.PI / 2.1, targetPhi + dy * 0.008));
+            prevX = e.clientX; prevY = e.clientY;
+        });
+        
+        container.addEventListener('wheel', e => {
+            targetRadius = Math.max(5, Math.min(35, targetRadius + e.deltaY * 0.02));
+        });
+
+        // Touch input compatibility for mobile users
+        let touches = [];
+        container.addEventListener('touchstart', e => { touches = Array.from(e.touches); });
+        container.addEventListener('touchmove', e => {
+            if (e.touches.length === 1 && touches.length === 1) {
+                const dx = e.touches[0].clientX - touches[0].clientX;
+                const dy = e.touches[0].clientY - touches[0].clientY;
+                targetTheta -= dx * 0.008;
+                targetPhi = Math.max(0.15, Math.min(Math.PI / 2.1, targetPhi + dy * 0.008));
+            }
+            touches = Array.from(e.touches);
+        });
+
+        return {
+            update() {
+                theta += (targetTheta - theta) * 0.1;
+                phi += (targetPhi - phi) * 0.1;
+                radius += (targetRadius - radius) * 0.1;
+                updateCamera();
+            },
+            reset() { targetTheta = 0.4; targetPhi = 1.1; targetRadius = 18; }
+        };
+    }
+
+    // ===================================================================
+    //  THREE.JS INITIALIZATION
+    // ===================================================================
+    function init3D() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000a00);
+        scene.fog = new THREE.FogExp2(0x000a00, stageFogDensity);
+
+        camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 500);
+        camera.position.set(0, 9, 18);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        orbitCtrl = initOrbitControls();
+
+        // Environment creation
+        buildCircusEnvironment();
+
+        // Global ambient glow
+        scene.add(new THREE.AmbientLight(0x553333, 1.4));
+        
+        // Solar main source
+        const sunLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+        sunLight.position.set(12, 22, 10);
+        sunLight.castShadow = true;
+        scene.add(sunLight);
+
+        // Standard stage spotlights
+        spotlightL = new THREE.SpotLight(0xff3366, 4, 40, Math.PI / 7, 0.4, 1.5);
+        spotlightL.position.set(-9, 15, 0);
+        scene.add(spotlightL);
+        scene.add(spotlightL.target);
+
+        spotlightR = new THREE.SpotLight(0x33aaff, 4, 40, Math.PI / 7, 0.4, 1.5);
+        spotlightR.position.set(9, 15, 0);
+        scene.add(spotlightR);
+        scene.add(spotlightR.target);
+
+        // Speaker Spotlight Tracker
+        activeSpeakerSpotlight = new THREE.SpotLight(0xffffe0, 8, 25, Math.PI / 8, 0.2, 1.0);
+        activeSpeakerSpotlight.position.set(0, 17, 0);
+        activeSpeakerSpotlight.castShadow = true;
+        scene.add(activeSpeakerSpotlight);
+        scene.add(activeSpeakerSpotlight.target);
+
+        // Node / Character groupings
+        meshGroup = new THREE.Group();
+        scene.add(meshGroup);
+        connectionsGroup = new THREE.Group();
+        scene.add(connectionsGroup);
+
+        // Stage mist / rain effects
+        const particleCount = 400;
+        particleGeo = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount * 3; i += 3) {
+            positions[i] = (Math.random() - 0.5) * 32;
+            positions[i+1] = Math.random() * 22;
+            positions[i+2] = (Math.random() - 0.5) * 32;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0x32cd32, size: 0.12, transparent: true, opacity: 0.45 });
+        particleSystem = new THREE.Points(particleGeo, particleMat);
+        scene.add(particleSystem);
+
+        // Window adaptation
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        rebuildSegmentRowsUI(narrativeSegments);
+        updateTimelineDuration(narrativeSegments);
+        envBuilt = true;
+    }
+
+    // ===================================================================
+    //  CIRCUS ENVIRONMENT DESIGN & ASSEMBLY
+    // ===================================================================
+    function buildCircusEnvironment() {
+        circusTentGroup = new THREE.Group();
+        circusFloorGroup = new THREE.Group();
+
+        // 1. Red/White Circus Board Floor
+        const floorDiameter = 48;
+        const totalTiles = 24;
+        const tileSize = floorDiameter / totalTiles;
+        for (let x = 0; x < totalTiles; x++) {
+            for (let z = 0; z < totalTiles; z++) {
+                const alt = (x + z) % 2 === 0;
+                const tileMaterial = new THREE.MeshStandardMaterial({
+                    color: alt ? 0xffffff : 0x22002b,
+                    roughness: 0.72,
+                    metalness: 0.08
+                });
+                const tile = new THREE.Mesh(new THREE.PlaneGeometry(tileSize - 0.04, tileSize - 0.04), tileMaterial);
+                tile.rotation.x = -Math.PI / 2;
+                tile.position.set(
+                    (x - totalTiles / 2 + 0.5) * tileSize,
+                    0,
+                    (z - totalTiles / 2 + 0.5) * tileSize
+                );
+                tile.receiveShadow = true;
+                circusFloorGroup.add(tile);
+            }
+        }
+
+        // 2. Main Pillars
+        const poleColors = [0xff3366, 0xffe033, 0x33aaff, 0xcc44ff, 0x33ff88, 0xff8c00, 0xff3366, 0x33aaff];
+        const ringRadius = 15;
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const px = Math.cos(angle) * ringRadius;
+            const pz = Math.sin(angle) * ringRadius;
+
+            const basePoleMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 });
+            const coloredBandMat = new THREE.MeshStandardMaterial({ color: poleColors[i], roughness: 0.6 });
+
+            const pillarGroup = new THREE.Group();
+            pillarGroup.position.set(px, 0, pz);
+
+            const poleCore = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 17, 12), basePoleMat);
+            poleCore.position.y = 8.5;
+            poleCore.castShadow = true;
+            pillarGroup.add(poleCore);
+
+            // Helical/tiered color bands
+            for (let j = 0; j < 8; j++) {
+                const band = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.8, 12), coloredBandMat);
+                band.position.y = 1.5 + j * 2.1;
+                pillarGroup.add(band);
+            }
+
+            const goldCap = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 12), coloredBandMat);
+            goldCap.position.y = 17.3;
+            pillarGroup.add(goldCap);
+
+            circusTentGroup.add(pillarGroup);
+            tentPoles.push(pillarGroup);
+        }
+
+        // 3. Drape Tent Canopy Segments
+        const drapeColors = [0xff3366, 0xffe033, 0x33aaff, 0xcc44ff, 0xff3366, 0xffe033, 0x33aaff, 0xcc44ff];
+        for (let i = 0; i < 8; i++) {
+            const a1 = (i / 8) * Math.PI * 2;
+            const a2 = ((i + 1) / 8) * Math.PI * 2;
+            const mid = (a1 + a2) / 2;
+
+            const vertices = new Float32Array([
+                0, 19, 0,  // top apex
+                Math.cos(a1) * ringRadius, 17, Math.sin(a1) * ringRadius,
+                Math.cos(a2) * ringRadius, 17, Math.sin(a2) * ringRadius,
+                
+                Math.cos(mid) * (ringRadius + 2.5), 14, Math.sin(mid) * (ringRadius + 2.5),
+                Math.cos(a1) * ringRadius, 17, Math.sin(a1) * ringRadius,
+                Math.cos(a2) * ringRadius, 17, Math.sin(a2) * ringRadius,
+            ]);
+            
+            const canopyGeo = new THREE.BufferGeometry();
+            canopyGeo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            canopyGeo.setIndex([0, 1, 2, 3, 4, 5]);
+            canopyGeo.computeVertexNormals();
+
+            const canopyMat = new THREE.MeshStandardMaterial({
+                color: drapeColors[i], 
+                side: THREE.DoubleSide,
+                transparent: true, 
+                opacity: 0.8, 
+                roughness: 0.85
+            });
+            const canopyMesh = new THREE.Mesh(canopyGeo, canopyMat);
+            circusTentGroup.add(canopyMesh);
+        }
+
+        // 4. Center Gold Sphere Apex
+        const starCoreMat = new THREE.MeshStandardMaterial({ color: 0xffe033, emissive: 0xffaa00, emissiveIntensity: 0.9 });
+        const apexGlobe = new THREE.Mesh(new THREE.SphereGeometry(1.0, 18, 18), starCoreMat);
+        apexGlobe.position.y = 19.3;
+        circusTentGroup.add(apexGlobe);
+
+        // 5. Banners / Swaying Flag String
+        for (let i = 0; i < 8; i++) {
+            const a1 = (i / 8) * Math.PI * 2;
+            const a2 = ((i + 1) / 8) * Math.PI * 2;
+            const flagColors = [0xff3366, 0xffe033, 0x33aaff, 0xcc44ff, 0x33ff88, 0xff8c00];
+            for (let f = 0; f < 5; f++) {
+                const t = (f + 1) / 6;
+                const a = a1 + (a2 - a1) * t;
+                const rx = Math.cos(a) * (ringRadius * 0.7);
+                const rz = Math.sin(a) * (ringRadius * 0.7);
+                const flagGeo = new THREE.ConeGeometry(0.25, 0.6, 4);
+                const flagMat = new THREE.MeshStandardMaterial({ color: flagColors[f % flagColors.length], roughness: 0.7 });
+                const bannerFlag = new THREE.Mesh(flagGeo, flagMat);
+                bannerFlag.position.set(rx, 18 - Math.abs(Math.sin(t * Math.PI)) * 1.6, rz);
+                bannerFlag.rotation.z = Math.PI;
+                circusTentGroup.add(bannerFlag);
+                bannerMeshes.push(bannerFlag);
+            }
+        }
+
+        // 6. Ring Performance Border
+        const borderGeo = new THREE.TorusGeometry(6.5, 0.24, 12, 64);
+        const borderMat = new THREE.MeshStandardMaterial({ color: 0xffe033, emissive: 0xff7700, emissiveIntensity: 0.5, roughness: 0.45, metalness: 0.7 });
+        const performanceRing = new THREE.Mesh(borderGeo, borderMat);
+        performanceRing.rotation.x = Math.PI / 2;
+        performanceRing.position.y = 0.12;
+        circusFloorGroup.add(performanceRing);
+
+        // 7. Golden Sand Arena Fill
+        const ringSandGeo = new THREE.CircleGeometry(6.5, 48);
+        const ringSandMat = new THREE.MeshStandardMaterial({ color: 0x8a4117, roughness: 0.98 });
+        const ringSand = new THREE.Mesh(ringSandGeo, ringSandMat);
+        ringSand.rotation.x = -Math.PI / 2;
+        ringSand.position.y = 0.02;
+        circusFloorGroup.add(ringSand);
+
+        // 8. Background Dust Sparkles
+        const sparkleCount = 600;
+        const spGeometry = new THREE.BufferGeometry();
+        const spPositions = new Float32Array(sparkleCount * 3);
+        const spColors = new Float32Array(sparkleCount * 3);
+        const colorPalette = [[1, 0.2, 0.45], [1, 0.9, 0.2], [0.2, 0.7, 1], [0.8, 0.2, 1], [0.1, 1, 0.4]];
+        for (let i = 0; i < sparkleCount; i++) {
+            spPositions[i*3] = (Math.random() - 0.5) * 48;
+            spPositions[i*3+1] = Math.random() * 20 + 0.3;
+            spPositions[i*3+2] = (Math.random() - 0.5) * 48;
+            const randCol = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+            spColors[i*3] = randCol[0]; 
+            spColors[i*3+1] = randCol[1]; 
+            spColors[i*3+2] = randCol[2];
+        }
+        spGeometry.setAttribute('position', new THREE.BufferAttribute(spPositions, 3));
+        spGeometry.setAttribute('color', new THREE.BufferAttribute(spColors, 3));
+        const spMaterial = new THREE.PointsMaterial({ size: 0.16, vertexColors: true, transparent: true, opacity: 0.75 });
+        starParticles = new THREE.Points(spGeometry, spMaterial);
+        circusTentGroup.add(starParticles);
+
+        // 9. Swinging Aerialist Pendulums
+        const ballColors = [0xff3366, 0x33aaff, 0xcc44ff];
+        for (let i = 0; i < 3; i++) {
+            const cableGeo = new THREE.CylinderGeometry(0.02, 0.02, 6, 6);
+            const cableMat = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+            const cable = new THREE.Mesh(cableGeo, cableMat);
+            cable.position.set(-5 + i * 5, 18 - 3.0, 0);
+            circusTentGroup.add(cable);
+
+            const propBall = new THREE.Mesh(
+                new THREE.SphereGeometry(0.55, 12, 12),
+                new THREE.MeshStandardMaterial({ color: ballColors[i], emissive: ballColors[i], emissiveIntensity: 0.4, roughness: 0.4 })
+            );
+            propBall.position.set(-5 + i * 5, 18 - 6.0, 0);
+            circusTentGroup.add(propBall);
+            pendulumBalls.push({ ball: propBall, wire: cable, baseX: -5 + i * 5, phase: i * 1.2 });
+        }
+
+        // 10. Stage Properties (Pedestals / Tubs)
+        const pedestalPlacements = [[5, 0, 4], [-5, 0, 4], [5, 0, -4], [-5, 0, -4]];
+        const pedestalColors = [0xff3366, 0xffe033, 0x33aaff, 0xcc44ff];
+        pedestalPlacements.forEach(([px, py, pz], idx) => {
+            const h = 0.9 + Math.random() * 0.4;
+            const pedestal = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.7, 0.9, h, 8),
+                new THREE.MeshStandardMaterial({ color: pedestalColors[idx % pedestalColors.length], roughness: 0.85 })
+            );
+            pedestal.position.set(px, h / 2, pz);
+            pedestal.castShadow = true;
+            pedestal.receiveShadow = true;
+            circusFloorGroup.add(pedestal);
+        });
+
+        scene.add(circusFloorGroup);
+        scene.add(circusTentGroup);
+    }
+
+    // ===================================================================
+    //  3D ACTOR RENDERING RUSTIC ENGINES
+    // ===================================================================
+    function createGeometryForNode(name, color, pos) {
+        const charRigGroup = new THREE.Group();
+        charRigGroup.position.set(pos[0], pos[1], pos[2]);
+        charRigGroup.name = name;
+
+        const baseMat = new THREE.MeshStandardMaterial({ color, wireframe: wireframeMode });
+
+        // Distinguish characters with distinctive procedural designs
+        if (name.includes("Joe") || name.includes("Orangutan") || name.includes("Zorblax") || name.includes("Pierrot")) {
+            // Stylized Circus Actor / Mascot
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.75, 1.5, 10), baseMat);
+            body.position.y = 0.75; 
+            charRigGroup.add(body);
+
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 12), baseMat);
+            head.position.y = 1.7; 
+            charRigGroup.add(head);
+
+            // Circus-style ruff/collar
+            const ruffMat = new THREE.MeshStandardMaterial({ color: 0xffe033, roughness: 0.4 });
+            const ruff = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.14, 8, 20), ruffMat);
+            ruff.position.y = 1.4; 
+            ruff.rotation.x = Math.PI / 2;
+            charRigGroup.add(ruff);
+
+            // Little party cone hat
+            const coneHatMat = new THREE.MeshStandardMaterial({ color: 0xff3366, roughness: 0.5 });
+            const coneHat = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.8, 8), coneHatMat);
+            coneHat.position.y = 2.4;
+            charRigGroup.add(coneHat);
+
+            // Append limbs for motion cycles
+            const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.7), baseMat);
+            leftLeg.position.set(-0.3, 0.35, 0);
+            leftLeg.name = "leftLeg";
+            charRigGroup.add(leftLeg);
+
+            const rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.7), baseMat);
+            rightLeg.position.set(0.3, 0.35, 0);
+            rightLeg.name = "rightLeg";
+            charRigGroup.add(rightLeg);
+        }
+        else if (name.includes("Leslie") || name.includes("Analyst")) {
+            // Technical Spectator
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.6, 0.7), baseMat);
+            body.position.y = 0.8; 
+            charRigGroup.add(body);
+
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.48, 12, 12), baseMat);
+            head.position.y = 1.8; 
+            charRigGroup.add(head);
+
+            // Smart tech specs
+            const framesMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const glassLeft = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.04, 6, 12), framesMat);
+            glassLeft.position.set(-0.18, 1.85, 0.48);
+            charRigGroup.add(glassLeft);
+
+            const glassRight = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.04, 6, 12), framesMat);
+            glassRight.position.set(0.18, 1.85, 0.48);
+            charRigGroup.add(glassRight);
+
+            // Tablet/Clipboard prop
+            const board = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.06), new THREE.MeshStandardMaterial({ color: 0x94a3b8 }));
+            board.position.set(0.6, 1.0, 0.35);
+            board.rotation.set(-0.2, -0.4, -0.1);
+            charRigGroup.add(board);
+        }
+        else if (name.includes("Cleaner") || name.includes("Tech") || name.includes("Reptile") || name.includes("Adversary")) {
+            // Fast Lunge / Aggressive Cleaner
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 1.0, 8), baseMat);
+            body.position.y = 1.1; 
+            charRigGroup.add(body);
+
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 10), baseMat);
+            head.position.y = 1.75; 
+            charRigGroup.add(head);
+
+            const utilityLegL = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.25, 0.8, 8), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
+            utilityLegL.position.set(-0.25, 0.4, 0);
+            utilityLegL.name = "leftLeg";
+            charRigGroup.add(utilityLegL);
+
+            const utilityLegR = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.25, 0.8, 8), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
+            utilityLegR.position.set(0.25, 0.4, 0);
+            utilityLegR.name = "rightLeg";
+            charRigGroup.add(utilityLegR);
+
+            // Holding a long broom or weapon
+            const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.0, 8), new THREE.MeshStandardMaterial({ color: 0x78350f }));
+            staff.position.set(0.65, 1.0, 0.4);
+            staff.rotation.x = 0.6;
+            charRigGroup.add(staff);
+
+            const brushHead = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.45, 0.65), new THREE.MeshStandardMaterial({ color: 0xeab308 }));
+            brushHead.position.set(0.65, 0.12, 0.6);
+            charRigGroup.add(brushHead);
+        }
+        else if (name.includes("Attenborough") || name.includes("Witness")) {
+            // Naturalist Explorer
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.45, 0.85), baseMat);
+            body.position.y = 0.72; 
+            charRigGroup.add(body);
+
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.46, 12, 12), baseMat);
+            head.position.y = 1.62; 
+            charRigGroup.add(head);
+
+            // Broad-brimmed explorer sun hat
+            const rimMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.06, 16), new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.8 }));
+            rimMesh.position.y = 2.02;
+            charRigGroup.add(rimMesh);
+
+            const crownMesh = new THREE.Mesh(new THREE.SphereGeometry(0.38, 10, 10), new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.8 }));
+            crownMesh.position.y = 2.15;
+            charRigGroup.add(crownMesh);
+
+            // Binoculars at the eyes
+            const specs = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.28, 0.45), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+            specs.position.set(0, 1.55, 0.52);
+            charRigGroup.add(specs);
+        }
+        else if (name.includes("Flanjeet")) {
+            // Surreal hovering oracle
+            const body = new THREE.Mesh(new THREE.SphereGeometry(0.6, 12, 12), baseMat);
+            body.position.y = 1.35; 
+            charRigGroup.add(body);
+
+            // Shimmering float wings
+            const wingMaterial = new THREE.MeshStandardMaterial({ color: 0xe879f9, transparent: true, opacity: 0.75 });
+            const leftWing = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.75, 0.55), wingMaterial);
+            leftWing.position.set(-0.7, 1.35, 0); 
+            leftWing.rotation.z = 0.4;
+            charRigGroup.add(leftWing);
+
+            const rightWing = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.75, 0.55), wingMaterial);
+            rightWing.position.set(0.7, 1.35, 0); 
+            rightWing.rotation.z = -0.4;
+            charRigGroup.add(rightWing);
+        }
+        else if (name.includes("Jane") || name.includes("Validator")) {
+            // Cybernetic Supervisor
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.72, 1.5, 0.72), baseMat);
+            body.position.y = 0.75; 
+            charRigGroup.add(body);
+
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.44, 12, 12), baseMat);
+            head.position.y = 1.65; 
+            charRigGroup.add(head);
+
+            // Neon supervisor visors
+            const visorMesh = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.18, 0.22), new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0xff00ff }));
+            visorMesh.position.set(0, 1.72, 0.38);
+            charRigGroup.add(visorMesh);
+        }
+        else if (name.includes("Rexy") || name.includes("T-Rex")) {
+            // Low-poly T-Rex
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 2.2), baseMat);
+            body.position.set(0, 1.2, -0.4);
+            charRigGroup.add(body);
+
+            const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 1.0), baseMat);
+            neck.position.set(0, 1.9, 0.4);
+            neck.rotation.x = -0.4;
+            charRigGroup.add(neck);
+
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 1.3), baseMat);
+            head.position.set(0, 2.3, 0.8);
+            charRigGroup.add(head);
+
+            const tail = new THREE.Mesh(new THREE.ConeGeometry(0.4, 1.8, 8), baseMat);
+            tail.position.set(0, 0.8, -2.0);
+            tail.rotation.x = -Math.PI / 3;
+            charRigGroup.add(tail);
+
+            const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.9, 0.3), baseMat);
+            leftLeg.position.set(-0.6, 0.45, -0.2);
+            leftLeg.name = "leftLeg";
+            charRigGroup.add(leftLeg);
+
+            const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.9, 0.3), baseMat);
+            rightLeg.position.set(0.6, 0.45, -0.2);
+            rightLeg.name = "rightLeg";
+            charRigGroup.add(rightLeg);
+        }
+        else if (name.includes("Monkey") || name.includes("Jester")) {
+            // Little Acrobat Monkey
+            const body = new THREE.Mesh(new THREE.SphereGeometry(0.4, 10, 10), baseMat);
+            body.position.y = 0.5; 
+            charRigGroup.add(body);
+
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), baseMat);
+            head.position.y = 0.95; 
+            charRigGroup.add(head);
+
+            const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.3, 8), new THREE.MeshStandardMaterial({ color: 0x33aaff }));
+            cap.position.y = 1.15;
+            charRigGroup.add(cap);
+        }
+        else {
+            // Generic physical device (e.g. Earth-Apple or Time Machine)
+            const accessoryMesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.5, 0), baseMat);
+            accessoryMesh.position.y = 0.5;
+            charRigGroup.add(accessoryMesh);
+        }
+
+        // Procedural metadata Canvas Sprite Tag
+        const sprCanvas = document.createElement('canvas');
+        sprCanvas.width = 256; 
+        sprCanvas.height = 72;
+        const ctx = sprCanvas.getContext('2d');
+        ctx.fillStyle = 'rgba(0, 10, 0, 0.82)';
+        ctx.fillRect(0, 0, 256, 72);
+        ctx.strokeStyle = '#32cd32';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(3, 3, 250, 66);
+        ctx.fillStyle = '#ff8c00';
+        ctx.font = 'bold 17px "Courier New"';
+        ctx.textAlign = 'center';
+        ctx.fillText(name.split(" ")[0].toUpperCase(), 128, 40);
+        
+        const sprTex = new THREE.CanvasTexture(sprCanvas);
+        const sprMaterial = new THREE.SpriteMaterial({ map: sprTex });
+        const textSprite = new THREE.Sprite(sprMaterial);
+        textSprite.position.y = 3.0;
+        textSprite.scale.set(2.4, 0.68, 1);
+        charRigGroup.add(textSprite);
+
+        return charRigGroup;
+    }
+
+    // ===================================================================
+    //  STORY DATA TO 3D TRANSLATOR
+    // ===================================================================
+    function update3DScene() {
+        const segment = narrativeSegments[activeSegmentIndex];
+        if (!segment) return;
+        const segmentTime = playhead - segment.start;
+
+        // Clean out previous actors and lines
+        while (meshGroup.children.length > 0) meshGroup.remove(meshGroup.children[0]);
+        while (connectionsGroup.children.length > 0) connectionsGroup.remove(connectionsGroup.children[0]);
+
+        const nodes = segment.nodes;
+        const keys = Object.keys(nodes);
+        const currentCoordinates = [];
+
+        keys.forEach(key => {
+            const nodeData = nodes[key];
+            const currentPosition = [
+                nodeData.pos[0] + nodeData.vel[0] * segmentTime,
+                nodeData.pos[1] + nodeData.vel[1] * segmentTime,
+                nodeData.pos[2] + nodeData.vel[2] * segmentTime
+            ];
+            currentCoordinates.push(new THREE.Vector3(currentPosition[0], currentPosition[1], currentPosition[2]));
+            
+            const actor = createGeometryForNode(key, nodeData.color, currentPosition);
+            
+            // Apply spinning cycles to accessories
+            if (key.includes("Apple") || key.includes("Asset") || key.includes("Machine") || key.includes("Reactor") || key.includes("Disk")) {
+                actor.rotation.y = playhead * 2.5;
+                actor.rotation.x = playhead * 1.2;
+            }
+            meshGroup.add(actor);
+        });
+
+        // Walking leg swinging calculations
+        meshGroup.children.forEach(actor => {
+            const hasVelocity = Math.abs(segment.nodes[actor.name]?.vel[0] || 0) > 0.01 || Math.abs(segment.nodes[actor.name]?.vel[2] || 0) > 0.01;
+            
+            if (hasVelocity) {
+                const legL = actor.getObjectByName("leftLeg");
+                const legR = actor.getObjectByName("rightLeg");
+                if (legL && legR) {
+                    legL.rotation.x = Math.sin(playhead * 8) * 0.6;
+                    legR.rotation.x = -Math.sin(playhead * 8) * 0.6;
+                }
+            }
+
+            if (actor.name.includes("Monkey")) {
+                actor.position.y += Math.abs(Math.sin(playhead * 4.5)) * 1.3;
+            }
+            if (actor.name.includes("Cleaner") || actor.name.includes("Reptile")) {
+                actor.position.x += Math.sin(playhead * 2.0) * 0.2;
+            }
+            if (actor.name.includes("Flanjeet")) {
+                actor.position.y += Math.sin(playhead * 3.0) * 0.4;
+            }
+        });
+
+        // Draw mesh/wire frame relational lines on stage
+        if (currentCoordinates.length > 1) {
+            const wireMat = new THREE.LineBasicMaterial({ color: 0x32cd32, transparent: true, opacity: 0.22 });
+            for (let i = 0; i < currentCoordinates.length; i++) {
+                for (let j = i + 1; j < currentCoordinates.length; j++) {
+                    const lineGeo = new THREE.BufferGeometry().setFromPoints([currentCoordinates[i], currentCoordinates[j]]);
+                    connectionsGroup.add(new THREE.Line(lineGeo, wireMat));
+                }
+            }
+        }
+    }
+
+    /**
+     * Positions a bright localized yellow spotlight on the character currently speaking.
+     */
+    function positionSpotlightOnSpeaker(speakerName) {
+        if (!activeSpeakerSpotlight) return;
+        const segment = narrativeSegments[activeSegmentIndex];
+        if (!segment) return;
+
+        let speakingNode = null;
+        const keys = Object.keys(segment.nodes);
+        for (const key of keys) {
+            if (key.toLowerCase().includes(speakerName.toLowerCase())) {
+                speakingNode = segment.nodes[key];
+                break;
+            }
+        }
+
+        if (speakingNode) {
+            const segmentTime = playhead - segment.start;
+            const currentX = speakingNode.pos[0] + speakingNode.vel[0] * segmentTime;
+            const currentZ = speakingNode.pos[2] + speakingNode.vel[2] * segmentTime;
+            activeSpeakerSpotlight.target.position.set(currentX, 0, currentZ);
+            activeSpeakerSpotlight.target.updateMatrixWorld();
+            activeSpeakerSpotlight.intensity = 8.5;
+        } else {
+            // Fade out spotlight if no clear actor is matching the speaker
+            activeSpeakerSpotlight.intensity = 1.0;
+        }
+    }
+
+    // ===================================================================
+    //  TELEMETRY & TEXT WRITERS
+    // ===================================================================
+    function updateTelemetryDisplay() {
+        const stackContainer = document.getElementById('telemetry-stack');
+        const nodesList = document.getElementById('active-nodes-list');
+        const segment = narrativeSegments[activeSegmentIndex];
+        if (!segment) return;
+
+        const segmentTime = playhead - segment.start;
+        const nodes = segment.nodes;
+        const keys = Object.keys(nodes);
+
+        nodesList.innerHTML = keys.map(k => `<div>&gt; ${k.split(" ")[0].toUpperCase()}</div>`).join('');
+
+        stackContainer.innerHTML = keys.map(key => {
+            const node = nodes[key];
+            const currentX = (node.pos[0] + node.vel[0] * segmentTime).toFixed(2);
+            const currentY = (node.pos[1] + node.vel[1] * segmentTime).toFixed(2);
+            const currentZ = (node.pos[2] + node.vel[2] * segmentTime).toFixed(2);
+            const hexColor = '#' + node.color.toString(16).padStart(6, '0');
+            
+            return `
+            <div class="bg-[#000800]/90 border border-[#1a441a] rounded p-2.5 flex flex-col gap-1.5 font-mono text-[11px] transition-all duration-200">
+                <div class="flex justify-between items-center border-b border-[#001400] pb-1">
+                    <span class="flex items-center gap-1.5 font-bold text-[#ff8c00]">
+                        <span class="w-2.5 h-2.5 rounded-full border border-[#32cd32]" style="background:${hexColor}"></span>
+                        ${key}
+                    </span>
+                </div>
+                <div class="grid grid-cols-3 gap-1.5 text-center">
+                    <div class="bg-[#000500] border border-[#1a441a] rounded p-1">
+                        <div class="text-[8px] text-[#32cd32]/80">X_COORD</div>
+                        <div class="text-xs font-bold text-[#ff8c00]">${currentX}</div>
+                    </div>
+                    <div class="bg-[#000500] border border-[#1a441a] rounded p-1">
+                        <div class="text-[8px] text-[#32cd32]/80">Y_COORD</div>
+                        <div class="text-xs font-bold text-[#ff8c00]">${currentY}</div>
+                    </div>
+                    <div class="bg-[#000500] border border-[#1a441a] rounded p-1">
+                        <div class="text-[8px] text-[#32cd32]/80">Z_COORD</div>
+                        <div class="text-xs font-bold text-[#ff8c00]">${currentZ}</div>
+                    </div>
+                </div>
+                <div class="text-[9px] text-[#1a8c1a] italic">${node.desc}</div>
+            </div>`;
+        }).join('');
+    }
+
+    function highlightSubtitleWord(text, charIndex, speaker) {
+        const el = document.getElementById('subtitles-output');
+        if (!el) return;
+        const tokens = text.split(' ');
+        let pos = 0;
+        const words = tokens.map(t => { 
+            const s = pos, e = pos + t.length; 
+            pos += t.length + 1; 
+            return { text: t, start: s, end: e }; 
+        });
+        let activeIdx = words.findIndex(w => charIndex >= w.start && charIndex < w.end);
+        if (activeIdx === -1) activeIdx = words.findIndex(w => charIndex <= w.start);
+        if (activeIdx === -1) activeIdx = words.length - 1;
+        
+        const prefix = `<span style="color:var(--circus-orange);font-weight:700;text-transform:uppercase;">${speaker}:</span> `;
+        el.innerHTML = prefix + words.map((w, i) => i === activeIdx ? `<span class="active-word">${w.text}</span>` : `<span>${w.text}</span>`).join(' ');
+    }
+
+    function updateSubtitles() {
+        const segment = narrativeSegments[activeSegmentIndex];
+        if (!segment) return;
+        if (voiceEnabled && isPlaying && window.speechSynthesis.speaking) return;
+        
+        const el = document.getElementById('subtitles-output');
+        const segmentTime = playhead - segment.start;
+        const activePartIndex = getPartIndexAtTime(segment, segmentTime);
+        const currentPart = segment.dialogueParts[activePartIndex];
+        if (!currentPart) return;
+
+        const totalChars = segment.dialogueParts.reduce((acc, p) => acc + p.text.length, 0);
+        const segmentDuration = segment.end - segment.start;
+        
+        let characterAcc = 0;
+        for (let i = 0; i < activePartIndex; i++) {
+            characterAcc += (segment.dialogueParts[i].text.length / totalChars) * segmentDuration;
+        }
+        
+        const currentPartDuration = (currentPart.text.length / totalChars) * segmentDuration;
+        const progressInPart = segmentTime - characterAcc;
+        const words = currentPart.text.split(' ');
+        const activeWordIdx = Math.min(words.length - 1, Math.floor((progressInPart / currentPartDuration) * words.length));
+        
+        const prefix = `<span style="color:var(--circus-orange);font-weight:700;text-transform:uppercase;">${currentPart.speaker}:</span> `;
+        el.innerHTML = prefix + words.map((w, i) => i === activeWordIdx ? `<span class="active-word">${w}</span>` : `<span>${w}</span>`).join(' ');
+    }
+
+    function calculateActiveSegment() {
+        for (let i = 0; i < narrativeSegments.length; i++) {
+            if (playhead >= narrativeSegments[i].start && playhead <= narrativeSegments[i].end) {
+                if (activeSegmentIndex !== i) {
+                    activeSegmentIndex = i;
+                    highlightSegmentRows();
+                    if (isPlaying && voiceEnabled) {
+                        speakCurrentSegment(playhead - narrativeSegments[i].start);
+                    }
+                }
+                return;
+            }
+        }
+    }
+
+    function highlightSegmentRows() {
+        narrativeSegments.forEach((_, i) => {
+            const row = document.getElementById(`sr-${i}`);
+            if (!row) return;
+            const active = i === activeSegmentIndex;
+            row.style.background = active ? 'rgba(50, 205, 50, 0.16)' : '';
+            row.style.color = active ? 'var(--circus-orange)' : 'var(--hud-green)';
+            row.style.fontWeight = active ? '700' : '400';
+        });
+    }
+
+    function rebuildSegmentRowsUI(segments) {
+        const list = document.getElementById('timeline-rows-container');
+        list.innerHTML = '';
+        segments.forEach((seg, i) => {
+            const div = document.createElement('div');
+            div.id = `sr-${i}`;
+            div.style.cssText = 'display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #1a441a;cursor:pointer;font-size:10px;font-family:inherit;color:var(--hud-green);transition:all 0.2s;';
+            div.innerHTML = `<span>${seg.start.toFixed(2)}s–${seg.end.toFixed(2)}s</span><span class="truncate ml-4 text-right">${seg.title}</span>`;
+            
+            div.onmouseenter = () => { if (i !== activeSegmentIndex) div.style.background = 'rgba(50, 205, 50, 0.08)'; };
+            div.onmouseleave = () => { if (i !== activeSegmentIndex) div.style.background = ''; };
+            div.onclick = () => { 
+                playhead = seg.start; 
+                document.getElementById('timeline-slider').value = playhead; 
+                tickUI(); 
+            };
+            list.appendChild(div);
+        });
+        highlightSegmentRows();
+    }
+
+    function updateTimelineDuration(segments) {
+        const finalTime = segments[segments.length - 1].end;
+        document.getElementById('timeline-slider').max = finalTime;
+        document.getElementById('deck-timer').textContent = `0.00 / ${finalTime.toFixed(2)} Seconds`;
+    }
+
+    function updateCircusPhaseBadge() {
+        const seg = narrativeSegments[activeSegmentIndex];
+        if (!seg) return;
+        const badge = document.getElementById('circus-phase-badge');
+        badge.style.color = seg.circusColor || '#33ff88';
+        badge.style.borderColor = (seg.circusColor || '#33ff88') + '66';
+        badge.textContent = seg.circusLabel || '🎪 BIG TOP';
+    }
+
+    function tickUI() {
+        calculateActiveSegment();
+        update3DScene();
+        updateTelemetryDisplay();
+        updateSubtitles();
+        updateCircusPhaseBadge();
+
+        const total = narrativeSegments[narrativeSegments.length - 1]?.end ?? 120;
+        const currentSeg = narrativeSegments[activeSegmentIndex];
+        if (currentSeg) {
+            document.getElementById('global-timer').textContent = playhead.toFixed(2) + 's';
+            document.getElementById('deck-timer').textContent = `${playhead.toFixed(2)} / ${total.toFixed(2)} Seconds`;
+            document.getElementById('scene-title').textContent = currentSeg.title;
+            document.getElementById('scene-duration').textContent = `${currentSeg.start.toFixed(2)}s - ${currentSeg.end.toFixed(2)}s`;
+        }
+    }
+
+    // ===================================================================
+    //  GLOBAL RENDER ENGINE TICK
+    // ===================================================================
+    function animateEngine(time) {
+        requestAnimationFrame(animateEngine);
+
+        // Frame rate calculation
+        frameCount++;
+        if (time > lastFpsTime + 1000) {
+            document.getElementById('fps-counter').textContent = Math.round((frameCount * 1000) / (time - lastFpsTime));
+            frameCount = 0; 
+            lastFpsTime = time;
+        }
+
+        if (isPlaying) {
+            const dt = (time - lastTime) / 1000;
+            // Scale progress with simulation speed slider
+            playhead += dt * simSpeedMultiplier;
+            
+            const maxDuration = narrativeSegments[narrativeSegments.length - 1]?.end ?? 120;
+            if (playhead >= maxDuration) {
+                playhead = 0;
+            }
+            document.getElementById('timeline-slider').value = playhead;
+            tickUI();
+        }
+        lastTime = time;
+
+        const clockTime = time * 0.001;
+
+        // Mist drift physics
+        if (particleSystem) {
+            const positions = particleSystem.geometry.attributes.position.array;
+            for (let i = 1; i < positions.length; i += 3) {
+                positions[i] -= 0.08 * simSpeedMultiplier;
+                if (positions[i] < 0) positions[i] = 20;
+            }
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+        }
+
+        // Shimmering sky particle drift
+        if (starParticles) {
+            const spArr = starParticles.geometry.attributes.position.array;
+            for (let i = 1; i < spArr.length; i += 3) {
+                spArr[i] += 0.01 * simSpeedMultiplier;
+                if (spArr[i] > 20) spArr[i] = 0.3;
+            }
+            starParticles.geometry.attributes.position.needsUpdate = true;
+            starParticles.material.opacity = 0.6 + Math.sin(clockTime * 2.5) * 0.2;
+        }
+
+        // Oscillate swing pendulums
+        pendulumBalls.forEach(({ ball, wire, baseX, phase }) => {
+            const swingX = Math.sin(clockTime * 1.6 + phase) * 3.5;
+            ball.position.x = baseX + swingX;
+            wire.position.x = baseX + swingX * 0.5;
+            wire.rotation.z = Math.sin(clockTime * 1.6 + phase) * 0.5;
+        });
+
+        // Wander spotlights scanning stage
+        if (spotlightL) {
+            spotlightL.target.position.x = Math.sin(clockTime * 0.8) * 6;
+            spotlightL.target.position.z = Math.cos(clockTime * 0.5) * 6;
+            spotlightL.target.updateMatrixWorld();
+        }
+        if (spotlightR) {
+            spotlightR.target.position.x = -Math.sin(clockTime * 0.7) * 6;
+            spotlightR.target.position.z = Math.cos(clockTime * 0.9) * 6;
+            spotlightR.target.updateMatrixWorld();
+        }
+
+        // Flags fluttering
+        bannerMeshes.forEach((flag, idx) => {
+            flag.rotation.z = Math.sin(clockTime * 2.2 + idx) * 0.2;
+            flag.rotation.x = Math.PI + Math.sin(clockTime * 1.5 + idx * 0.6) * 0.1;
+        });
+
+        // Pole caps bouncing
+        tentPoles.forEach((pg, idx) => {
+            const goldenCap = pg.children[pg.children.length-1];
+            if (goldenCap) goldenCap.position.y = 17.3 + Math.sin(clockTime * 2.5 + idx * 0.8) * 0.2;
+        });
+
+        // Special environmental visual triggers based on active segments
+        if (activeSegmentIndex === 3 && isPlaying) {
+            // Shake camera slightly under "Flanjeet" void dimension phase
+            camera.position.x += Math.sin(clockTime * 12.0) * 0.02;
+            camera.position.z += Math.sin(clockTime * 10.0) * 0.02;
+        }
+
+        if (activeSegmentIndex === 4 && isPlaying) {
+            // Flash colors under "Boom/Impact" phase
+            const intensity = (Math.sin(clockTime * 25.0) + 1.0) / 2.0;
+            const impactColor = new THREE.Color().setHSL(0.08, 1.0, 0.12 * intensity);
+            renderer.setClearColor(impactColor);
+            if (scene.fog) scene.fog.color.copy(impactColor);
+        } else {
+            const seg = narrativeSegments[activeSegmentIndex];
+            const regularColor = seg ? new THREE.Color(seg.color) : new THREE.Color(0x000a00);
+            renderer.setClearColor(regularColor);
+            if (scene.fog) scene.fog.color.copy(regularColor);
+        }
+
+        // Adjust static stage spotlights based on active phase theme colors
+        const leftColors = [0x33ff88, 0xff8c00, 0xff3366, 0xcc44ff, 0xffe033, 0x33aaff];
+        const rightColors = [0x33aaff, 0xffe033, 0xcc44ff, 0x33ff88, 0xff3366, 0xff8c00];
+        if (spotlightL) spotlightL.color.set(leftColors[activeSegmentIndex] || 0x33ff88);
+        if (spotlightR) spotlightR.color.set(rightColors[activeSegmentIndex] || 0x33aaff);
+
+        if (orbitCtrl) orbitCtrl.update();
+        renderer.render(scene, camera);
+    }
+
+    // ===================================================================
+    //  EVENT LISTENERS & BINDINGS
+    // ===================================================================
+    document.getElementById('timeline-slider').addEventListener('input', e => {
+        playhead = parseFloat(e.target.value);
+        tickUI();
+        if (isPlaying && voiceEnabled) {
+            const seg = narrativeSegments[activeSegmentIndex];
+            if (seg) speakCurrentSegment(playhead - seg.start);
+        }
+    });
+
+    document.getElementById('btn-mode').onclick = () => {
+        wireframeMode = !wireframeMode;
+        tickUI();
+    };
+
+    document.getElementById('btn-camera-reset').onclick = () => {
+        if (orbitCtrl) orbitCtrl.reset();
+    };
+
+    document.getElementById('btn-toggle-crt').onclick = () => {
+        const scanlines = document.getElementById('scanlines-layer');
+        scanlines.classList.toggle('disabled');
+    };
+
+    // Parameter sliders
+    document.getElementById('param-speed').addEventListener('input', e => {
+        simSpeedMultiplier = parseFloat(e.target.value);
+        document.getElementById('val-speed').textContent = simSpeedMultiplier.toFixed(1) + 'x';
+    });
+
+    document.getElementById('param-fog').addEventListener('input', e => {
+        stageFogDensity = parseFloat(e.target.value);
+        document.getElementById('val-fog').textContent = stageFogDensity.toFixed(3);
+        if (scene && scene.fog) {
+            scene.fog.density = stageFogDensity;
+        }
+    });
+
+    // Play/Pause button
+    const playBtn = document.getElementById('btn-play-pause');
+    const controlIcon = document.getElementById('control-icon');
+    
+    playBtn.onclick = () => {
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+            controlIcon.className = "fa-solid fa-pause text-sm";
+            playBtn.style.background = 'var(--circus-orange)';
+            playBtn.style.boxShadow = '0 0 15px rgba(255, 140, 0, 0.6)';
+            if (voiceEnabled) {
+                const seg = narrativeSegments[activeSegmentIndex];
+                speakCurrentSegment(playhead - (seg ? seg.start : 0));
+            }
+        } else {
+            controlIcon.className = "fa-solid fa-play text-sm";
+            playBtn.style.background = 'var(--hud-green)';
+            playBtn.style.boxShadow = '0 0 15px rgba(50, 205, 50, 0.6)';
+            window.speechSynthesis.cancel();
+        }
+    };
+
+    // Voice Sync Toggle
+    const voiceBtn = document.getElementById('btn-audio-voice');
+    voiceBtn.onclick = () => {
+        voiceEnabled = !voiceEnabled;
+        if (voiceEnabled) {
+            voiceBtn.style.background = 'var(--circus-orange)';
+            voiceBtn.style.color = '#000400';
+            voiceBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> VOICE SYNC: ACTIVE';
+            if (isPlaying) {
+                const seg = narrativeSegments[activeSegmentIndex];
+                speakCurrentSegment(playhead - (seg ? seg.start : 0));
+            }
+        } else {
+            voiceBtn.style.background = '#002200';
+            voiceBtn.style.color = 'var(--circus-orange)';
+            voiceBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i> VOICE SYNC';
+            window.speechSynthesis.cancel();
+        }
+    };
+
+    // Synthesizer Submission
+    function triggerPromptSynthesis(inputText) {
+        const btn = document.getElementById('btn-generate-story');
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin"></i> Synthesizing...';
+        btn.disabled = true;
+        
+        setStatus('COMPILING DIGITAL SCRIPT ENVIRONMENT...', 'var(--circus-orange)');
+        
+        setTimeout(() => {
+            const synthesizedPhases = buildProceduralStory(inputText);
+            loadGeneratedStory(synthesizedPhases, inputText);
+            btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Synthesize';
+            btn.disabled = false;
+        }, 1000);
+    }
+
+    function setStatus(msg, color) {
+        const el = document.getElementById('gen-status');
+        el.style.color = color || 'var(--hud-green)';
+        el.textContent = msg;
+    }
+
+    function loadGeneratedStory(parsedData, promptText) {
+        narrativeSegments = [...parsedData];
+        window.speechSynthesis.cancel();
+        
+        playhead = 0; 
+        activeSegmentIndex = 0; 
+        isPlaying = false;
+        
+        controlIcon.className = "fa-solid fa-play text-sm";
+        playBtn.style.background = 'var(--hud-green)';
+        document.getElementById('timeline-slider').value = 0;
+        
+        rebuildSegmentRowsUI(narrativeSegments);
+        updateTimelineDuration(narrativeSegments);
+        document.getElementById('story-subtitle').textContent = `STORY SEED: "${promptText.toUpperCase().slice(0, 60)}"`;
+        
+        tickUI();
+        setStatus(`✓ LOADED ${narrativeSegments.length} PHASES`, 'var(--circus-orange)');
+    }
+
+    document.getElementById('btn-generate-story').onclick = () => {
+        const promptText = document.getElementById('story-prompt-input').value.trim();
+        if (promptText) {
+            triggerPromptSynthesis(promptText);
+        }
+    };
+
+    document.getElementById('story-prompt-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            document.getElementById('btn-generate-story').click();
+        }
+    });
+
+    // Anomaly Presets dropdown mapping
+    document.getElementById('preset-select').onchange = (e) => {
+        const val = e.target.value;
+        const input = document.getElementById('story-prompt-input');
+        if (val === 'default') {
+            input.value = '';
+            loadGeneratedStory(defaultCircusStory, "CONVERT SCRIPT TO 120S PILOT ANIMATION");
+        } else if (val === 'saucer') {
+            input.value = 'UFO Abduction at Circus';
+            triggerPromptSynthesis('Joe encounters a retro flying saucer in the main ring');
+        } else if (val === 'rebellion') {
+            input.value = 'Dino rebellion';
+            triggerPromptSynthesis('Clown T-Rex launches a temporal uprising in candy canyon');
+        } else if (val === 'glitch') {
+            input.value = 'Digital glitch singularity';
+            triggerPromptSynthesis('Logic matrix collapse forces space robot systems to rewrite');
+        }
+    };
+
+    // ===================================================================
+    //  INIT ENGINE BOOTSTRAP
+    // ===================================================================
+    window.onload = () => {
+        init3D();
+        tickUI();
+        requestAnimationFrame(animateEngine);
+    };
+</script>
+</body>
+</html>
