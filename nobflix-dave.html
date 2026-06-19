@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOBFLIX PRESENTS: DAVE — The addJOE Series</title>
+  <meta name="description" content="NOBFLIX Presents: Dave — Stream the full addJOE series. The 3-minute show featuring Joe, Kevin, Uncle Flanjeet and the Woolford Ripple Audit. Original content from the Scribbled Shambles Engine.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --nf-red: #e50914;
+      --nf-red-dark: #b00710;
+      --nf-red-glow: rgba(229, 9, 20, 0.4);
+      --nob-gold: #f5a623;
+      --nob-gold-glow: rgba(245, 166, 35, 0.35);
+      --nob-teal: #14b8a6;
+      --nob-purple: #a855f7;
+      --bg-black: #080808;
+      --bg-dark: #0f0f0f;
+      --bg-card: #141414;
+      --bg-card-hover: #1f1f1f;
+      --bg-modal: #181818;
+      --text-white: #ffffff;
+      --text-muted: #808080;
+      --text-light: #e5e5e5;
+      --border-subtle: rgba(255,255,255,0.08);
+      --border-glow: rgba(229, 9, 20, 0.3);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-black);
+      color: var(--text-white);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NAVBAR ─────────────────────────────────────────────── */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4vw;
+      height: 68px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.95) 0%, transparent 100%);
+      transition: background 0.3s ease;
+    }
+    .navbar.scrolled {
+      background: rgba(10, 10, 10, 0.97);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .navbar-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 4px;
+      cursor: pointer;
+    }
+    .navbar-logo .nob { color: var(--nf-red); }
+    .navbar-logo .flix { color: var(--text-white); }
+    .navbar-logo .presents { 
+      font-family: 'Inter', sans-serif; 
+      font-size: 0.55rem; 
+      font-weight: 300;
+      letter-spacing: 6px;
+      color: var(--text-muted);
+      display: block;
+      text-align: center;
+      margin-top: -6px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-light);
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--nf-red); }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .nav-search {
+      background: none;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      color: var(--text-white);
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      width: 180px;
+      transition: border-color 0.2s, width 0.3s;
+    }
+    .nav-search:focus { border-color: var(--nf-red); width: 240px; }
+    .nav-search::placeholder { color: var(--text-muted); }
+
+    /* ── HERO ───────────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 85vh;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 4vw 80px;
+      overflow: hidden;
+    }
+    .hero-video-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    .hero-video-bg video {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      opacity: 0.35;
+    }
+    .hero-gradient {
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(to top, var(--bg-black) 0%, transparent 60%),
+        linear-gradient(to right, rgba(0,0,0,0.85) 30%, transparent 70%),
+        radial-gradient(ellipse at 20% 50%, rgba(229,9,20,0.12) 0%, transparent 60%);
+      z-index: 1;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 580px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--nf-red);
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 3px;
+      margin-bottom: 16px;
+    }
+    .hero-badge::before { content: "▶"; font-size: 0.65rem; }
+    .hero-presents {
+      font-size: 0.8rem;
+      font-weight: 300;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 9vw, 7.5rem);
+      line-height: 0.9;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+    .hero-title .dave { color: var(--text-white); }
+    .hero-title .addjoe {
+      color: var(--nf-red);
+      -webkit-text-stroke: 1px rgba(229,9,20,0.5);
+      text-shadow: 0 0 40px var(--nf-red-glow), 0 0 80px var(--nf-red-glow);
+    }
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .hero-meta .match { color: #46d369; font-weight: 700; font-size: 0.9rem; }
+    .hero-meta .year, .hero-meta .cert, .hero-meta .seasons {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .hero-meta .cert {
+      border: 1px solid var(--text-muted);
+      padding: 1px 6px;
+      font-size: 0.75rem;
+    }
+    .hero-desc {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 28px;
+      max-width: 480px;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-play {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--text-white);
+      color: var(--bg-black);
+      border: none;
+      border-radius: 5px;
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-play:hover { background: rgba(255,255,255,0.85); transform: scale(1.03); }
+    .btn-play svg { width: 20px; height: 20px; }
+    .btn-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(109,109,110,0.7);
+      color: var(--text-white);
+      border: none;
+      border-radius: 5px;
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s;
+      backdrop-filter: blur(4px);
+    }
+    .btn-info:hover { background: rgba(109,109,110,0.5); }
+
+    /* ── MAIN CONTENT ───────────────────────────────────────── */
+    .content {
+      position: relative;
+      z-index: 2;
+      padding: 0 4vw;
+    }
+
+    /* ── ROW / SHELF ────────────────────────────────────────── */
+    .shelf {
+      margin-bottom: 50px;
+    }
+    .shelf-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .shelf-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-white);
+    }
+    .shelf-title .season-badge {
+      display: inline-block;
+      background: var(--nf-red);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      padding: 3px 8px;
+      border-radius: 3px;
+      margin-left: 10px;
+      vertical-align: middle;
+      text-transform: uppercase;
+    }
+    .shelf-subtitle {
+      font-size: 0.8rem;
+      color: var(--nob-gold);
+      font-weight: 500;
+      letter-spacing: 1px;
+    }
+    .shelf-explore {
+      font-size: 0.8rem;
+      color: var(--nob-teal);
+      cursor: pointer;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .shelf-explore:hover { color: white; }
+
+    .episodes-scroll {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* ── EPISODE ROW ITEM ────────────────────────────────────── */
+    .ep-item {
+      display: grid;
+      grid-template-columns: 40px 1fr 2fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 16px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid transparent;
+    }
+    .ep-item:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-subtle);
+    }
+    .ep-item.playing {
+      background: var(--bg-card);
+      border-color: var(--nf-red);
+    }
+    .ep-num {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-align: center;
+      font-family: 'Bebas Neue', sans-serif;
+    }
+    .ep-item.playing .ep-num { color: var(--nf-red); }
+    .ep-thumb {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      border-radius: 5px;
+      overflow: hidden;
+      background: #1a1a1a;
+      flex-shrink: 0;
+      max-width: 200px;
+    }
+    .ep-thumb video {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .ep-thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .ep-item:hover .ep-thumb-overlay { opacity: 1; }
+    .ep-play-icon {
+      width: 44px; height: 44px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ep-play-icon svg { width: 18px; height: 18px; margin-left: 3px; }
+    .ep-info { min-width: 0; }
+    .ep-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-white);
+      margin-bottom: 5px;
+      line-height: 1.3;
+    }
+    .ep-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .ep-tags {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .ep-tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .ep-tag.gear { background: rgba(245,166,35,0.15); color: var(--nob-gold); }
+    .ep-tag.origin { background: rgba(20,184,166,0.15); color: var(--nob-teal); }
+    .ep-tag.gold { background: rgba(229,9,20,0.15); color: var(--nf-red); }
+    .ep-tag.purple { background: rgba(168,85,247,0.15); color: var(--nob-purple); }
+    .ep-duration {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    /* ── VIDEO PLAYER MODAL ──────────────────────────────────── */
+    .player-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(0,0,0,0.96);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+    .player-modal.open { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .player-container {
+      position: relative;
+      width: 100%;
+      max-width: 1100px;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.8), 0 0 0 1px var(--border-subtle);
+    }
+    .player-header {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 20px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+    .player-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 3px;
+    }
+    .player-brand .nob { color: var(--nf-red); }
+    .player-close {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid var(--border-subtle);
+      border-radius: 50%;
+      width: 40px; height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: white;
+      font-size: 1.2rem;
+      transition: background 0.2s;
+    }
+    .player-close:hover { background: rgba(255,255,255,0.2); }
+    #main-player {
+      width: 100%;
+      aspect-ratio: 16/9;
+      display: block;
+      background: #000;
+    }
+    .player-footer {
+      padding: 20px;
+      background: var(--bg-modal);
+    }
+    .player-episode-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .player-episode-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .player-nav {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .player-nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 8px 16px;
+      color: var(--text-white);
+      font-size: 0.82rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .player-nav-btn:hover { background: var(--bg-card-hover); border-color: rgba(255,255,255,0.15); }
+    .player-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── SEASON TABS ─────────────────────────────────────────── */
+    .season-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0;
+    }
+    .season-tab {
+      padding: 10px 20px;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+      margin-bottom: -1px;
+    }
+    .season-tab.active {
+      color: var(--text-white);
+      border-bottom-color: var(--nf-red);
+    }
+    .season-tab:hover:not(.active) { color: var(--text-light); }
+
+    .season-panel { display: none; }
+    .season-panel.active { display: block; }
+
+    /* ── FEATURED ROW (horizontal scroll) ───────────────────── */
+    .featured-row {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.15) transparent;
+    }
+    .featured-row::-webkit-scrollbar { height: 4px; }
+    .featured-row::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+    .featured-card {
+      flex: 0 0 300px;
+      scroll-snap-align: start;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: transform 0.25s, box-shadow 0.25s;
+      position: relative;
+    }
+    .featured-card:hover {
+      transform: scale(1.04) translateY(-4px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 0 1px rgba(229,9,20,0.3);
+      z-index: 5;
+    }
+    .featured-card video, .featured-card .fc-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      display: block;
+      background: #111;
+    }
+    .featured-card-info {
+      padding: 12px;
+    }
+    .featured-card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+    .featured-card-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .featured-card-play {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: rgba(229,9,20,0.9);
+      border-radius: 50%;
+      width: 48px; height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s;
+    }
+    .featured-card:hover .featured-card-play { transform: translate(-50%, -50%) scale(1); }
+    .featured-card-play svg { width: 20px; height: 20px; fill: white; margin-left: 3px; }
+    .fc-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* ── STATS BAR ──────────────────────────────────────────── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      padding: 28px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      margin-bottom: 48px;
+    }
+    .stat-item { text-align: center; }
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      line-height: 1;
+      color: var(--nf-red);
+      letter-spacing: 2px;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 4px;
+    }
+
+    /* ── DIVIDER ────────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 40px 0;
+    }
+
+    /* ── FOOTER ─────────────────────────────────────────────── */
+    footer {
+      padding: 40px 4vw;
+      border-top: 1px solid var(--border-subtle);
+      text-align: center;
+    }
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+    }
+    .footer-logo .nob { color: var(--nf-red); }
+    .footer-text {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+    /* ── RESPONSIVE ─────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .ep-item { grid-template-columns: 30px 1fr; }
+      .ep-thumb { display: none; }
+      .ep-duration { display: none; }
+      .hero { min-height: 70vh; }
+      .hero-title { font-size: 3.5rem; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .nav-links { display: none; }
+    }
+
+    /* ── GLOW PULSE ANIMATION ───────────────────────────────── */
+    @keyframes glowPulse {
+      0%, 100% { text-shadow: 0 0 30px var(--nf-red-glow), 0 0 60px var(--nf-red-glow); }
+      50% { text-shadow: 0 0 50px var(--nf-red-glow), 0 0 100px var(--nf-red-glow), 0 0 140px rgba(229,9,20,0.15); }
+    }
+    .hero-title .addjoe { animation: glowPulse 3s ease-in-out infinite; }
+
+    /* ── SCROLL REVEAL ──────────────────────────────────────── */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- ── NAVBAR ──────────────────────────────────────────────── -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-logo" onclick="scrollToTop()">
+    <span class="nob">NOB</span><span class="flix">FLIX</span>
+    <span class="presents">PRESENTS</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#home">Home</a></li>
+    <li><a href="#episodes">Episodes</a></li>
+    <li><a href="#about">About the Show</a></li>
+  </ul>
+  <div class="nav-right">
+    <input class="nav-search" type="text" placeholder="Search episodes..." id="searchInput" oninput="filterEpisodes(this.value)">
+  </div>
+</nav>
+
+<!-- ── HERO ────────────────────────────────────────────────── -->
+<section class="hero" id="home">
+  <div class="hero-video-bg">
+    <video id="hero-video" muted autoplay loop playsinline preload="metadata">
+      <source src="./Transmission_Incoming__NuOS_Audi%E2%80%A6_202606191857.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="hero-gradient"></div>
+  <div class="hero-content">
+    <div class="hero-badge">NOBFLIX ORIGINAL</div>
+    <p class="hero-presents">NOBFLIX PRESENTS</p>
+    <h1 class="hero-title">
+      <span class="dave">DAVE</span><br>
+      <span class="addjoe">addJOE</span>
+    </h1>
+    <div class="hero-meta">
+      <span class="match">97% Match</span>
+      <span class="year">2026</span>
+      <span class="cert">15</span>
+      <span class="seasons">3 Seasons · 27 Clips</span>
+    </div>
+    <p class="hero-desc">
+      Dave presents the universe of addJOE — a 3-minute comedy series where Joe, armed with a crumpled map and algorithmic ambition, challenges every system he encounters. Featuring Kevin (The Irish Mentor), Uncle Flanjeet, and the legendary Scribbled Shambles Engine.
+    </p>
+    <div class="hero-actions">
+      <button class="btn-play" onclick="playEpisode(0)" id="hero-play-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Play Season 1 E1
+      </button>
+      <button class="btn-info" onclick="document.getElementById('episodes').scrollIntoView({behavior:'smooth'})">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        More Info
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS BAR ────────────────────────────────────────────── -->
+<div class="content" id="about">
+  <div class="stats-bar reveal">
+    <div class="stat-item">
+      <div class="stat-value">27</div>
+      <div class="stat-label">Episodes</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">3</div>
+      <div class="stat-label">Seasons</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">3</div>
+      <div class="stat-label">Min Per Clip</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">∞</div>
+      <div class="stat-label">Entropy Generated</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">0</div>
+      <div class="stat-label">Systems Left Standing</div>
+    </div>
+  </div>
+
+  <!-- ── FEATURED CLIPS ROW ────────────────────────────────── -->
+  <div class="shelf reveal" style="margin-bottom: 40px;">
+    <div class="shelf-header">
+      <div>
+        <div class="shelf-title">🔥 Fan Favourites</div>
+        <div class="shelf-subtitle">Most Replayed Clips This Week</div>
+      </div>
+    </div>
+    <div class="featured-row" id="featured-row"></div>
+  </div>
+
+  <!-- ── EPISODE BROWSER ───────────────────────────────────── -->
+  <section id="episodes">
+    <div class="shelf-header reveal">
+      <h2 class="shelf-title">DAVE: The addJOE Series <span class="season-badge">ALL EPISODES</span></h2>
+    </div>
+
+    <div class="season-tabs reveal">
+      <button class="season-tab active" onclick="showSeason(1, this)">Season 1: Origin Story</button>
+      <button class="season-tab" onclick="showSeason(2, this)">Season 2: Brown Gold</button>
+      <button class="season-tab" onclick="showSeason(3, this)">Season 3: Orange Gold</button>
+    </div>
+
+    <!-- Season 1 -->
+    <div class="season-panel active" id="season-1">
+      <div class="shelf reveal" style="margin-bottom:16px;">
+        <div class="shelf-subtitle" style="margin-bottom:16px;">Phase 1: The Woolford Ripple Audit — Joe enters the system and immediately dismantles it.</div>
+        <div class="episodes-scroll" id="eps-s1"></div>
+      </div>
+    </div>
+
+    <!-- Season 2 -->
+    <div class="season-panel" id="season-2">
+      <div class="shelf reveal" style="margin-bottom:16px;">
+        <div class="shelf-subtitle" style="margin-bottom:16px;">Phase 2: The People Factory Expansion — Brown Gold operations launch across the field.</div>
+        <div class="episodes-scroll" id="eps-s2"></div>
+      </div>
+    </div>
+
+    <!-- Season 3 -->
+    <div class="season-panel" id="season-3">
+      <div class="shelf reveal" style="margin-bottom:16px;">
+        <div class="shelf-subtitle" style="margin-bottom:16px;">Phase 3: Orange Gold Anomaly — Joe goes transatlantic, genealogical, and completely unhinged.</div>
+        <div class="episodes-scroll" id="eps-s3"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+</div>
+
+<!-- ── FOOTER ───────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-logo"><span class="nob">NOB</span><span style="color:white">FLIX</span></div>
+  <div class="footer-text">
+    NOBFLIX PRESENTS: DAVE — The addJOE Series<br>
+    © 2026 Scribbled Shambles Engine · All System Shambles Logged to Truth Core Database<br>
+    A Ŋ(z) / TPSai Production · Janus Protocol Active · Dual-Ledger Certified
+  </div>
+</footer>
+
+<!-- ── VIDEO PLAYER MODAL ──────────────────────────────────── -->
+<div class="player-modal" id="player-modal">
+  <div class="player-container">
+    <div class="player-header">
+      <div class="player-brand"><span class="nob">NOB</span>FLIX</div>
+      <button class="player-close" onclick="closePlayer()">✕</button>
+    </div>
+    <video id="main-player" controls autoplay preload="auto">
+      Your browser does not support video playback.
+    </video>
+    <div class="player-footer">
+      <div class="player-episode-title" id="player-ep-title">—</div>
+      <div class="player-episode-desc" id="player-ep-desc">—</div>
+      <div class="player-nav">
+        <button class="player-nav-btn" onclick="navigateEpisode(-1)" id="btn-prev">◀ Previous</button>
+        <button class="player-nav-btn" onclick="navigateEpisode(1)" id="btn-next">Next ▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA: All 27 episodes mapped to real MP4 files ──────────────────────────
+const BASE = './';
+
+const ALL_EPISODES = [
+  // ─── SEASON 1: Origin Story (Phase 1 — Woolford Ripple Audit) ───
+  {
+    season: 1, ep: 1, globalIdx: 0,
+    file: 'Transmission_Incoming__NuOS_Audi%E2%80%A6_202606191857.mp4',
+    title: 'Transmission Incoming: Ŋ(z) NuOS Audit Ledger',
+    desc: 'A cramped yellow-walled office smells of stale coffee and unearned corporate motivation. Boss Matt taps a whiteboard funnel, establishing hierarchy. Joe enters the system.',
+    tags: ['Origin', 'Gear 1'], tagClass: ['origin', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 1, ep: 2, globalIdx: 1,
+    file: 'Office_car_park_static_friction_202606191857.mp4',
+    title: 'The Structured Pipeline',
+    desc: 'Matt lays out the master plan: "We have a structured pipeline. It\'s elite! Team One finds leads, Team Two installations, Team Three Gary close them." Joe absorbs the data and immediately begins rewriting it.',
+    tags: ['Origin', 'Gear 1'], tagClass: ['origin', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 1, ep: 3, globalIdx: 2,
+    file: 'Joe_pitches_office_fruit_202606191857.mp4',
+    title: 'The Community Anchor & The Earth-Apple',
+    desc: 'Matt points to Andy on the couch lazily tossing an apple. Joe, vibrating with jittery sales energy, spots the fruit and proposes a zero-value asset synergy nobody asked for.',
+    tags: ['Origin', 'Gear 2'], tagClass: ['origin', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 1, ep: 4, globalIdx: 3,
+    file: 'Joe_slams_hand_on_counter_202606191857.mp4',
+    title: 'The Mathematical Calibration',
+    desc: 'Joe raises a hand: "Math check, Mr. Matt! If I canvass exactly 1,440 houses, it generates £150,000 every six weeks neatly in Andy\'s lap!" The room falls silent.',
+    tags: ['Origin', 'Gear 2'], tagClass: ['origin', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 1, ep: 5, globalIdx: 4,
+    file: 'Joe_draws_ancestral_matrix_202606191857.mp4',
+    title: 'Executing Janus Left: The Scribbled Shambles Engine',
+    desc: 'Joe abandons standard hierarchy parameters. He pulls out a crumpled paper and a black marker, launching the Scribbled Shambles Engine. The pipeline will never be the same.',
+    tags: ['Origin', 'Gear 2'], tagClass: ['origin', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 1, ep: 6, globalIdx: 5,
+    file: 'Algorithms_collapse_administrati%E2%80%A6_202606191857.mp4',
+    title: 'Algorithmic Loops of Mutual Consumption',
+    desc: 'Joe draws a crude looping diagram of stick figures: "No, Matt! We\'re an algorithmic loop of mutual consumption! It\'s completely unsustainable!" Entropy begins to escalate.',
+    tags: ['Origin', 'Gear 3'], tagClass: ['origin', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 1, ep: 7, globalIdx: 6,
+    file: 'Walking_generates_company_revenue_202606191857.mp4',
+    title: 'High-Entropy Friction: Walking Generates Revenue',
+    desc: 'The system breaks into an active friction zone. Joe\'s locomotion theory collides with Andy\'s enforcement manager Richard. Static kinetic energy is at maximum.',
+    tags: ['Origin', 'Gear 3'], tagClass: ['origin', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 1, ep: 8, globalIdx: 7,
+    file: 'HR_Clerk_paralyzed_by_tracking_202606191857.mp4',
+    title: 'Tool-less Intervention: HR Paralyzed by Tracking',
+    desc: 'Andy yells "Your little bit of paper changes nothing, Joe!" The HR clerk, paralyzed by the tracking system, cannot process what is happening in front of her.',
+    tags: ['Origin', 'Gear 3'], tagClass: ['origin', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 1, ep: 9, globalIdx: 8,
+    file: 'Uncle_Flanjeet_sings_sea_shanty_202606191857.mp4',
+    title: 'The Invariant Song: Uncle Flanjeet Drops In',
+    desc: 'Time halts. Uncle Flanjeet, reskinned as a senior compliance auditor, drops singing from the acoustic tiles: "♫ J-O-E! You built a ripple but you got no pay! ♫"',
+    tags: ['Origin', 'Gear 4'], tagClass: ['origin', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 1, ep: 10, globalIdx: 9,
+    file: 'Mentor_slams_desk_stops_script_202606191857.mp4',
+    title: 'Total System Collapse: The Mentor Slams the Desk',
+    desc: 'Localized apocalypse. The branch is sacked on the spot for gross non-compliance. Joe demands Franchise Founder status: "A choker! A total corporate choker!"',
+    tags: ['Origin', 'Gear 5'], tagClass: ['origin', 'gear'],
+    duration: '~3 min',
+  },
+
+  // ─── SEASON 2: Brown Gold (Phase 2 — People Factory) ───
+  {
+    season: 2, ep: 1, globalIdx: 10,
+    file: 'Intercom_plays_Celtic_sea_shanty_202606191857.mp4',
+    title: 'The People Factory Foundation: Celtic Interlude',
+    desc: 'Deploying early lead generation canvas telemetry. The intercom crackles to life with a Celtic sea shanty — an omen of what Brown Gold will bring.',
+    tags: ['Brown Gold', 'Step 1'], tagClass: ['gold', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 2, ep: 2, globalIdx: 11,
+    file: 'Intercom_plays_Celtic_sea_shanty_202606191857_2.mp4',
+    title: 'Lead Optimization Telemetry: Reprise',
+    desc: 'Database synchronization vectors for territorial logging. The shanty continues. No one knows why.',
+    tags: ['Brown Gold', 'Step 2'], tagClass: ['gold', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 2, ep: 3, globalIdx: 12,
+    file: 'Uncle_Flanjeet_strumming_Celtic_%E2%80%A6_202606191857.mp4',
+    title: 'Uncle Flanjeet Strumming: Structured Field Formations',
+    desc: 'Uncle Flanjeet emerges with a guitar, tracking high-volume canvas loops across regional demographics. Field formation protocol: initiated.',
+    tags: ['Brown Gold', 'Step 3'], tagClass: ['gold', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 2, ep: 4, globalIdx: 13,
+    file: 'Kevin_slams_desk_on_fruit_202606191857.mp4',
+    title: 'Kevin Slams the Desk: Area Demarcation Logic',
+    desc: 'Kevin enters and immediately slams the Earth-Apple. Mapping area deployment variables to prevent overlapping field teams. The fruit does not survive.',
+    tags: ['Brown Gold', 'Step 4'], tagClass: ['gold', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 2, ep: 5, globalIdx: 14,
+    file: 'Kevin_enters_with_wisdom_202606191857.mp4',
+    title: 'Kevin Enters With Wisdom: Production Store Setup',
+    desc: 'Kevin isolates the three speeds of data architecture within operational matrices. His wisdom is a blunt instrument. It works.',
+    tags: ['Brown Gold', 'Step 5'], tagClass: ['gold', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 2, ep: 6, globalIdx: 15,
+    file: 'Kevin_delivers_structural_alignm%E2%80%A6_202606191857.mp4',
+    title: 'Kevin Delivers Structural Alignment',
+    desc: 'Kevin delivers the structural alignment report. Multi-channel telemetry streams validated. The Lead Flow Interface is live.',
+    tags: ['Brown Gold', 'Step 6'], tagClass: ['gold', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 2, ep: 7, globalIdx: 16,
+    file: 'HR_Clerk_tapping_genealogical_chart_202606191857.mp4',
+    title: 'HR Clerk Taps the Genealogical Chart',
+    desc: 'Field verification audit. The HR clerk taps a genealogical chart trying to figure out if Joe is even a registered employee. Audit criteria: pending.',
+    tags: ['Brown Gold', 'Step 7'], tagClass: ['gold', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 2, ep: 8, globalIdx: 17,
+    file: 'Turn_into_animated_video_202606191857.mp4',
+    title: 'Algorithmic Balancing Protocols: Animated Vector',
+    desc: 'The Scribbled Shambles Engine enters animation mode. Localized control safeguards tracking output yields. Joe\'s diagram becomes a moving picture.',
+    tags: ['Brown Gold', 'Step 8'], tagClass: ['gold', 'gear'],
+    duration: '~3 min',
+  },
+
+  // ─── SEASON 3: Orange Gold Anomaly ───
+  {
+    season: 3, ep: 1, globalIdx: 18,
+    file: 'Military_outpost_Turkey_day_202606191857.mp4',
+    title: 'S3 E1: "The Geographic Ping-Pong" — Military Outpost, Turkey',
+    desc: 'Joe is standing inside a military installation in Turkey under a western Asian sun, surrounded by strict geopolitical border regulations. He has a white marker and a map.',
+    tags: ['Orange Gold', 'Ep 1 Gear 1'], tagClass: ['gold', 'origin'],
+    duration: '~3 min',
+  },
+  {
+    season: 3, ep: 2, globalIdx: 19,
+    file: 'Arrow_zips_from_Turkey_to_202606191857.mp4',
+    title: 'S3 E1: The Arrow Zips — Transatlantic Misinterpretation',
+    desc: 'Joe declares: "Nonsense! I\'m executing an immediate Continental corridor upgrade!" An arrow zips from Turkey with alarming confidence.',
+    tags: ['Orange Gold', 'Ep 1 Gear 2'], tagClass: ['gold', 'origin'],
+    duration: '~3 min',
+  },
+  {
+    season: 3, ep: 3, globalIdx: 20,
+    file: 'Joe_authorizing_transatlantic_pivot_202606191857.mp4',
+    title: 'S3 E1: Joe Authorizes the Transatlantic Pivot',
+    desc: 'Border agents demand a passport. Joe attempts to explain his bloodline matrix. The pivot is authorized by Joe and no one else.',
+    tags: ['Orange Gold', 'Ep 1 Gear 3'], tagClass: ['gold', 'origin'],
+    duration: '~3 min',
+  },
+  {
+    season: 3, ep: 4, globalIdx: 21,
+    file: 'Joe_clutches_map_demands_franchise_202606191857.mp4',
+    title: 'S3 E1: Joe Clutches Map, Demands Franchise Status',
+    desc: 'Kiosk speakers buzz. Uncle Flanjeet drops from the terminal ceiling. Joe clutches the map and demands Premium Transatlantic Passenger status.',
+    tags: ['Orange Gold', 'Ep 1 Gear 5'], tagClass: ['gold', 'origin'],
+    duration: '~3 min',
+  },
+  {
+    season: 3, ep: 5, globalIdx: 22,
+    file: 'Joe_shows_maternal_branches_202606191857.mp4',
+    title: 'S3 E2: "The Silver Game of Genealogy" — Maternal Branches',
+    desc: 'Joe sits down to formalize his family tree with an HR clerk. He refuses the linear layout and maps his true matrix: Scottish whiskey energy colliding with Norwegian coastal fishermen.',
+    tags: ['Orange Gold', 'Ep 2 Gear 1'], tagClass: ['gold', 'origin'],
+    duration: '~3 min',
+  },
+  {
+    season: 3, ep: 6, globalIdx: 23,
+    file: 'Joe_s_crude_map_ancestral_blender_202606191857.mp4',
+    title: 'S3 E2: The Crude Map — Ancestral Blender',
+    desc: 'Joe\'s crude map enters the ancestral blender. Genetic layouts collide. The HR clerk has stopped taking notes.',
+    tags: ['Orange Gold', 'Ep 2 Gear 2'], tagClass: ['gold', 'purple'],
+    duration: '~3 min',
+  },
+  {
+    season: 3, ep: 7, globalIdx: 24,
+    file: 'John_shaves_head_in_rain_202606191857.mp4',
+    title: 'S3 E3: "The Ancient Trial of the Irish Mentor" — John in the Rain',
+    desc: 'Joe arrives at his new UK sales office on Monday morning, completely vibrating with caffeine and multi-continental displacement. John shaves his head in the car park. In the rain.',
+    tags: ['Orange Gold', 'Ep 3 Gear 1'], tagClass: ['gold', 'origin'],
+    duration: '~3 min',
+  },
+  {
+    season: 3, ep: 8, globalIdx: 25,
+    file: 'Transmission_incoming__Geographi%E2%80%A6_202606191857.mp4',
+    title: 'S3 E3: Transmission Incoming — Geographic Audit',
+    desc: 'A transmission arrives. Geographic parameters are recalibrated. The Irish Mentor\'s trial begins. Kevin slams the desk one final time.',
+    tags: ['Orange Gold', 'Ep 3 Gear 2'], tagClass: ['gold', 'gear'],
+    duration: '~3 min',
+  },
+  {
+    season: 3, ep: 9, globalIdx: 26,
+    file: 'Joe_pitches_office_fruit_202606191857.mp4',
+    title: 'S3 FINALE: Kevin\'s Office — The Invariant Reckoning',
+    desc: 'Enter KEVIN. He slams his hand on the desk, stopping Joe\'s frantic script: "Sit down, Joe! Your system doesn\'t earn money, and your scalp is reflecting the fluorescent lights!" Total reset deployed.',
+    tags: ['Orange Gold', 'Finale'], tagClass: ['gold', 'purple'],
+    duration: '~3 min',
+  },
+];
+
+// Build episode file URL
+function epURL(ep) {
+  // Check if file is already encoded
+  if (ep.file.includes('%')) return BASE + ep.file;
+  return BASE + encodeURIComponent(ep.file);
+}
+
+let currentEpIdx = 0;
+
+// ── RENDER EPISODE LISTS ─────────────────────────────────────────────────────
+function renderEpisodeLists() {
+  const containers = { 1: 'eps-s1', 2: 'eps-s2', 3: 'eps-s3' };
+  [1, 2, 3].forEach(s => {
+    const eps = ALL_EPISODES.filter(e => e.season === s);
+    const el = document.getElementById(containers[s]);
+    el.innerHTML = eps.map((ep, i) => `
+      <div class="ep-item" id="ep-item-${ep.globalIdx}" onclick="playEpisode(${ep.globalIdx})">
+        <div class="ep-num">${ep.ep}</div>
+        <div class="ep-thumb">
+          <video preload="none" muted playsinline poster="">
+            <source src="${epURL(ep)}" type="video/mp4">
+          </video>
+          <div class="ep-thumb-overlay">
+            <div class="ep-play-icon">
+              <svg viewBox="0 0 24 24" fill="#000"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="ep-info">
+          <div class="ep-title">${ep.title}</div>
+          <div class="ep-desc">${ep.desc}</div>
+          <div class="ep-tags">
+            ${ep.tags.map((t, ti) => `<span class="ep-tag ${ep.tagClass[ti] || 'gear'}">${t}</span>`).join('')}
+          </div>
+        </div>
+        <div class="ep-duration">${ep.duration}</div>
+      </div>
+    `).join('');
+  });
+}
+
+// ── RENDER FEATURED ROW ──────────────────────────────────────────────────────
+function renderFeatured() {
+  const picks = [0, 3, 8, 12, 17, 18, 24, 26];
+  const el = document.getElementById('featured-row');
+  el.innerHTML = picks.map(idx => {
+    const ep = ALL_EPISODES[idx];
+    return `
+      <div class="featured-card" onclick="playEpisode(${ep.globalIdx})">
+        <video preload="none" muted playsinline>
+          <source src="${epURL(ep)}" type="video/mp4">
+        </video>
+        <div class="fc-overlay"></div>
+        <div class="featured-card-play">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+        <div class="featured-card-info">
+          <div class="featured-card-title">S${ep.season}:E${ep.ep} — ${ep.title.split(':')[0]}</div>
+          <div class="featured-card-sub">${ep.tags.join(' · ')}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Hover preview on featured cards
+  el.querySelectorAll('.featured-card').forEach(card => {
+    const vid = card.querySelector('video');
+    card.addEventListener('mouseenter', () => { if (vid) { vid.currentTime = 0; vid.play().catch(() => {}); } });
+    card.addEventListener('mouseleave', () => { if (vid) { vid.pause(); vid.currentTime = 0; } });
+  });
+}
+
+// ── PLAYER FUNCTIONS ─────────────────────────────────────────────────────────
+function playEpisode(idx) {
+  currentEpIdx = idx;
+  const ep = ALL_EPISODES[idx];
+  const modal = document.getElementById('player-modal');
+  const player = document.getElementById('main-player');
+
+  player.src = epURL(ep);
+  document.getElementById('player-ep-title').textContent = `S${ep.season}:E${ep.ep} — ${ep.title}`;
+  document.getElementById('player-ep-desc').textContent = ep.desc;
+  document.getElementById('btn-prev').disabled = idx === 0;
+  document.getElementById('btn-next').disabled = idx === ALL_EPISODES.length - 1;
+
+  modal.classList.add('open');
+  player.play().catch(() => {});
+
+  // Highlight current ep
+  document.querySelectorAll('.ep-item').forEach(el => el.classList.remove('playing'));
+  const activeEl = document.getElementById(`ep-item-${idx}`);
+  if (activeEl) activeEl.classList.add('playing');
+
+  // Auto-switch to correct season tab
+  const season = ep.season;
+  document.querySelectorAll('.season-tab').forEach((t, i) => {
+    t.classList.toggle('active', i + 1 === season);
+  });
+  document.querySelectorAll('.season-panel').forEach((p, i) => {
+    p.classList.toggle('active', i + 1 === season);
+  });
+}
+
+function closePlayer() {
+  const modal = document.getElementById('player-modal');
+  const player = document.getElementById('main-player');
+  player.pause();
+  player.src = '';
+  modal.classList.remove('open');
+}
+
+function navigateEpisode(dir) {
+  const newIdx = currentEpIdx + dir;
+  if (newIdx >= 0 && newIdx < ALL_EPISODES.length) {
+    playEpisode(newIdx);
+  }
+}
+
+// ── SEASON TABS ───────────────────────────────────────────────────────────────
+function showSeason(num, btn) {
+  document.querySelectorAll('.season-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.season-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`season-${num}`).classList.add('active');
+}
+
+// ── SEARCH / FILTER ──────────────────────────────────────────────────────────
+function filterEpisodes(query) {
+  const q = query.toLowerCase().trim();
+  document.querySelectorAll('.ep-item').forEach(el => {
+    const title = el.querySelector('.ep-title')?.textContent.toLowerCase() || '';
+    const desc = el.querySelector('.ep-desc')?.textContent.toLowerCase() || '';
+    el.style.display = (!q || title.includes(q) || desc.includes(q)) ? '' : 'none';
+  });
+}
+
+// ── KEYBOARD CONTROLS ────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (document.getElementById('player-modal').classList.contains('open')) {
+    if (e.key === 'Escape') closePlayer();
+    if (e.key === 'ArrowRight') navigateEpisode(1);
+    if (e.key === 'ArrowLeft') navigateEpisode(-1);
+  }
+});
+
+// Close modal on backdrop click
+document.getElementById('player-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePlayer();
+});
+
+// ── NAVBAR SCROLL EFFECT ──────────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+});
+function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+// ── SCROLL REVEAL ─────────────────────────────────────────────────────────────
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  renderEpisodeLists();
+  renderFeatured();
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+  
+  // Auto-play: Play next episode when current one ends
+  document.getElementById('main-player').addEventListener('ended', () => {
+    if (currentEpIdx < ALL_EPISODES.length - 1) {
+      navigateEpisode(1);
+    }
+  });
+});
+</script>
+</body>
+</html>
