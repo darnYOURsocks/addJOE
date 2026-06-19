@@ -1,319 +1,614 @@
+To enable the videos to play automatically when the page loads, you need to add the `autoplay` and `muted` attributes to your `<video>` tags. Most modern browsers require videos to be muted to allow autoplay without user interaction.
+
+I have updated the HTML structure below. I've also added the `playsinline` attribute, which ensures the video plays within the element's playback area on mobile devices (like iOS) rather than forcing it into fullscreen.
+
+### Updated HTML Ledger (Autoplay Enabled)
+
+``` html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shambles Engine // NuOS Archives // The 30-Era Audit</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700;800&family=Bangers&display=swap');
-        
-        :root {
-            --neon-orange: #f97316;
-            --dark-bg: #05060b;
-        }
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>addJOE Series Multi-Layer Video Ledger</title>
+ <style>
+ :root {
+ --bg-primary: #0a0f1d;
+ --bg-secondary: #111827;
+ --accent-orange: #f97316;
+ --accent-teal: #14b8a6;
+ --accent-purple: #a855f7;
+ --text-main: #f3f4f6;
+ --text-muted: #9ca3af;
+ --border-color: #1f2937;
+ }
 
-        body { 
-            background-color: var(--dark-bg); 
-            color: #fff; 
-            font-family: 'JetBrains Mono', monospace; 
-            margin: 0; padding: 0; 
-            background-image: 
-                radial-gradient(rgba(249, 115, 22, 0.08) 1px, transparent 1px),
-                linear-gradient(180deg, rgba(5,6,11,1) 0%, rgba(9,13,22,1) 100%);
-            background-size: 30px 30px, 100% 100%;
-            background-attachment: fixed;
-            min-height: 100vh;
-        }
+ * {
+ box-sizing: border-box;
+ margin: 0;
+ padding: 0;
+ }
 
-        .glass-card {
-            background: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(249, 115, 22, 0.2);
-            border-radius: 16px;
-            padding: 24px;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            position: relative;
-            overflow: hidden;
-        }
+ body {
+ background-color: var(--bg-primary);
+ color: var(--text-main);
+ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+ line-height: 1.6;
+ padding: 2rem 1rem;
+ }
 
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.1), transparent);
-            transform: skewX(-20deg);
-            transition: left 0.5s ease;
-        }
+ header {
+ max-width: 1200px;
+ margin: 0 auto 3rem auto;
+ text-align: center;
+ border-bottom: 2px solid var(--border-color);
+ padding-bottom: 2rem;
+ }
 
-        .glass-card:hover::before {
-            left: 150%;
-        }
+ header h1 {
+ font-size: 2.5rem;
+ color: var(--text-main);
+ margin-bottom: 0.5rem;
+ text-transform: uppercase;
+ letter-spacing: 2px;
+ }
 
-        .glass-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            border-color: var(--neon-orange);
-            box-shadow: 0 10px 30px rgba(249, 115, 22, 0.2), 0 0 15px rgba(249, 115, 22, 0.1) inset;
-        }
+ header h1 span {
+ color: var(--accent-orange);
+ }
 
-        .bangers { font-family: 'Bangers', cursive; letter-spacing: 2px; }
-        
-        .header-glow {
-            text-shadow: 0 0 20px rgba(249,115,22,0.6), 0 0 40px rgba(249,115,22,0.3);
-        }
+ header p {
+ color: var(--text-muted);
+ font-size: 1.1rem;
+ }
 
-        .badge {
-            background: rgba(249,115,22,0.15);
-            color: var(--neon-orange);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            border: 1px solid rgba(249,115,22,0.3);
-            align-self: flex-start;
-        }
-    </style>
+ .phase-section {
+ max-width: 1200px;
+ margin: 0 auto 4rem auto;
+ }
+
+ .phase-header {
+ display: flex;
+ align-items: center;
+ margin-bottom: 1.5rem;
+ padding: 0.5rem;
+ border-radius: 4px;
+ background: linear-gradient(90deg, rgba(31,41,55,0.5) 0%, rgba(10,15,29,0) 100%);
+ }
+
+ .phase-header h2 {
+ font-size: 1.5rem;
+ text-transform: uppercase;
+ letter-spacing: 1px;
+ padding-left: 0.75rem;
+ }
+
+ .phase-1 h2 { border-left: 4px solid var(--accent-teal); color: var(--accent-teal); }
+ .phase-2 h2 { border-left: 4px solid var(--accent-purple); color: var(--accent-purple); }
+ .phase-3 h2 { border-left: 4px solid var(--accent-orange); color: var(--accent-orange); }
+
+ .video-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+ gap: 2rem;
+ }
+
+ .video-card {
+ background-color: var(--bg-secondary);
+ border: 1px solid var(--border-color);
+ border-radius: 8px;
+ overflow: hidden;
+ display: flex;
+ flex-direction: column;
+ transition: transform 0.2s ease, border-color 0.2s ease;
+ }
+
+ .video-card:hover {
+ transform: translateY(-4px);
+ border-color: #374151;
+ }
+
+ .video-wrapper {
+ position: relative;
+ width: 100%;
+ background-color: #000;
+ aspect-ratio: 16/9;
+ }
+
+ video {
+ width: 100%;
+ height: 100%;
+ display: block;
+ object-fit: cover;
+ }
+
+ .card-content {
+ padding: 1.25rem;
+ display: flex;
+ flex-direction: column;
+ flex-grow: 1;
+ }
+
+ .card-tag {
+ align-self: flex-start;
+ font-size: 0.75rem;
+ font-weight: bold;
+ text-transform: uppercase;
+ padding: 0.2rem 0.5rem;
+ border-radius: 4px;
+ margin-bottom: 0.75rem;
+ letter-spacing: 0.5px;
+ }
+
+ .phase-1 .card-tag { background-color: rgba(20,184,166,0.15); color: var(--accent-teal); }
+ .phase-2 .card-tag { background-color: rgba(168,85,247,0.15); color: var(--accent-purple); }
+ .phase-3 .card-tag { background-color: rgba(249,115,22,0.15); color: var(--accent-orange); }
+
+ .card-title {
+ font-size: 1.1rem;
+ font-weight: 600;
+ margin-bottom: 0.75rem;
+ line-height: 1.4;
+ }
+
+ .card-description {
+ color: var(--text-muted);
+ font-size: 0.9rem;
+ flex-grow: 1;
+ }
+
+ blockquote {
+ border-left: 2px solid #4b5563;
+ padding-left: 0.5rem;
+ margin: 0.5rem 0;
+ font-style: italic;
+ color: #d1d5db;
+ }
+
+ footer {
+ text-align: center;
+ color: var(--text-muted);
+ font-size: 0.85rem;
+ margin-top: 4rem;
+ padding-top: 2rem;
+ border-top: 1px solid var(--border-color);
+ }
+
+ @media (max-width: 640px) {
+ body { padding: 1rem 0.5rem; }
+ header h1 { font-size: 1.8rem; }
+ .video-grid { grid-template-columns: 1fr; }
+ }
+ </style>
 </head>
-<body class="p-8 md:p-16">
+<body>
 
-    <header class="max-w-6xl mx-auto mb-20 text-center relative z-10 pt-10">
-        <div class="inline-block px-4 py-1 rounded-full border border-orange-500/30 text-orange-500 text-xs font-bold tracking-[0.3em] mb-6 bg-orange-500/10 backdrop-blur-md">
-            TRANSMISSION INCOMING: Ŋ(z) NuOS
-        </div>
-        <h1 class="text-6xl md:text-8xl bangers text-white header-glow mb-4 uppercase">The Shambles Engine</h1>
-        <p class="text-xl text-zinc-400 max-w-2xl mx-auto font-light leading-relaxed">
-            A comprehensive 30-Era Audit of biological incompetence across the space-time continuum. 
-            All simulations rendered via strict 5-Gear Spatiotemporal Telemetry.
-        </p>
-    </header>
+ <header>
+ <h1>addJOE <span>Multi-Layer</span> Document Engine</h1>
+ <p>Ledger Database Index • Verified Chronologies from the Scribbled Shambles</p>
+ </header>
 
-    <main class="max-w-6xl mx-auto">
-        
-        <div class="mb-16">
-            <h2 class="text-3xl font-bold border-b border-zinc-800 pb-4 mb-8 flex items-center gap-4">
-                <span class="text-orange-500">>></span> 30-Era Batch Simulation (The Invariant)
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                
-                <a href="episode_1_egyptian_audit.html" class="glass-card">
-                    <span class="badge">PHASE -2500</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Egyptian Audit</h3>
-                    <p class="text-sm text-zinc-400">Square blocks are a stagnant market. Behold the frictionless granite sphere.</p>
-                </a>
+ <section class="phase-section phase-1">
+ <div class="phase-header">
+ <h2>Phase 1: addJOE Origin Story (The Woolford Ripple Audit)</h2>
+ </div>
+ <div class="video-grid">
+ <!-- Updated with autoplay, muted, and loop for the best automated experience -->
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Origin • Gear 1</span>
+ <h3 class="card-title">Part 1 - Transmission Incoming: Ŋ(z) NuOS Audit Ledger</h3>
+ <div class="card-description">
+ <blockquote>[INT. SALES OFFICE - DAY] A cramped, yellow-walled office smells of "stale coffee and unearned corporate motivation." Boss Matt taps a whiteboard funnel, establishing hierarchy.</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_2_cyber_hustle.html" class="glass-card">
-                    <span class="badge">PHASE 2099</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Cyber-Hustle</h3>
-                    <p class="text-sm text-zinc-400">Bypassing the digital grid with an un-hackable, analog wooden abacus.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Origin • Gear 1</span>
+ <h3 class="card-title">Part 2 - The Structured Pipeline</h3>
+ <div class="card-description">
+ <blockquote>Matt points out the framework layout: "Listen, team! We have a structured pipeline here. It's elite! Team One finds leads, Team Two installations, Team Three Gary close them."</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_3_wall_street_shambles.html" class="glass-card">
-                    <span class="badge">PHASE 1987</span>
-                    <h3 class="text-2xl bangers text-zinc-100">Wall Street Shambles</h3>
-                    <p class="text-sm text-zinc-400">Injecting physical pre-IPO arcade equity into the mainframe.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Origin • Gear 1</span>
+ <h3 class="card-title">Part 3 - The Community Anchor</h3>
+ <div class="card-description">
+ <blockquote>Matt points to a couch where Andy lazily tosses an apple. Matt: "And Team Four—Andy, our 'community anchor.' He's in the supermarket all day, claiming he used to play for Luton!"</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_4_medieval_siege.html" class="glass-card">
-                    <span class="badge">PHASE 1347</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Medieval Siege</h3>
-                    <p class="text-sm text-zinc-400">Executing a Bureaucratic Boundary Negation via catapult.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Origin • Gear 1</span>
+ <h3 class="card-title">Part 4 - The Mathematical Calibration</h3>
+ <div class="card-description">
+ <blockquote>Joe, vibrating with jittery sales energy, raises a hand: "Math check, Mr. Matt! If I canvass exactly 1,440 houses, it generates 150,000 pounds every six weeks neatly in Andy's lap!"</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_5_paleolithic_ignition.html" class="glass-card">
-                    <span class="badge">PHASE -10,000</span>
-                    <h3 class="text-2xl bangers text-zinc-100">Paleolithic Ignition</h3>
-                    <p class="text-sm text-zinc-400">A hydro-thermal lubrication node to initiate the Ice Age.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Origin • Gear 2</span>
+ <h3 class="card-title">Part 5 - Executing Janus Left</h3>
+ <div class="card-description">
+ <blockquote>Joe abandons standard hierarchy parameters. He pulls out a crumpled paper and a black marker, launching the Scribbled Shambles Engine.</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_6_pirate_market_saturation.html" class="glass-card">
-                    <span class="badge">PHASE 1715</span>
-                    <h3 class="text-2xl bangers text-zinc-100">Market Saturation</h3>
-                    <p class="text-sm text-zinc-400">Mapping the ocean using self-erasing squid ink geography.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Origin • Gear 2</span>
+ <h3 class="card-title">Part 6 - Algorithmic Loops</h3>
+ <div class="card-description">
+ <blockquote>Joe draws a crude looping diagram of stick figures: "No, Matt! We're an 'algorithmic loop of mutual consumption!' It's completely unsustainable!"</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_7_victorian_tea_friction.html" class="glass-card">
-                    <span class="badge">PHASE 1888</span>
-                    <h3 class="text-2xl bangers text-zinc-100">Victorian Tea Friction</h3>
-                    <p class="text-sm text-zinc-400">Introducing an iron-infused rustic infusion to the high society.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Origin • Gear 3</span>
+ <h3 class="card-title">Part 7 - High-Entropy Friction</h3>
+ <div class="card-description">
+ <blockquote>The system breaks into an active friction zone. Andy stands up as a furious red mask, backed by enforcement manager Richard.</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_8_samurai_dojo_collapse.html" class="glass-card">
-                    <span class="badge">PHASE 1600</span>
-                    <h3 class="text-2xl bangers text-zinc-100">Samurai Dojo Collapse</h3>
-                    <p class="text-sm text-zinc-400">Swords are a liability. Enter the Zero-Edge Pacification Rod.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Origin • Gear 3</span>
+ <h3 class="card-title">Part 8 - Tool-less Intervention</h3>
+ <div class="card-description">
+ <blockquote>Andy yells: "Your little bit of paper changes nothing, Joe! I'll punch you straight in the head!" Frantic, tool-less corporate intervention triggers.</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_9_industrial_mill_weep.html" class="glass-card">
-                    <span class="badge">PHASE 1812</span>
-                    <h3 class="text-2xl bangers text-zinc-100">Industrial Mill Weep</h3>
-                    <p class="text-sm text-zinc-400">A micro-fibrous ambient fluff upgrade for the steam piston.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Origin • Gear 4</span>
+ <h3 class="card-title">Part 9 - The Invariant Song</h3>
+ <div class="card-description">
+ <blockquote>Time halts. Uncle Flanjeet, reskinned as a senior compliance auditor, drops singing from the acoustic tiles: "♫ J-O-E! You built a ripple but you got no pay! ♫"</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_10_orbital_greenhouse.html" class="glass-card">
-                    <span class="badge">PHASE 2300</span>
-                    <h3 class="text-2xl bangers text-zinc-100">Orbital Greenhouse</h3>
-                    <p class="text-sm text-zinc-400">The ultimate open-concept layout in the vacuum of space.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Origin • Gear 5</span>
+ <h3 class="card-title">Part 10 - Total System Collapse</h3>
+ <div class="card-description">
+ <blockquote>Localized apocalypse. The branch is sacked on the spot for gross non-compliance. Joe demands Franchise Founder status: "A choker! A total corporate choker!"</blockquote>
+ </div>
+ </div>
+ </div>
+ </div>
+ </section>
 
-                <a href="episode_11_titanic_audit.html" class="glass-card">
-                    <span class="badge">PHASE 1912</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Titanic Audit</h3>
-                    <p class="text-sm text-zinc-400">Injecting fractal vision enhancement for premium iceberg evasion.</p>
-                </a>
+ <section class="phase-section phase-2">
+ <div class="phase-header">
+ <h2>Phase 2: Brown Gold Story (The People Factory Expansion)</h2>
+ </div>
+ <div class="video-grid">
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Brown Gold • Step 1</span>
+ <h3 class="card-title">Part 1 - The People Factory Foundation</h3>
+ <div class="card-description">Deploying the early lead generation canvas telemetry parameters under the Brown Gold banner.</div>
+ </div>
+ </div>
 
-                <a href="episode_12_trojan_hustle.html" class="glass-card">
-                    <span class="badge">PHASE -1184</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Trojan Hustle</h3>
-                    <p class="text-sm text-zinc-400">Upgrading to an open-door policy with a tiny wooden rocking horse.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Brown Gold • Step 2</span>
+ <h3 class="card-title">Part 2 - Lead Optimization Telemetry</h3>
+ <div class="card-description">Database synchronization and optimization vectors for territorial logging operations.</div>
+ </div>
+ </div>
 
-                <a href="episode_13_speakeasy_paralysis.html" class="glass-card">
-                    <span class="badge">PHASE 1925</span>
-                    <h3 class="text-2xl bangers text-zinc-100">Speakeasy Paralysis</h3>
-                    <p class="text-sm text-zinc-400">Injecting premium botanical bathtub synergy into the gin supply.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Brown Gold • Step 3</span>
+ <h3 class="card-title">Part 3 - Structured Field Formations</h3>
+ <div class="card-description">Tracking high-volume canvas loops across regional demographics without structural drift.</div>
+ </div>
+ </div>
 
-                <a href="episode_14_renaissance_canvas.html" class="glass-card">
-                    <span class="badge">PHASE 1503</span>
-                    <h3 class="text-2xl bangers text-zinc-100">Renaissance Canvas</h3>
-                    <p class="text-sm text-zinc-400">A monochromatic organic pigment upgrade using dried pigeon guano.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Brown Gold • Step 4</span>
+ <h3 class="card-title">Part 4 - Area Demarcation Logic</h3>
+ <div class="card-description">Mapping area deployment variables to prevent overlapping field teams.</div>
+ </div>
+ </div>
 
-                <a href="episode_15_y2k_bug.html" class="glass-card">
-                    <span class="badge">PHASE 1999</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Y2K Bug</h3>
-                    <p class="text-sm text-zinc-400">Authorizing an analog chronological override because wood doesn't crash.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Brown Gold • Step 5</span>
+ <h3 class="card-title">Part 5 - The Production Store Setup</h3>
+ <div class="card-description">Isolating the three speeds of data architecture within operational matrices.</div>
+ </div>
+ </div>
 
-                <a href="episode_16_transcontinental_spike.html" class="glass-card">
-                    <span class="badge">PHASE 1869</span>
-                    <h3 class="text-2xl bangers text-zinc-100">Transcontinental Spike</h3>
-                    <p class="text-sm text-zinc-400">Deploying a high-friction culinary connector with a soup spoon.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Brown Gold • Step 6</span>
+ <h3 class="card-title">Part 6 - The Lead Flow Interface</h3>
+ <div class="card-description">Validating the conversion mechanics of real-time multi-channel telemetry streams.</div>
+ </div>
+ </div>
 
-                <a href="episode_17_chicxulub_impact.html" class="glass-card">
-                    <span class="badge">PHASE -65M</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Chicxulub Impact</h3>
-                    <p class="text-sm text-zinc-400">Deploying a premium atmospheric thermal shield using a wilted fern.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Brown Gold • Step 7</span>
+ <h3 class="card-title">Part 7 - Field Verification Audit</h3>
+ <div class="card-description">Auditing raw response profiles against verification criteria parameters.</div>
+ </div>
+ </div>
 
-                <a href="episode_18_cuban_missile_friction.html" class="glass-card">
-                    <span class="badge">PHASE 1962</span>
-                    <h3 class="text-2xl bangers text-zinc-100">Cuban Missile Friction</h3>
-                    <p class="text-sm text-zinc-400">Injecting acoustic stealth disruption via plastic neon maracas.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Brown Gold • Step 8</span>
+ <h3 class="card-title">Part 8 - Algorithmic Balancing Protocols</h3>
+ <div class="card-description">Establishing localized control safeguards to track output yields efficiently.</div>
+ </div>
+ </div>
 
-                <a href="episode_19_zeppelin_static.html" class="glass-card">
-                    <span class="badge">PHASE 1937</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Zeppelin Static</h3>
-                    <p class="text-sm text-zinc-400">Generating premium static electricity for unearned airship buoyancy.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Brown Gold • Step 9</span>
+ <h3 class="card-title">Part 9 - Structural System Constraints</h3>
+ <div class="card-description">Enforcing operational containment criteria over distributed local loops.</div>
+ </div>
+ </div>
 
-                <a href="episode_20_viking_raid.html" class="glass-card">
-                    <span class="badge">PHASE 800</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Viking Raid</h3>
-                    <p class="text-sm text-zinc-400">Deploying a premium aerodynamic sink-anchor to stabilize the wind.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Brown Gold • Step 10</span>
+ <h3 class="card-title">Part 10 - Iterative Target Mapping</h3>
+ <div class="card-description">Synchronizing chronological ledger points to maintain total schema stability.</div>
+ </div>
+ </div>
 
-                <a href="episode_21_mars_colony.html" class="glass-card">
-                    <span class="badge">PHASE 2045</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Mars Colony</h3>
-                    <p class="text-sm text-zinc-400">A premium organic lung-capacity multiplier using expired terrestrial mold.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Brown Gold • Step 11</span>
+ <h3 class="card-title">Part 11 - Core Data Infrastructure</h3>
+ <div class="card-description">Ensuring data sovereignty and indexing pipelines remain completely offline-ready.</div>
+ </div>
+ </div>
 
-                <a href="episode_22_wild_west_showdown.html" class="glass-card">
-                    <span class="badge">PHASE 1881</span>
-                    <h3 class="text-2xl bangers text-zinc-100">Wild West Showdown</h3>
-                    <p class="text-sm text-zinc-400">Initiating a non-lethal hydration protocol against an outlaw.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Brown Gold • Step 12</span>
+ <h3 class="card-title">Part 12 - Final Era Consolidation</h3>
+ <div class="card-description">Closing out the Brown Gold operational vector to prepare the pipeline engine for structural shift.</div>
+ </div>
+ </div>
+ </div>
+ </section>
 
-                <a href="episode_23_ides_of_march.html" class="glass-card">
-                    <span class="badge">PHASE -44</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Ides of March</h3>
-                    <p class="text-sm text-zinc-400">High-velocity stab-proof shielding via a tiny plastic cocktail sword.</p>
-                </a>
+ <section class="phase-section phase-3">
+ <div class="phase-header">
+ <h2>Phase 3: Orange Gold Anomaly (Post-Hoc Probability Vector)</h2>
+ </div>
+ <div class="video-grid">
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Orange Gold • Ep 1 Gear 1</span>
+ <h3 class="card-title">Episode 1: "The Geographic Ping-Pong" - The Briefing</h3>
+ <div class="card-description">
+ <blockquote><strong>Gear 1: The Briefing (Janus Right)</strong> – Joe is standing inside a military installation in Turkey under a western Asian sun, surrounded by strict geopolitical border regulations.</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_24_vhs_rental_shambles.html" class="glass-card">
-                    <span class="badge">PHASE 1985</span>
-                    <h3 class="text-2xl bangers text-zinc-100">VHS Rental Shambles</h3>
-                    <p class="text-sm text-zinc-400">Delivering uncompressed narrative expansion through unspooled tape.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Orange Gold • Ep 1 Gear 2</span>
+ <h3 class="card-title">Episode 1 - The Misinterpretation</h3>
+ <div class="card-description">
+ <blockquote><strong>Gear 2: The Misinterpretation (Janus Left)</strong> – Joe pulls out a white marker and a map, declaring: "Nonsense! I’m executing an immediate Continental corridor upgrade!"</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_25_roswell_coverup.html" class="glass-card">
-                    <span class="badge">PHASE 1955</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Roswell Coverup</h3>
-                    <p class="text-sm text-zinc-400">Premium aerodynamic polymer synergy applied to an alien saucer.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Orange Gold • Ep 1 Gear 3</span>
+ <h3 class="card-title">Episode 1 - The Invisible Struggle</h3>
+ <div class="card-description">
+ <blockquote><strong>Gear 3: The Invisible Struggle</strong> – Border agents try to force Joe to show a standard passport. Joe attempts to explain his bloodline matrix.</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_26_salem_audit.html" class="glass-card">
-                    <span class="badge">PHASE 1692</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Salem Audit</h3>
-                    <p class="text-sm text-zinc-400">Absolute synthetic buoyancy as proof of innocence via rubber duck.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Orange Gold • Ep 1 Gear 4</span>
+ <h3 class="card-title">Episode 1 - The Invariant Song</h3>
+ <div class="card-description">
+ <blockquote><strong>Gear 4: The Invariant Song</strong> – Kiosk speakers buzz to life. Uncle Flanjeet drops from the terminal ceiling to sing: "♫ From western Asia to a maple leaf, you skipped the logic and you found no relief! ♫"</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_27_forbidden_city.html" class="glass-card">
-                    <span class="badge">PHASE 1420</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Forbidden City</h3>
-                    <p class="text-sm text-zinc-400">Upgrading a Ming vase with a shatter-resistant tea matrix.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Orange Gold • Ep 1 Gear 5</span>
+ <h3 class="card-title">Episode 1 - Total Reset</h3>
+ <div class="card-description">
+ <blockquote><strong>Gear 5: The Boom / The Reset</strong> – Joe stands in a grey British office, entirely unphased: "A choker! Elevate me to Premium Transatlantic Passenger status immediately!"</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_28_disco_fever.html" class="glass-card">
-                    <span class="badge">PHASE 1977</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Disco Fever</h3>
-                    <p class="text-sm text-zinc-400">Premium analog groove insertion onto a spinning turntable needle.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Orange Gold • Ep 2 Gear 1</span>
+ <h3 class="card-title">Episode 2: "The Silver Game of Genealogy" - Family Trees</h3>
+ <div class="card-description">
+ <blockquote><strong>Gear 1: The Briefing</strong> – Joe sits down to formalize his tree with an HR clerk who insists on a simple localized pedigree.</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_29_great_wall_collapse.html" class="glass-card">
-                    <span class="badge">PHASE -200</span>
-                    <h3 class="text-2xl bangers text-zinc-100">Great Wall Collapse</h3>
-                    <p class="text-sm text-zinc-400">Lightweight, high-equity structural pulp synergy replacing stone blocks.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Orange Gold • Ep 2 Gear 2</span>
+ <h3 class="card-title">Episode 2 - Genetic Layouts</h3>
+ <div class="card-description">
+ <blockquote><strong>Gear 2: The Misinterpretation</strong> – Joe refuses the linear layout. He maps his true matrix: pure Scottish whiskey energy colliding with Norwegian coastal fishermen.</blockquote>
+ </div>
+ </div>
+ </div>
 
-                <a href="episode_30_subprime_mortgage.html" class="glass-card">
-                    <span class="badge">PHASE 2008</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Subprime Mortgage</h3>
-                    <p class="text-sm text-zinc-400">Injecting unregulated synthetic board-game equity into a bank ledger.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Orange Gold • Ep 3 Gear 1</span>
+ <h3 class="card-title">Episode 3: "The Ancient Trial of the Irish Mentor" - Office Arrival</h3>
+ <div class="card-description">
+ <blockquote><strong>Gear 1: The Briefing</strong> – Joe arrives at his new UK sales office on Monday morning, completely vibrating with caffeine and multi-continental displacement.</blockquote>
+ </div>
+ </div>
+ </div>
 
-            </div>
-        </div>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Orange Gold • Ep 3 Gear 2</span>
+ <h3 class="card-title">Episode 3 - The Earth Apple</h3>
+ <div class="card-description">
+ <blockquote><strong>Gear 2: The Misinterpretation</strong> – Joe steps in holding this era's Earth-Apple—a highly unoptimized, lumpy piece of office fruit—proposing a zero-value asset synergy.</blockquote>
+ </div>
+ </div>
+ </div>
 
-        <div>
-            <h2 class="text-3xl font-bold border-b border-zinc-800 pb-4 mb-8 flex items-center gap-4 mt-24">
-                <span class="text-orange-500">>></span> Offline Standalone Ledgers
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                <a href="earth_apple_lmstudio_webtoon.html" class="glass-card !border-zinc-700 hover:!border-white">
-                    <span class="badge !bg-zinc-800 !text-white !border-zinc-600">LLAMA 3.1 SYNTHESIS</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Earth-Apple Theory</h3>
-                    <p class="text-sm text-zinc-400">The stashed value of a forgotten memory, possessing no cash value.</p>
-                </a>
+ <div class="video-card">
+ <div class="video-wrapper">
+ <video controls autoplay muted loop playsinline src="[link removed]"></video>
+ </div>
+ <div class="card-content">
+ <span class="card-tag">Orange Gold • Ep 3 Gear 3</span>
+ <h3 class="card-title">Episode 3 - Kevin's Office</h3>
+ <div class="card-description">
+ <blockquote><strong>Gear 3: The Invisible Struggle</strong> – Enter KEVIN (The Irish Mentor). Kevin slams his hand on the desk, stopping Joe's frantic script: "Sit down, Joe! Your system doesn't earn money, and your scalp is reflecting the fluorescent lights!"</blockquote>
+ </div>
+ </div>
+ </div>
+ </div>
+ </section>
 
-                <a href="moan_machine_webtoon.html" class="glass-card !border-zinc-700 hover:!border-white">
-                    <span class="badge !bg-zinc-800 !text-white !border-zinc-600">STANDALONE</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Moan Machine</h3>
-                    <p class="text-sm text-zinc-400">A non-scalable biological asset receives an untraceable fiat generator.</p>
-                </a>
-
-                <a href="tiny_horse_webtoon.html" class="glass-card !border-zinc-700 hover:!border-white">
-                    <span class="badge !bg-zinc-800 !text-white !border-zinc-600">STANDALONE</span>
-                    <h3 class="text-2xl bangers text-zinc-100">The Tiny Horse Incident</h3>
-                    <p class="text-sm text-zinc-400">A promotion from 'unemployed idiot' to 'garbage supervisor'.</p>
-                </a>
-
-            </div>
-        </div>
-    </main>
-
-    <footer class="mt-32 border-t border-zinc-900 py-12 text-center">
-        <p class="text-zinc-600 font-bold tracking-widest uppercase text-sm">[ SYSTEM AUDIT BATCH FINALIZED // 30 ERAS LOGGED // THE INVARIANT REMAINS UNBROKEN ]</p>
-    </footer>
+ <footer>
+ <p>© 2026 addJOE Multi-Layer Document Engine. All System Shambles Logged securely to Truth Core Database.</p>
+ </footer>
 
 </body>
 </html>
+
+```
+
+Would you like me to add a script that ensures the videos pause when they scrolled out of view to save system resources?
